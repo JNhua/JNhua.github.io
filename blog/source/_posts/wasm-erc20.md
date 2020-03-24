@@ -13,6 +13,8 @@ tags:
 
 This guide will cover the basics of smart contract development on Substrate using ink!, and show you how you can use Substrate and the contract module to deploy and interact with your smart contract.
 
+<!-- more -->
+
 # Prerequisites
 
 At first, you will need to set up some stuff on your computer.

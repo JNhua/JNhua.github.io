@@ -19,6 +19,8 @@ tags:
 ./target/release/substratekitties --dev
 ```
 
+<!-- more -->
+
 如果你要开始一个新项目并希望获得最新版本的 Substrate，你可以通过运行以下命令来构建自己的 Substrate 包：
 
 ```

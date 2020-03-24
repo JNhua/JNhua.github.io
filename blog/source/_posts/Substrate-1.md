@@ -16,6 +16,8 @@ Substrate是下一代区块链革新框架。
 
 Substrate的核心由三个技术组成：[WebAssembly](https://webassembly.org/), [Libp2p](https://libp2p.io/) 和 GRANDPA 共识。关于GRANDPA共识，查看此[定义](https://hackmd.io/Jd0byWX0RiqFiXUVC78Bdw?view#GRANDPA)，[介绍](https://medium.com/polkadot-network/grandpa-block-finality-in-polkadot-an-introduction-part-1-d08a24a021b5)和[形式规范](https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf)。它既是一个构建新链的库，又对于区块链客户端来说是一个“万能钥匙”，能够与任何基于Substrate的链进行同步。
 
+<!-- more -->
+
 Substrate的链有三个不同特性使得他们成为“下一代”（区块链）：动态、自定义状态转移功能；轻客户端功能性；一种具有快速块生成和自适应、确定性的先进共识算法。STF，用Wasm编码，作为“runtime”。这个定义了`execute_block`功能，并且可以从权益算法、交易语义、日志记录机制和替换自身任何一部分过程或区域链状态（“治理”）来指定所有（链）。因为runtime是完全动态的，所有这部分在任何时候可以被替换或者被更新。一个Substrate链是一个“活的组织”。
 
 更多关于Substrate的资料请看：  [Substrate是什么？](https://jnhua.github.io/2019/04/20/what-is-Substrate/)

@@ -2,11 +2,8 @@
 title: Edgeware简介/白皮书中文翻译
 categories:
   - Substrate
-  - Edgeware
+  - Application
 tags:
-  - edgeware
-  - substrate
-  - EDG
 copyright: true
 date: 2019-05-21 15:55:33
 ---
@@ -18,6 +15,8 @@ date: 2019-05-21 15:55:33
 # 简介
 
 Edgeware旨在通过采用完全不同的体系结构来解决可伸缩性问题。Edgeware的token持有者可以使用链上投票来升级网络，然后节点自动下载运行时的新版本。关键决策是在链上做出的，创建一个具有更低协调开销和透明流程的系统，用于决定改进。
+
+<!-- more -->
 
 # 技术细节
 

@@ -3,7 +3,7 @@ title: Spring_Mongodb之update
 copyright: true
 date: 2019-08-22 14:13:36
 categories:
-- Spring
+- Java
 - Mongodb
 tags:
 - Mongodb
@@ -22,6 +22,8 @@ mongoTemplate.updateFirst(query, update, COLLECTION_NAME);
 `set`：修改指定属性为指定数据；
 
 `updateFirst`：修改根据query查找到的第一个实体对象。
+
+<!-- more -->
 
 ## b. 数字相关
 

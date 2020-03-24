@@ -16,6 +16,8 @@ tags:
 
 关键：安全方便地生成、保存和备份/恢复密钥。
 
+<!-- more -->
+
 # 钱包分类
 
 ![image](wallet-introduction/1.jpg)

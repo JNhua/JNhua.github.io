@@ -6,14 +6,14 @@ categories:
 - Substrate
 - base
 tags:
-- grandpa
-- 终结
 - finalize
 ---
 
 # 简介
 
-之前已经翻译了部分[Byzantine Finality Gadgets](https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf)，可以看我之前发布的[拜占庭终结工具](#  [https://munan.tech/2019/09/30/%E6%8B%9C%E5%8D%A0%E5%BA%AD%E7%BB%88%E7%BB%93%E5%B7%A5%E5%85%B7/#more](https://munan.tech/2019/09/30/拜占庭终结工具/#more) )。
+之前已经翻译了部分[Byzantine Finality Gadgets](https://github.com/w3f/consensus/blob/master/pdf/grandpa.pdf)，可以看我之前发布的[拜占庭终结工具](https://munan.tech/2019/09/30/ByzantineFinalityGadgets)。
+
+<!-- more -->
 
 # 相关模块
 
