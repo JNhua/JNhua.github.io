@@ -91,6 +91,30 @@ byte b = (byte)i;
 
 使用默认访问修饰符声明的变量和方法，对同一个包内的类是可见的。接口里的变量都隐式声明为 **public static final**,而接口里的方法默认情况下访问权限为 **public**。
 
+### private修饰符代表的可见性说明
+
+如果一个成员被声明为private，它就只能在**定义该成员的最外层类的范围**之内访问。具体地，有两点容易被忽略。
+
+#### 可见性是针对于类来说的，不是对象
+
+在类内可以直接访问private成员。
+
+#### 内部类的私有成员可以在内部类的外面访问
+
+```java
+class A{
+    class B{
+        private int x=10;
+    }
+    public static void main(String... args){
+        A.B xx = new A().new B();
+        System.out.println("Hello :: "+xx.x); //This is allowed!!
+    }
+}
+```
+
+可见：private这种修饰符并不能阻止外部类直接访问到内部类中的private属性；反之，内部类可以访问外部类private属性。
+
 ### 受保护的访问修饰符-protected
 
 protected 需要从以下两个点来分析说明：
@@ -103,6 +127,81 @@ protected 可以修饰数据成员，构造方法，方法成员，**不能修�
 接口及接口的成员变量和成员方法不能声明为 protected。
 
 子类能访问 protected 修饰符声明的方法和变量，这样就能保护不相关的类使用这些方法和变量。
+
+### protected关键字详解
+
+> 基类的 protected 成员是包内可见的，并且对子类可见
+>
+
+```java
+package p1;
+public class Father1 {
+    protected void f() {}    // 父类Father1中的protected方法
+}
+ 
+package p1;
+public class Son1 extends Father1 {}
+ 
+package p11;
+public class Son11 extends Father1{}
+ 
+package p1;
+public class Test1 {
+    public static void main(String[] args) {
+        Son1 son1 = new Son1();
+        son1.f(); // Compile OK     ----（1）
+        son1.clone(); // Compile Error     ----（2）
+ 
+        Son11 son = new Son11();    
+        son11.f(); // Compile OK     ----（3）
+        son11.clone(); // Compile Error     ----（4）
+    }
+}
+```
+
+对于上面的示例，首先看(1)(3)，其中的f()方法从类Father1继承而来，其可见性是包p1及其子类Son1和Son11，而由于调用f()方法的类Test1所在的包也是p1，因此（1）(3)处编译通过。其次看(2)(4)，其中的clone()方法的可见性是java.lang包及其所有子类，对于语句"son1.clone();"和"son11.clone();"，二者的clone()在类Son1、Son11中是可见的，但对Test1是不可见的，因此（2）(4)处编译不通过。
+
+> 若子类与父类不在同一包中，那么在子类中，子类实例可以访问其从父类继承而来的protected方法，而不能访问父类实例的protected方法。
+
+```java
+package p2;
+class MyObject2 {
+    protected Object clone() throws CloneNotSupportedException{
+       return super.clone();
+    }
+}
+ 
+package p22;
+public class Test2 extends MyObject2 {
+    public static void main(String args[]) {
+       MyObject2 obj = new MyObject2();
+       obj.clone(); // Compile Error         ----（1）
+ 
+       Test2 tobj = new Test2();
+       tobj.clone(); // Complie OK         ----（2）
+    }
+}
+```
+
+对于(1)而言，clone()方法来自于类MyObject2本身，因此其可见性为包p2及MyObject2的子类，虽然Test2是MyObject2的子类，但在Test2中不能访问基类MyObject2的protected方法clone()，因此编译不通过;对于(2)而言，由于在Test2中访问的是其本身实例的从基类MyObject2继承来的的clone()，因此编译通过。
+
+```java
+package p3;
+class MyObject3 extends Test3 {
+}
+ 
+package p33;
+public class Test3 {
+  public static void main(String args[]) {
+    MyObject3 obj = new MyObject3();
+    obj.clone();   // Compile OK     ------（1）
+  }
+}
+```
+
+对于(1)而言，clone()方法来自于Object，因此其可见性为包java.lang及其子类Test3，而（1）正是在类Test3中调用，编译通过。
+
+更多例子：https://www.runoob.com/w3cnote/java-protected-keyword-detailed-explanation.html
 
 ### 访问控制和继承
 
@@ -290,6 +389,12 @@ Scanner s = new Scanner(System.in);
 # Java 异常处理
 
 ![exception](JavaBasics/exception.jpg)
+
+java中的异常分为两大类，强制性异常(CheckedException)和非强制性异常(UncheckedException)。而java中除了RuntimeException外，都是强制性异常。 
+
+强制性异常：所谓强制性异常就是在编写程序的过程中必需在抛出异常的部分try catch 或者向上throws异常。 
+
+非强制性异常：所谓非强制性异常就和上面相反了。不过你当然也可以try catch或者thows，只不过这不是强制性的。 
 
 ## Java 内置异常类
 
