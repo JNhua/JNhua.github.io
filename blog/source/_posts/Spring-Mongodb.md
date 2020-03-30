@@ -4,9 +4,8 @@ copyright: true
 date: 2019-08-22 14:13:36
 categories:
 - Java
-- Mongodb
+- Database
 tags:
-- Mongodb
 ---
 
 # 1.基本类型
