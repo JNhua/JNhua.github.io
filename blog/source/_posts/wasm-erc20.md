@@ -3,6 +3,7 @@ title: wasm-erc20
 copyright: true
 date: 2019-05-10 11:05:56
 categories:
+- BlockChain
 - Substrate
 - contract
 tags:

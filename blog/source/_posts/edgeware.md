@@ -1,8 +1,9 @@
 ---
 title: Edgeware简介/白皮书中文翻译
 categories:
-  - Substrate
-  - Application
+- BlockChain
+- Substrate
+- Application
 tags:
 copyright: true
 date: 2019-05-21 15:55:33

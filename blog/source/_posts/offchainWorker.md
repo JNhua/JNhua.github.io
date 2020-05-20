@@ -3,6 +3,7 @@ title: Off-Chain Workers喂价
 copyright: true
 date: 2020-03-23 16:34:51
 categories:
+- BlockChain
 - Substrate
 - base
 tags:

@@ -3,6 +3,7 @@ title: grandpa模块剖析
 copyright: true
 date: 2019-10-16 17:45:28
 categories:
+- BlockChain
 - Substrate
 - base
 tags:

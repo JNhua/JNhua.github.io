@@ -2,6 +2,7 @@
 title: Substrate是什么
 date: 2019-04-20 10:13:04
 categories:
+- BlockChain
 - Substrate
 - base
 tags: 

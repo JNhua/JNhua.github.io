@@ -3,6 +3,7 @@ title: 拜占庭终结工具
 copyright: true
 date: 2019-09-30 09:25:05
 categories:
+- BlockChain
 - Substrate
 - base
 tags:

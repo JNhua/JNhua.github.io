@@ -3,6 +3,7 @@ title: write-runtime
 copyright: true
 date: 2019-09-10 14:53:46
 categories:
+- BlockChain
 - Substrate
 - base
 tags:

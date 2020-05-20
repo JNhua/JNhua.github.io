@@ -2,6 +2,7 @@
 title: Substrate基础_github项目的README
 date: 2019-04-19 16:57:26
 categories: 
+- BlockChain
 - Substrate
 - base
 tags: Substrate
