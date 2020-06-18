@@ -1,0 +1,158 @@
+---
+title: crosDomain
+copyright: true
+date: 2020-06-18 09:43:12
+categories:
+- Other
+tags:
+---
+
+# 跨域问题
+
+随着前后端分离技术的越来越盛行，跨域问题也逐渐凸显了出来。跨域问题的根本原因：因为浏览器收到同源策略的限制，当前域名的js只能读取同域下的窗口属性。什么叫做同源策略？就是不同的域名, 不同端口, 不同的协议不允许共享资源的，保障浏览器安全。同源策略是针对浏览器设置的门槛。如果绕过浏览器就能实现跨域，所以说早期的跨域都是打着安全路数的擦边球，都可以认为是 hack 处理。
+
+<!-- more -->
+
+> 这里要注意的是，只有访问类型为xhr（XMLHttpRequest)的才会出现跨域。
+>
+> 同源检测主要是为了防止CSRF攻击。
+
+## CSRF
+
+### 什么是CSRF
+
+Cross-site request forgery 跨站请求伪造：攻击者诱导受害者进入第三方网站，在第三方网站中，向被攻击网站发送跨站请求。利用受害者在被攻击网站已经获取的注册凭证，绕过后台的用户验证，达到冒充用户对被攻击的网站执行某项操作的目的。
+
+一个典型的CSRF攻击有着如下的流程：
+
+- 受害者登录a.com，并保留了登录凭证（Cookie）。
+- 攻击者引诱受害者访问了b.com。
+- b.com 向 a.com 发送了一个请求：a.com/act=xx。浏览器会默认携带a.com的Cookie。
+- a.com接收到请求后，对请求进行验证，并确认是受害者的凭证，误以为是受害者自己发送的请求。
+- a.com以受害者的名义执行了act=xx。
+- 攻击完成，攻击者在受害者不知情的情况下，冒充受害者，让a.com执行了自己定义的操作。
+
+### 防护策略
+
+CSRF的两个特点：
+
+- CSRF（通常）发生在第三方域名。
+- CSRF攻击者不能获取到Cookie等信息，只是使用。
+
+针对这两点，我们可以专门制定防护策略，如下：
+
+- 阻止不明外域的访问
+  - 同源检测
+  - Samesite Cookie
+- 提交时要求附加本域才能获取的信息
+  - CSRF Token
+  - 双重Cookie验证
+
+# 跨域问题的解决方案
+
+## 修改浏览器设置
+
+以Google Chrome为例，浏览器以
+
+```bash
+"C:\ProgramFiles(x86)\Google\Chrome\Application\chrome.exe"
+    --disable-web-security--user-data-dir
+```
+
+中模式打开，右键点击浏览器快捷方式，在目标中输入上述代码即可解决（不推荐）。
+
+## 修改请求的方式：jsonp
+
+JQuery中的正常AJAX请求代码片段
+
+```js
+$("#demo1").click(function(){
+    $.ajax({
+        url : 'http://www.tpadmin.top/Index/Test/crossDomain',
+        data : {},
+        type : 'get',
+        success : function (res) {
+            //No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'http://127.0.0.1' is therefore not allowed access. 在执行时候报出的错误，这代表了跨域错误
+            alert(res);
+        }
+    });
+});
+```
+
+ JQuery中的使用JSONP的AJAX请求代码：
+
+```js
+$("#demo2").click(function(){
+    $.ajax({
+        url : 'http://www.tpadmin.top/Index/Test/crossDomain',
+        data : {},
+        type : 'get',
+        dataType : 'jsonp', 
+        success : function (res) {
+            alert(res);
+        }
+    });
+});
+```
+
+
+这时候我们看到 请求的网址自动变成了
+
+`http://www.tpadmin.top/Index/Test/crossDomain?callback=jQuery331015214102388989237_1534993962395&_=1534993962396`
+这是为什么呢？原来由于跨域访问的只限制`xhr`类型的请求（上文中已经说了），所以js中就利用了这一特点，让服务端不在返回的是一个JSON格式的数据，而是返回一段JS代码，将JSON的数据以参数的形式传递到这个函数中，而函数的名称就是callback参数的值，所以我们还需要修改服务端的代码，代码如下：
+
+```js
+<?php
+    $callback = isset($_GET['callback'])?$_GET['callback']:'';
+    if (!empty($callback)) {
+        $arr = ['code' => 200, 'name' => 'cui'];
+        $data = json_encode($arr);
+        exit($callback . '(' . $data . ')');
+    }
+?>
+```
+
+
+OK，现在问题解决了，但是JSONP存在着诸多限制：
+
+1. JSONP只支持GET请求，什么？你要提交表单，sorry，此路不通
+
+2. 它只支持跨域HTTP请求
+
+   
+
+## CORS
+
+跨域访问的请求头中存在Origin的字段，用来记录当前的访问域名，我们可以再服务端增加一个响应头`Access-Control-Allow-Origin`来告诉浏览器我们支持它获取就可以了，代码实现：
+
+```php
+<?php
+$requestHeader = getallheaders();
+$origin = isset($requestHeader['Origin'])?$requestHeader['Origin']:'';
+switch ($origin) {
+    case 'http://127.0.0.1':
+        header('Access-Control-Allow-Origin:http://127.0.0.1');
+        break;
+    case 'http://localhost':
+        header('Access-Control-Allow-Origin:http://localhost');
+        break;
+    default:
+        break;
+}
+$arr = ['code' => 200, 'name' => 'cui'];
+echo $data = json_encode($arr);
+?>
+```
+
+## nginx反向代理
+
+通过配置反向代理，增加允许访问的`Origin`请求头部分：`add_header Access-Control-Allow-Origin xxx`
+
+# Reference
+
+[前后端分离与跨域的解决方案（CORS的原理)](https://blog.csdn.net/cuixiaogang110/article/details/81948173)
+
+[[前端安全系列（二）：如何防止CSRF攻击？](https://tech.meituan.com/2018/10/11/fe-security-csrf.html)]
+
+
+
