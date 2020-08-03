@@ -1,13 +1,11 @@
 ---
-title: 模块化 & 包管理
+title: Rust 模块化 & 包管理
 copyright: true
 date: 2019-09-04 17:37:46
 categories:
 - Rust
+- base
 tags:
-- Rust
-- 包管理
-- 模块化
 ---
 
 # 包管理（Cargo）
@@ -22,10 +20,10 @@ tags:
 
 ## 使用第三方包
 
-1. 在Cargo.toml中的[dependencies]下加入包的依赖；
-2. 在需要引入的文件头部加入 extern crate 包名; 之后才可以use 包（Rust 2015）。在2018中，直接可以用use xxx。
+1. 在`Cargo.toml`中的`[dependencies]`下加入包的依赖；
+2. 在需要引入的文件头部加入` extern crate` 包名; 之后才可以`use` 包（`Rust 2015`）。在`2018`中，直接可以用`use xxx`。
 
-Note：Cargo默认把连字符替换为下划线。
+Note：`Cargo`默认把连字符替换为下划线。
 
 ## Cargo文件格式
 
@@ -63,13 +61,13 @@ Note：Cargo默认把连字符替换为下划线。
 
 自定义rustc编译配置。
 
-## 模块系统
+# 模块系统
 
 如果存在与文件名同名的目录，则该目录下的模块都是该文件的子模块。
 
-![src目录结构](模块化/1.png)
+![src目录结构](Rust模块化/1.png)
 
-### read_func.rs
+`read_func.rs`
 
 ```rust
 pub mod static_kv;  //pub关键字使得可以在main.rs中：use read_func::static_kv
@@ -79,9 +77,9 @@ pub fn rw_mut_kv() -> Result<(), String> {
 }
 ```
 
-Rust会通过mod关键字去当前模块的子模块中寻找static_kv模块。
+Rust会通过`mod`关键字去当前模块的子模块中寻找`static_kv`模块。模块名字可以被以下表述：1.模块名.rs；2.与模块名相同的文件夹，并且该文件夹包含`mod.rs`。
 
-### read_func/static_kv.rs
+`read_func/static_kv.rs`
 
 ```rust
 use lazy_static::lazy_static;
@@ -89,7 +87,7 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 ```
 
-### main.rs
+`main.rs`
 
 ```rust
 mod read_func;
@@ -100,7 +98,7 @@ fn main() {
 
 第一行mod引入模块。
 
-第二行的`crate`可以用`self`代替，代表当前的crate，以main.rs为起点寻找当前相对路径下的read_func模块。如果是第三方包，就不需要写crate前缀。
+第二行的`crate`可以用`self`代替，代表当前的`crate`，以`main.rs`为起点寻找当前相对路径下的`read_func`模块。如果是第三方包，就不需要写`crate`前缀。
 
 ## 模块间的关系
 
@@ -168,9 +166,9 @@ fn breathe_in() {
 }
 ```
 
-clarinet 函数位于 instrument 模块中，所以可以使用 super 进入 instrument 的父模块，也就是根 crate。从这里可以找到 breathe_in。使用super相对路径可以方便的进行扩展，而不用更改路径来调用。
+`clarinet `函数位于` instrument` 模块中，所以可以使用 `super` 进入 `instrument` 的父模块，也就是根 `crate`。从这里可以找到 `breathe_in`。使用`super`相对路径可以方便的进行扩展，而不用更改路径来调用。
 
-sound模块放入sound.rs文件中，调用方式不变。
+`sound`模块放入`sound.rs`文件中，调用方式不变。
 
 ### 重新导出
 
@@ -178,9 +176,9 @@ sound模块放入sound.rs文件中，调用方式不变。
 pub use crate::sound::instrument;
 ```
 
-可以简化外部调用的导出路径（外部调用：use xxx::instrument; ），也不需要对外暴露模块（sound）。
+可以简化外部调用的导出路径（外部调用：`use xxx::instrument; `），也不需要对外暴露模块（`sound`）。
 
-一般重新导出放在lib.rs中。main.rs结合lib.rs的形式，是二进制包的最佳实践。
+一般重新导出放在`lib.rs`中。`main.rs`结合`lib.rs`的形式，是二进制包的最佳实践。
 
 ## 可见性
 
@@ -240,5 +238,5 @@ fn main() { bar() }
 * pub(self) / pub(in self)，只限当前模块可见；
 * pub(super) / pub(in super)，当前模块和父模块中可见。
 
-Note：trait中关联类型和Enum中变体的可见性，会随着trait和Enum的可见性而变化。但是结构体中的字段需要单独使用pub来改变可见性。
+*Note*：trait中关联类型和Enum中变体的可见性，会随着trait和Enum的可见性而变化。但是结构体中的字段需要单独使用pub来改变可见性。
 

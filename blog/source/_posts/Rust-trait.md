@@ -4,24 +4,59 @@ copyright: true
 date: 2019-09-05 18:00:11
 categories:
 - Rust
+- base
 tags:
-- Rust
-- trait
 ---
 
 # 行为上对类型的约束
 
 trait是Rust对Ad-hoc（点对点/特别的/临时的）多态的支持。
 
+<!-- more -->
+
 ## 接口抽象
 
 * 接口中可以定义方法，并支持默认实现；
+
+```rust
+trait NoiseMaker {
+    fn make_noise(&self);
+    
+    fn make_alot_of_noise(&self){
+        self.make_noise();
+        self.make_noise();
+        self.make_noise();
+    }
+}
+```
+
 * 接口中不能实现另一个接口，但是接口之间可以继承；
+
+```rust
+trait NoiseMaker {
+    fn make_noise(&self);
+}
+
+trait LoudNoiseMaker: NoiseMaker {
+    fn make_alot_of_noise(&self) {
+        self.make_noise();
+        self.make_noise();
+        self.make_noise();
+    }
+}
+
+impl NoiseMaker for SeaCreature {
+    fn make_noise(&self) {
+        println!("{}", &self.get_sound());
+    }
+}
+
+impl LoudNoiseMaker for SeaCreature {}
+```
+
 * 同一个接口可以同时被多个类型实现，但不能被同一个类型实现多次；
 
 为不同的类型实现trait，属于一种函数重载，也是Ad-hoc多态。
-
-<!-- more -->
 
 ### 关联类型
 
@@ -88,21 +123,23 @@ fn main() {
 ```rust
 use std::ops::Add;
 fn sum<T: Add<T, Output=T>>(a: T, b: T) -> T{
+// where
+  // T: Add<T, Output=T>
     a + b
 }
 assert_eq!(sum(1u32, 2u32), 3);
 assert_eq!(sum(1u64, 2u64), 3);
 ```
 
-约束sum函数，只有实现了Add这个trait的类型才可以当做参数。
+约束`sum`函数，只有实现了`Add`这个trait的类型才可以当做参数。
 
-where关键字，可以把泛型中的trait限定移到语句最后。
+`where`关键字，可以把泛型中的trait限定移到语句最后。
 
 ## 抽象类型
 
 #### trait对象
 
-trait的类型大小在编译期间无法确定，所以trait对象必须使用指针。可以利用引用操作符&或Box<T>来制造一个trait对象。trait对象的结构体包含一个可变data指针和一个可变虚表指针。
+trait的类型大小在编译期间无法确定，所以trait对象必须使用指针。可以利用引用操作符`&`或`Box<T>`来制造一个trait对象。trait对象的结构体包含一个可变data指针和一个可变虚表指针。
 
 作参数时，trait限定是静态分发的，trait对象是动态分发的。
 
@@ -124,9 +161,9 @@ fn can_fly(s: impl Fly+Debug) -> impl Fly {
 }
 ```
 
-impl Trait只能用于单个参数指定抽象类型。
+`impl Trait`只能用于单个参数指定抽象类型。
 
-dyn Trait是与impl Trait相对应的动态分发。
+`dyn Trait`是与`impl Trait`相对应的动态分发。
 
 ## 标签trait
 
@@ -138,6 +175,49 @@ dyn Trait是与impl Trait相对应的动态分发。
 * 如果实现trait的类型包含&'a X 或者 &'a mut X，则默认生命周期是'a；
 * 如果实现trait的类型只有T: 'a，则默认生命周期是'a；
 * 如果实现trait的类型包含多个类似T:'a 的从句，则生命周期需要明确指定。
+
+# 动态分发
+
+```rust
+struct Duck;
+struct Pig;
+trait Fly {
+    fn fly(&self) -> bool;
+}
+impl Fly for Duck {
+    fn fly(&self) -> bool {
+        true
+    }
+}
+impl Fly for Pig {
+    fn fly(&self) -> bool {
+        false
+    }
+}
+fn fly_static<F: Fly>(s: F) -> bool {
+    s.fly()
+}
+fn fly_dyn(s: &dyn Fly) -> bool {
+    s.fly()
+}
+//fn fly_dyn(s: &impl Fly) -> bool {
+//    s.fly()
+//}
+
+fn main() {
+    let pig = Pig;
+    assert_eq!(fly_static::<Pig>(pig), false);
+    let duck = Duck;
+    assert_eq!(fly_static::<Duck>(duck), true);
+  // 需要推断具体类型
+    assert_eq!(fly_dyn(&Pig), false);
+    assert_eq!(fly_dyn(&Duck), true);
+}
+```
+
+fly_static是静态分发，fly_dyn是动态分发。Trait对象拥有实例对象方法的指针（定义在该Trait中的），类似于C++的虚函数表。
+
+内存细节：动态分发会稍慢，因为要推断类型，去查找真正的函数调用。
 
 
 

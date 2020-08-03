@@ -4,11 +4,11 @@ copyright: true
 date: 2019-09-16 19:09:13
 categories:
 - Rust
+- base
 tags:
-- PhantomData
 ---
 
-PhantomData<T>是一个零大小类型的标记结构体。
+`PhantomData<T>`是一个零大小类型的标记结构体。
 
 作用：
 

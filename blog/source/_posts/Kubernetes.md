@@ -8,6 +8,14 @@ categories:
 tags:
 ---
 
-k8s基础技术原理。
+学习资源整理：
+
+[教程](http://docs.gerrywen.com/kubernetes/01/1-1.Kubernetes-components.html)
+
+[k8s集群部署](https://www.cnblogs.com/wangyongqiang/articles/12564373.html)
+
+[k8s初体验](https://www.qikqiak.com/k8s-book/docs/14.Kubernetes初体验.html)
+
+
 
 <!-- more -->
