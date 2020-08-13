@@ -7,9 +7,6 @@ categories:
 - Ethereum
 - 钱包
 tags:
-- keystore
-- ethereum
-- encrypt
 ---
 
 # Keystore简介

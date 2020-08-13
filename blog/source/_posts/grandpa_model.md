@@ -7,7 +7,6 @@ categories:
 - Substrate
 - base
 tags:
-- finalize
 ---
 
 # 简介

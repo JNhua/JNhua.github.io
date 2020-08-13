@@ -7,8 +7,6 @@ categories:
 - Ethereum
 - 钱包
 tags:
-- ethereum
-- HD钱包
 ---
 
 # 钱包简介

@@ -7,8 +7,6 @@ categories:
 - Substrate
 - base
 tags:
-- Substrate
-- runtime
 ---
 
 # 开始

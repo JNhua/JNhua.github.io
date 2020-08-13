@@ -5,7 +5,7 @@ categories:
 - BlockChain
 - Substrate
 - base
-tags: Substrate
+tags:
 copyright: true
 ---
 

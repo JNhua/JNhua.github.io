@@ -14,6 +14,18 @@ tags:
 
 <!-- more -->
 
+Rust在预处理时，会加入以下代码：
+
+```rust
+#![feature(prelude_import)]
+#[prelude_import]
+use std::prelude::v1::*;
+#[macro_use]
+extern crate std;
+```
+
+从而自动导入标准库。
+
 # 声明宏（Declarative Macro）
 
 宏解析器将宏扩展的时机在解析过程中。
@@ -41,9 +53,44 @@ tags:
 * sep，代表分隔符，常用逗号、分号和=>。这个分隔符可以依据具体的情况忽略。
 * rep，代表控制重复次数的标记，目前支持两种：* 和 +，代表“重复零次及以上”和“重复一次及以上”。
 
+展开宏：
+
+```bash
+cargo rustc -- -Z unstable-options --pretty=expanded
+```
+
+或
+
+```bash
+rustc -Z unstable-options --pretty=expanded main.rs
+```
+
+```rust
+#[macro_export]
+macro_rules! my_vec { 
+    ($($x: expr), *) => {
+        {
+            let mut temp_vec = Vec::new();
+          
+          // 重复匹配到的值在这里访问
+            $(
+                temp_vec.push($x);
+            )*
+          
+            temp_vec
+        }
+    };
+}
+```
+
+## hashmap实现
+
+### 递归调用
+
 ```rust
 #![allow(unused)]
 macro_rules! hashmap {
+  // 利用递归调用消去最后键值对的结尾逗号
     ($($key:expr => $value:expr,)*) =>
         {  hashmap!($($key => $value),*) };
     ($($key:expr => $value:expr),* ) => {
@@ -66,7 +113,57 @@ fn main(){
 }
 ```
 
-利用递归调用消去最后键值对的结尾逗号。第一层调用将其替换为`hashmap!(("a" ) => (1),("b" ) => (2),("c" ) => (3) )`。因为`c=>3`后面没有表达式，所以分隔符 “，”也不再加入。
+第一层转换为`hashmap ! ("a" => 1, "b" => 2, "c" => 3)`。
+
+### 重复匹配规则
+
+```rust
+macro_rules! hashmap {
+    ($($key:expr => $value:expr),* $(,)*) => {
+        {
+            let mut _map = ::std::collections::HashMap::new();
+            $(
+                _map.insert($key, $value);
+            )*
+            _map
+        }
+   };
+}
+fn main(){
+    let map = hashmap!{
+        "a" => 1,
+        "b" => 2,
+        "c" => 3, 
+    };
+    assert_eq!(map["a"], 1);
+}
+```
+
+### 预分配空间
+
+```rust
+macro_rules! unit {
+    ($($x:tt)*) => (());
+}
+macro_rules! count {
+    ($($key:expr),*) => (<[()]>::len(&[$(unit!($key)),*]));
+}
+macro_rules! hashmap {
+    ($($key:expr => $value:expr),* $(,)*) => {
+        {
+           let _cap = count!($($key),*);
+           let mut _map 
+               = ::std::collections::HashMap::with_capacity(_cap);
+           $(
+               _map.insert($key, $value);
+           )*
+           _map
+       }
+   };
+}
+```
+
+### 消除外部宏
 
 ```rust
 #![feature(trace_macros)]
@@ -97,9 +194,7 @@ fn main(){
 }
 ```
 
-将两个工具宏`unit`和`count`移到`hashmap!`内部。
-
-`#![feature(trace_macros)]`在nightly版本下可以跟踪宏展开（编译过程输出信息，不是调试过程）。
+`#![feature(trace_macros)]`在nightly版本下可以跟踪宏展开，在需要展开宏的地方使用`trace_macros!(true);`打开跟踪。
 
 ## 导入/导出
 
@@ -197,9 +292,9 @@ pub fn attr_with_args(args: TokenStream, input: TokenStream)
 }
 ```
 
-在引号的括号要用{% raw %}`{{`{% endraw %}转义，最内部的`{}`是给`args`占位的。
+在引号的括号要用`{% raw %}`{{`{% endraw %}`转义，最内部的`{}`是给`args`占位的。
 
-## Bang宏
+## Bang宏/类函数宏
 
 test.rs
 

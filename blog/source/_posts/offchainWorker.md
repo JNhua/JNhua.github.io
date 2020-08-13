@@ -7,7 +7,6 @@ categories:
 - Substrate
 - base
 tags:
-- Off-Chain Worker
 ---
 
 # OCW喂价

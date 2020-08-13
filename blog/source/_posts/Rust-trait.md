@@ -56,7 +56,7 @@ impl LoudNoiseMaker for SeaCreature {}
 
 * 同一个接口可以同时被多个类型实现，但不能被同一个类型实现多次；
 
-为不同的类型实现trait，属于一种函数重载，也是Ad-hoc多态。
+为不同的类型实现trait，属于一种函数重载，也是`Ad-hoc`多态。
 
 ### 关联类型
 
@@ -67,9 +67,9 @@ pub trait Add<RHS = Self> {
 }
 ```
 
-Self是每个trait都带有的隐式类型参数，代表实现当前trait的具体类型。实现时，未指明泛型，默认为Self类型。
+`Self`是每个`trait`都带有的隐式类型参数，代表实现当前`trait`的具体类型。实现时，未指明泛型，默认为`Self`类型。
 
-Output为关联类型。
+`Output`为关联类型。
 
 #### 为u32类型实现Add trait
 
@@ -80,9 +80,40 @@ impl Add for u32 {
 }
 ```
 
+#### 关联类型的作用
+
+关联类型在trait定义中指定占位符类型。trait 的实现者会针对特定的实现在这个类型的位置指定相应的具体类型。如此可以定义一个使用多种类型的 trait。
+
+```rust
+pub trait Iterator {
+    type Item;
+    fn next(&mut self) -> Option<Self::Item>;
+}
+// 为什么不像下面这样写，使用泛型？
+// pub trait Iterator<T> {
+//    fn next(&mut self) -> Option<T>;
+// }
+```
+
+使用泛型的方式，则如例子中在实现trait的时候必须带上具体的类型，调用时也必须带上具体的类型。
+
 ### 孤儿规则
 
 如果要实现某个trait，那么该trait和实现该trait的那个类型至少有一个要在当前crate中定义。
+
+绕开这个限制的方法是使用 newtype 模式（newtype pattern）。
+
+```rust
+use std::fmt;
+struct Wrapper(Vec<String>);
+impl fmt::Display for Wrapper {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({})", self.0.join(","))
+    }
+}
+```
+
+在上述例子中，我们在 Vec 上实现 Display，而孤儿规则阻止我们直接这么做，因为 Display trait 和 Vec 都定义于我们的 crate 之外。我们可以创建一个包含 Vec 实例的 Wrapper 结构体，然后再实现。
 
 ### trait继承
 
@@ -137,7 +168,7 @@ assert_eq!(sum(1u64, 2u64), 3);
 
 ## 抽象类型
 
-#### trait对象
+### trait对象
 
 trait的类型大小在编译期间无法确定，所以trait对象必须使用指针。可以利用引用操作符`&`或`Box<T>`来制造一个trait对象。trait对象的结构体包含一个可变data指针和一个可变虚表指针。
 
@@ -219,7 +250,43 @@ fly_static是静态分发，fly_dyn是动态分发。Trait对象拥有实例对�
 
 内存细节：动态分发会稍慢，因为要推断类型，去查找真正的函数调用。
 
+# 完全限定语法
 
+## 同名方法
 
+```rust
+trait Trait {
+    fn foo(&mut self, x: i32);
+}
 
+struct Foo;
+
+impl Foo {
+    fn foo(&self) {
+        println!("Foo::foo");
+    }
+}
+
+impl Trait for Foo {
+    fn foo(&mut self, x: i32) {
+        //self.foo(); 　　　//１、出错点１ (&*self).foo();　按照此方式或者Self::foo(self)调用ok
+        println!("Trait::foo {}", x);
+    }
+}
+
+fn main() {
+    let mut a: Foo = Foo {};
+    a.foo();
+    //a.foo(3); //２、出错点２，此方式调用出错 Trait::foo(&mut a, 3);
+}
+```
+
+Rust在进行方法解析的时候试用的规则比较简单，编译器查看方法“ receiver”（`.` 之前的东西，在本例中为`self`，其类型为`＆mut Foo`），并检查它是否具有称为`foo`的方法。如果没有`foo`方法，则尝试借用或取消引用接收方后，再次检查是否有此方法。编译器会一直重复此过程，直到找到匹配的方法为止。 在此例中，编译器就会匹配到`fn foo(&mut self, x: i32)`方法，但是没有足够的参数，所以按照**出错点１的写法会出错**，正确的方式是显示地调用。
+默认会调用`Foo`类型的`foo`方法，那么如果要调用`trait`中的方法怎么办呢？用trait名显示调用即可`Trait::foo(&mut a, 3);`。
+
+## 关联函数的完全限定语法
+
+当不能判断由哪个类型实现的方法来调用，需要使用完全限定语法：
+
+`<Type as Trait>::function(receiver_if_method, next_arg, ...);`
 

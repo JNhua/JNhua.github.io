@@ -96,6 +96,8 @@ let y = {
 
 ## 函数指针
 
+函数指针实现了所有三个闭包 trait（Fn、FnMut 和 FnOnce），所以总是可以在调用期望闭包的函数时传递函数指针作为参数。倾向于编写使用泛型和闭包 trait 的函数，这样它就能接受函数或闭包作为参数。
+
 ### 函数作为参数
 
 ```rust
@@ -124,7 +126,7 @@ fn main() {
 
 ## 闭包
 
-闭包在函数中的应用，常常与trait结合。
+闭包在函数中的应用，常常与`trait`结合。
 
 ### 闭包作为参数
 
@@ -152,7 +154,70 @@ fn main() {
 }
 ```
 
-闭包默认会按引用捕获变量（在此例中为 i ）。如果将此闭包返回，则引用也会跟着返回。而 i 会被销毁，所以引用变为悬垂指针。因此要加上move关键字，移动所有权。
+闭包默认会按***引用***捕获变量（在此例中为 i ）。如果将此闭包返回，则引用也会跟着返回。而 i 会被销毁，所以引用变为悬垂指针。因此要加上move关键字，移动所有权。
+
+或者如下写法，用`Box<T>`：
+
+```rust
+fn return_clo() -> Box<dyn Fn(i32)->i32> {
+    Box::new(|x| x+1)
+}
+
+fn main() {
+    let c = return_clo();
+    println!("1 + 1 = {}", c(1));
+    println!("1 + 1 = {}", (*c)(1)); //解引用多态
+    println!("Hello, world!");
+}
+```
+
+
+
+### 捕获环境值
+
+闭包可以通过三种方式捕获其环境，它们对应函数的三种获取参数的方式，分别是获取所有权、可变借用、不可变借用。这三种捕获值的方式被编码为如下三个Fn trait：
+（1）FnOnce消费从周围作用域捕获的变量，闭包周围的作用域被称为其环境。为了消费捕获到的变量，闭包必须获取其所有权并在定义闭包时将其移进闭包。其名称的Once部分代表了闭包不能多次获取相同变量的所有权。
+（2）FnMut获取可变的借用值，所以可以改变其环境。
+（3）Fn从其环境获取不可变的借用值。
+当创建一个闭包时，rust会根据其如何使用环境中的变量来推断我们希望如何引用环境。由于所有闭包都可以被调用至少一次，因此所有闭包都实现了FnOnce。没有移动被捕获变量的所有权到闭包的闭包也实现了FnMut，而不需要对捕获的变量进行可变访问的闭包实现了Fn。
+
+
+
+### 自动推导
+
+闭包会为每个参数和返回类型推导一个具体类型，但是不能推导两次。如下错误：
+
+```rust
+let example_closure = |x| x;
+let s = example_closure(String::from("hello"));
+let n = example_closure(5); //报错，尝试推导两次，变成了不同的类型
+```
+
+### 与trait结合
+
+```rust
+struct Cacher<T> 
+    where T: Fn(u32) -> u32
+{
+    calcuation: T,
+    value: Option<u32>,
+}
+
+impl<T> Cacher<T>
+    where T: Fn(u32) -> u32
+{
+    fn new(calcuation: T) -> Cacher<T> {
+        Cacher {
+            calcuation,
+            value: None,
+        }
+    }
+}
+
+fn main() {
+    let mut c = Cacher::new(|x| x+1);
+}
+```
 
 # 流程控制
 
@@ -211,8 +276,6 @@ let result = match food {
 };
 ```
 
-
-
 ## loop
 
 ```rust
@@ -223,9 +286,18 @@ let result = loop {
         break counter * 2;
     }
 };
+//result等于20。
 ```
 
-`result`等于20。
+避免使用`while true {...}`，使用`loop`。Rust使用LLVM，而LLVM没有表达无限循环的方式，因此在某些时候会出错。如下：
+
+```rust
+let x;
+while true { x = 1; break; }
+println!("{}", x);
+```
+
+编译器报错，"use of possibly uninitialised variable"。
 
 ## match
 
@@ -255,6 +327,34 @@ match x {
     }
 ```
 
+# 结构体
+
+Rust中结构体有：具名结构体、元组结构体、单元结构体。
+
+## 具名结构体
+
+```rust
+struct SeaCreature {
+    animal_type: String,
+    name: String,
+}
+```
+
+## 元祖结构体
+
+```rust
+// 这仍然是一个在栈上的结构体
+let loc = Location(42, 32);
+```
+
+## 单元结构体
+
+```rust
+struct Marker;
+```
+
+其中，元组结构体只有一个字段时，称之为`New Type`模式。
+
 # 方法（封装特性）
 
 与函数（function）不同，方法（method）是与特定数据类型关联的函数。
@@ -283,44 +383,6 @@ fn main() {
     println!("{}", creature.get_sound());
 }
 ```
-
-
-
-# 内存
-
-Rust 程序有 3 个存放数据的内存区域：
-
-- **数据内存** - 对于固定大小和**静态**（即在整个程序声明周期中都存在）的数据。 例如 “Hello World”字面值常量，该文本的字节只能读取，因此它们位于该区域中。 编译器对这类数据做了很多优化，由于位置已知且固定，因此通常认为编译器使用起来非常快。
-- **栈内存** - 对于在函数中声明为变量的数据。 在函数调用期间，内存的位置不会改变，因为编译器可以优化代码，所以栈数据使用起来非常快。
-- **堆内存** - 对于在程序运行时创建的数据。 此区域中的数据可以添加、移动、删除、调整大小等。由于它的动态特性，通常认为它使用起来比较慢， 但是它允许更多创造性的内存使用。当数据添加到该区域时，我们称其为**分配**。 从本区域中删除 数据后，我们将其称为**释放**。
-
-# 结构体
-
-Rust中结构体有：具名结构体、元组结构体、单元结构体。
-
-## 具名结构体
-
-```rust
-struct SeaCreature {
-    animal_type: String,
-    name: String,
-}
-```
-
-## 元祖结构体
-
-```rust
-// 这仍然是一个在栈上的结构体
-let loc = Location(42, 32);
-```
-
-## 单元结构体
-
-```rust
-struct Marker;
-```
-
-其中，元组结构体只有一个字段时，称之为`New Type`模式。
 
 # 枚举
 
@@ -398,6 +460,16 @@ enum Result<T, E> {
 
 `Result` 如此常见以至于 Rust 有个强大的操作符 `?` 来与之配合。
 
+## option值复制
+
+```rust
+let x = 123u8;
+let y: Option<&u8> = Some(&x);
+let z = y.copied();
+```
+
+copied将引用转换为值。
+
 # Vectors
 
 `Vec` 有一个形如 `iter()` 的方法可以为一个 vector 创建迭代器，这允许我们可以轻松地将 vector 用到 `for` 循环中去。
@@ -426,6 +498,20 @@ fn main() {
 
 - `Vec` 是一个结构体，但是内部其实保存了在堆上固定长度数据的引用。
 - 一个 vector 开始有默认大小容量，当更多的元素被添加进来后，它会重新在堆上分配一个新的并具有更大容量的定长列表。（类似 C++ 的 vector）
+
+## 迭代器
+
+迭代器实现了`Iterator`（`trait`），定义于标准库中。该`trait`定义如下：
+
+```rust
+trait Iterator {
+	type Item;
+	fn next(mut self) -> Option<Self::Item>;
+	//省略其它内容
+}
+```
+
+如果希望迭代可变引用，可以使用`iter_mut`。
 
 # 切片
 
@@ -485,6 +571,31 @@ let a: &'static str = r#"
 let 00_html = include_str!("00_en.html");
 ```
 
+# HashMap
+## 创建
+```rust
+HashMap::new();
+let scores: HashMap<_, _> = keys.iter().zip(values.iter()).collect(); 
+```
+## 读取
+```rust
+let key = String::from("Blue");
+let value = ss.get(&key); 
+```
+## 遍历
+`for (key, value) in &ss`
+## 更新
+```rust
+ss.insert(String::from("Blue"), 20);//会将之前Blue对应的值覆盖掉
+ss.entry(String::from("Yellow")).or_insert(20); // 没有实体时插入
+
+// 根据旧值更新
+for word in text.split_whitespace() {
+    let count = map.entry(word).or_insert(0);
+    *count += 1;
+}
+```
+
 # 所有权
 
 所有权是Rust的特性。所有权解决了堆栈分配与回收问题。
@@ -539,7 +650,17 @@ let ref_ref_ref_f = &&&f;
 println!("{}", ref_ref_ref_f.value);
 ```
 
+### 解引用多态与可变性交互
+
+解引用多态有如下三种情况：
+
+* 当 T: Deref<Target=U> 时从 &T 到 &U。
+* 当 T: DerefMut<Target=U> 时从 &mut T 到 &mut U。
+* 当 T: Deref<Target=U> 时从 &mut T 到 &U。（注意：此处反之是不可能的）
+
 # 生命周期
+
+生命周期的主要目标是避免悬垂引用，大部分时候是可以隐含并且被推断的。
 
 ## 显式生命周期
 
@@ -566,6 +687,62 @@ static mut SECRET: &'static str = "swordfish";
 let msg: &'static str = "Hello World!";
 ```
 
+## 隐式生命周期
+
+三条规则确定不需要生命周期注解：
+
+* 第一条规则是：每一个是引用的参数都有它自己的生命周期参数。
+* 第二条规则是：如果只有一个输入生命周期参数，那么它被赋予所有输出生命周期参数：`fn foo<'a>(x: &'a i32) -> &'a i32`。 
+* 第三条规则是：在struct的impl语句中，如果方法有多个输入生命周期参数，不过其中之一因为方法的缘故为 `&self` 或 `&mut self`，那么 `self` 的生命周期被赋给所有输出生命周期参数。第三条规则使得方法更容易读写，因为只需更少的符号。
+```rust
+use std::str::FromStr;
+pub struct Wrapper<'a>(&'a str);
+
+impl<'a> FromStr for Wrapper<'a> {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Wrapper(s))
+    }
+}
+```
+
+在上述例子中，fn from_str函数显然是符合第二条规则，也就是说入参s: &str的生命周期被赋予为输出的生命周期。但是，输出参数中的Self对应的类型为结构体Wrapper，而Wrapper是有生命周期的限制的，此时编译器不知道如何判断，因此报错。
+
+## 结构体生命周期
+
+如果结构体成员含有引用类型，则需要显式指定生命周期。如下：
+
+```rust
+struct StuA<'a> {
+    name: &'a str,
+}
+```
+
+相应的，在方法中，也需要声明结构体的生命周期：
+
+```rust
+impl<'b> StuA<'b> {
+  // 隐式生命周期第二条规则
+    fn do_something(&self) -> i32 {
+        3
+    }
+
+    fn do_something2(&self, s: &str) -> &str{
+      // 隐式生命周期第三条规则
+    //相当于fn do_something2<'b>(&'b self, s: &str) -> &'b str{
+      // self.name与self生命周期相同，✅
+        self.name
+    }
+
+  // 返回值生命周期与s相同，而不是self，所以需要显式指定
+    fn do_something3<'a>(&self, s: &'a str) -> &'a str{
+        s
+    }
+}
+```
+
+
+
 # Trait（多态）
 
 在Rust中，trait是唯一的接口抽象方式。Rust中没有继承，贯彻的是组合优于继承和面向接口编程的思想。
@@ -589,6 +766,14 @@ let msg: &'static str = "Hello World!";
 * p代表指针；
 * e/E表示指数；
 
+# 内存布局
+
+Rust 程序有 3 个存放数据的内存区域：
+
+- **数据内存** - 对于固定大小和**静态**（即在整个程序声明周期中都存在）的数据。 例如 “Hello World”字面值常量，该文本的字节只能读取，因此它们位于该区域中。 编译器对这类数据做了很多优化，由于位置已知且固定，因此通常认为编译器使用起来非常快。
+- **栈内存** - 对于在函数中声明为变量的数据。 在函数调用期间，内存的位置不会改变，因为编译器可以优化代码，所以栈数据使用起来非常快。
+- **堆内存** - 对于在程序运行时创建的数据。 此区域中的数据可以添加、移动、删除、调整大小等。由于它的动态特性，通常认为它使用起来比较慢， 但是它允许更多创造性的内存使用。当数据添加到该区域时，我们称其为**分配**。 从本区域中删除 数据后，我们将其称为**释放**。
+
 # 指针
 
 原生指针：
@@ -602,9 +787,14 @@ let msg: &'static str = "Hello World!";
 
 ## 智能指针
 
+智能指针通常使用结构体实现。智能指针区别于常规结构体的显著特征在于其实现了Deref和Drop trait。
+
+* Deref trait允许智能指针结构体实例表现的像引用一样，这样就可以编写既用于引用，又用于智能指针的代码。
+* Drop trait允许我们自定义当智能指针离开作用域时执行的代码。
+
 ### Box
 
-`Box`将数据从栈上移动到堆。
+`Box`将数据从栈上移动到堆，栈上存放指向堆数据的指针。
 
 ```rust
 struct Ocean {
@@ -615,9 +805,15 @@ let ocean = Ocean {
 };
 ```
 
+适用于：
+
+* 当有一个在编译时未知大小的类型，而又需要在确切大小的上下文中使用这个类型值的时候；（举例子：在一个list环境下，存放数据，但是每个元素的大小在编译时又不确定）；
+* 当有大量数据并希望在确保数据不被拷贝的情况下转移所有权的时候；
+* 当希望拥有一个值并只关心它的类型是否实现了特定trait而不是其具体类型时。
+
 ### Rc
 
-引用计数指针，将数据从栈上移动到堆。允许其他`Rc`指针不可变引用同一个数据。
+引用计数指针，将数据从栈上移动到堆。允许其他`Rc`指针**不可变引用**同一个数据。单线程。
 
 ```rust
 let heap_pie = Rc::new(Pie);
@@ -631,7 +827,7 @@ heap_pie.eat();
 
 ### RefCell
 
-一个智能指针容器。可变与不可变引用都可以，引用规则与之前一样。
+一个智能指针容器。可变与不可变引用都可以，引用规则与之前一样。单线程。
 
 ```rust
 fn main() {
@@ -651,6 +847,46 @@ fn main() {
 }
 ```
 
+#### 内部可变性
+
+```rust
+#[derive(Debug)]
+enum List {
+    Cons(Rc<RefCell<i32>>, Rc<List>),
+    Nil,
+}
+```
+
+可以拥有一个表面上不可变的List，但是通过`RefCell<T>`中提供内部可变性方法来在需要时修改数据的方式。
+
+### 弱引用
+
+```rust
+fn main() {
+    let a = Rc::new(Cons(5, RefCell::new(Weak::new())));
+  // 1, a strong count = 1, weak count = 0
+	// 1, a tail = Some(RefCell { value: (Weak) })
+    let b = Rc::new(Cons(10, RefCell::new(Weak::new())));
+    if let Some(link) = b.tail() {
+        *link.borrow_mut() = Rc::downgrade(&a);
+    }
+  // 2, a strong count = 1, weak count = 1
+	// 2, b strong count = 1, weak count = 0
+	// 2, b tail = Some(RefCell { value: (Weak) })
+    if let Some(link) = a.tail() {
+        *link.borrow_mut() = Rc::downgrade(&b);
+    }
+    // 3, a strong count = 1, weak count = 1
+	// 3, b strong count = 1, weak count = 1
+	// 3, a tail = Some(RefCell { value: (Weak) })
+}
+```
+
+特点：
+（1）弱引用通过`Rc::downgrade`传递Rc实例的引用，调用`Rc::downgrade`会得到`Weak<T>`类型的智能指针，同时将weak_count加1（不是将strong_count加1）。
+（2）区别在于 `weak_count` 无需计数为 0 就能使 Rc 实例被清理。只要`strong_count`为0就可以了。
+（3）可以通过`Rc::upgrade`方法返回`Option<Rc<T>>`对象。
+
 ### Mutex
 
 智能指针容器，可变与不可变引用都可以。可以用来编排多核CPU线程任务。
@@ -658,4 +894,100 @@ fn main() {
 ## 内部可变性
 
 组合智能指针：`Rc<Vec<Foo>>`，`Rc<RefCell<Foo>>`, `Arc<Mutex<Foo>>`。
+
+## 比较
+
+`RefCell<T>`/`Rc<T>` 与 `Mutex<T>`/`Arc<T> `的相似性
+
+（1）`Mutex<T>`提供内部可变性，类似于RefCell；
+
+（2）`RefCell<T>`/`Rc<T>`是非线程安全的，而`Mutex<T>`/`Arc<T>`是线程安全的。
+
+# 面向对象
+
+## 对象
+
+结构体、枚举。
+
+## 封装
+
+在Rust中，使用pub关键字来标记模块、类型、函数和方法是公有的，默认情况下一切都是私有的。
+
+## 继承
+
+Rust不支持继承。但是Rust可以通过trait进行行为共享。
+
+## trait对象
+
+1、trait对象动态分发
+（1）对泛型类型使用trait bound编译器进行的方式是单态化处理，单态化的代码进行的是静态分发（就是说编译器在编译的时候就知道调用了什么方法）。
+（2）使用 trait 对象时，Rust 必须使用动态分发。编译器无法知晓所有可能用于 trait 对象代码的类型，所以它也不知道应该调用哪个类型的哪个方法实现。为此，Rust 在运行时使用 trait 对象中的指针来知晓需要调用哪个方法。
+
+2、trait对象要求对象安全
+只有 对象安全（object safe）的 trait 才可以组成 trait 对象。trait的方法满足以下两条要求才是对象安全的：
+
+- 返回值类型不为 Self（例如`Clone`不能作为对象安全的trait对象）
+- 方法没有任何泛型类型参数
+
+# 高级特性
+
+## 类型别名
+
+类型别名的主要用途是减少重复。
+
+```rust
+type Result<T> = std::result::Result<T, std::io::Error>;//result<T, E> 中 E 放入了 std::io::Error
+pub trait Write { 
+    fn write(&mut self, buf: &[u8]) -> Result<usize>; 
+    fn flush(&mut self) -> Result<()>; 
+}
+```
+
+## 从不返回的never type
+
+Rust 有一个叫做 `!` 的特殊类型。在类型理论术语中，它被称为 empty type，因为它没有值。我们更倾向于称之为 never type。在函数不返回的时候充当返回值。
+
+```rust
+loop { 
+        let mut guess = String::new(); 
+        io::stdin().read_line(&mut guess) .expect("Failed to read line"); 
+        let guess: u32 = match guess.trim().parse() { 
+            Ok(num) => num, 
+            Err(_) => continue, //continue 的值是 !。
+            //当 Rust 要计算 guess 的类型时，它查看这两个分支。
+            //前者是 u32 值，而后者是 ! 值。
+            //因为 ! 并没有一个值，Rust 决定 guess 的类型是 u32
+            };         
+
+        println!("You guessed: {}", guess); 
+    } 
+```
+
+说明：never type 可以强转为任何其他类型。允许 match 的分支以 continue 结束是因为 continue 并不真正返回一个值；相反它把控制权交回上层循环，所以在 Err 的情况，事实上并未对 guess 赋值。
+
+## 动态类型
+
+动态大小类型（dynamically sized types），有时被称为 “DST” 或 “unsized types”，这些类型允许我们处理只有在运行时才知道大小的类型。
+
+### str
+
+```rust
+// 错误代码
+// let s1: str = "Hello there!"; 
+// let s2: str = "How's it going?";
+// 正确代码为：
+let s1: &str = "Hello there!"; 
+let s2: &str = "How's it going?";
+```
+
+&str 则是 两个 值：str 的地址和其长度。这样，&str 就有了一个在编译时可以知道的大小：它是 usize 长度的两倍。也就是说，无论字符串是多大，&str的大小我们总是知道的。
+因此，引出动态大小类型的黄金规则：必须将动态大小类型的值置于某种指针之后。如：Box 或 Rc、&str等。
+
+### trait
+
+每一个 trait 都是一个可以通过 trait 名称来引用的动态大小类型。为了将 trait 用于 trait 对象，必须将他们放入指针之后，比如 &Trait 或 Box（Rc 也可以）。
+
+### Sized trait
+
+为了处理 DST，Rust 用Sized trait 来决定一个类型的大小是否在编译时可知。这个 trait 自动为编译器在编译时就知道大小的类型实现。
 
