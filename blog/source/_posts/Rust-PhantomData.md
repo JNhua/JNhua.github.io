@@ -107,4 +107,4 @@ struct Vec<T> {
 | `PhantomData<fn(T) -> T>`   | -         | invariant                 |
 | `PhantomData<Cell<&'a ()>>` | invariant | -                         |
 
-（*）如果逆变被废除，这将是不变的。
+(*) 如果发生变性的冲突，这个是不变的。
