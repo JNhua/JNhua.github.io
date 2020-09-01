@@ -1,5 +1,5 @@
 ---
-title: Rust-asynchronous
+title: Rust_asynchronous
 copyright: true
 date: 2020-08-18 14:12:47
 categories:
@@ -393,7 +393,42 @@ async fn async_main() {
 }
 ```
 
-那么实际上会生成一个匿名结构体
+那么实际上会生成一个匿名的`Future trait object`，包裹一个 `Generator`。也就是一个实现了 `Future` 的 `Generator`。`Generator`实际上是一个状态机，配合`.await`当每次`async` 代码块中任何返回 `Poll::Pending`则即调用`generator yeild`，让出执行权，一旦恢复执行，`generator resume` 继续执行剩余流程。
+
+```rust
+pub const fn from_generator<T>(gen: T) -> impl Future<Output = T::Return>
+where
+    T: Generator<ResumeTy, Yield = ()>,
+{
+    #[rustc_diagnostic_item = "gen_future"]
+    struct GenFuture<T: Generator<ResumeTy, Yield = ()>>(T);
+
+    // We rely on the fact that async/await futures are immovable in order to create
+    // self-referential borrows in the underlying generator.
+    impl<T: Generator<ResumeTy, Yield = ()>> !Unpin for GenFuture<T> {}
+
+    impl<T: Generator<ResumeTy, Yield = ()>> Future for GenFuture<T> {
+        type Output = T::Return;
+        fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+            // Safety: Safe because we're !Unpin + !Drop, and this is just a field projection.
+            let gen = unsafe { Pin::map_unchecked_mut(self, |s| &mut s.0) };
+
+            // Resume the generator, turning the `&mut Context` into a `NonNull` raw pointer. The
+            // `.await` lowering will safely cast that back to a `&mut Context`.
+            match gen.resume(ResumeTy(NonNull::from(cx).cast::<Context<'static>>())) {
+                GeneratorState::Yielded(()) => Poll::Pending,
+                GeneratorState::Complete(x) => Poll::Ready(x),
+            }
+        }
+    }
+
+    GenFuture(gen)
+}
+```
+
+每一次`gen.resume(）`会顺序执行`async block`中代码直到遇到`yield`。`async block`中的`.await`语句在无法立即完成时会调用`yield`交出控制权等待下一次`resume`。而当所有代码执行完，也就是状态机入`Complete`，`async block`返回`Poll::Ready`，代表`Future`执行完毕。
+
+生成的匿名对象类似如下：
 
 ```rust
 struct AsyncFuture {

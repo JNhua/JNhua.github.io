@@ -618,18 +618,38 @@ for word in text.split_whitespace() {
 | 其他语言 | GC会跟踪声明的变量，当它不再被使用时，自动清除。如果没有GC，程序员负责在恰当的时候释放这段申请的内存。 |
 | Rust     | 使用RAII(“资源获取即初始化”)，在变量`invalid`时，调用`drop`回收。 |
 
-## 移动
+## Move，Copy，Clone
+
+### Move
 
 ```rust
 let s1 = String::from("hello");
 let s2 = s1;
 ```
 
-`s1`移动到了`s2`，不仅仅是`shallow copy`，`s1`还被置为`invalid`了。
-
-Rust不会自动创建“深拷贝”，需要自己用`clone()`。但是，如果实现了`Copy`的`trait`，那么值会被复制入栈。在实现`Copy`时，必须先实现`Drop`。
+`s1`移动到了`s2`，不仅仅是`shallow copy`，`s1`还被置为`invalid`了。栈上的s1对象和s2对象进行按位浅拷贝，堆上数据不变。
 
 将所有者作为参数传递给函数时，其所有权将移交至该函数的参数。 在一次**移动**后，原函数中的变量将无法再被使用。在**移动**期间，所有者的堆栈值将会被复制到函数调用的参数堆栈中。
+
+Rust不会自动创建“深拷贝”，需要自己用`Clone()`。但是，如果实现了`Copy`的`trait`，那么值会被复制入栈。
+
+### Copy
+
+实现Copy的类型在堆上没有资源，值完全处于栈上。浅拷贝后，源与目标对象都可以访问，是独立的数据。为了`#[derive(Copy, Clone)]`工作，成员也必须实现`Copy`。
+
+> 在派生语句中的Clone是需要的，因为Copy的定义类似这样:pub trait Copy:Clone {}，即要实现Copy需要先实现Clone
+
+Copy与Drop不能同时存在。
+
+### Drop
+
+变量在离开作用范围时，编译器会自动销毁变量，如果变量类型有`Drop` trait，就先调用`Drop::drop`方法，做资源清理，一般会回收heap内存等资源，然后再收回变量所占用的stack内存。如果变量没有`Drop` trait，那就只收回stack内存。
+
+如果类型实现了`Copy` trait，在copy语义中并不会调用`Clone::clone`方法，不会做deep copy，那就会出现两个变量同时拥有一个资源（比如说是heap内存等），在这两个变量离开作用范围时，会分别调用`Drop::drop`方法释放资源，这就会出现double free错误。
+
+### Clone
+
+帮助实现“深拷贝”。
 
 ## 释放
 
