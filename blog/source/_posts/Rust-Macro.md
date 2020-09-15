@@ -78,15 +78,14 @@ rustc -Z unstable-options --pretty=expanded main.rs
 ```rust
 #[macro_export]
 macro_rules! my_vec { 
+  // x 为重复匹配到的表达式，“，”可以根据情况忽略
     ($($x: expr), *) => {
         {
             let mut temp_vec = Vec::new();
-          
           // 重复匹配到的值在这里访问
             $(
                 temp_vec.push($x);
             )*
-          
             temp_vec
         }
     };
@@ -101,6 +100,7 @@ macro_rules! my_vec {
 #![allow(unused)]
 macro_rules! hashmap {
   // 利用递归调用消去最后键值对的结尾逗号
+  // 如果是末尾仍有逗号的，会转换成($($key:expr => $value:expr),*)
     ($($key:expr => $value:expr,)*) =>
         {  hashmap!($($key => $value),*) };
     ($($key:expr => $value:expr),* ) => {
