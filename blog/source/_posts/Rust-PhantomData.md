@@ -108,3 +108,4 @@ struct Vec<T> {
 | `PhantomData<Cell<&'a ()>>` | invariant | -                         |
 
 (*) 如果发生变性的冲突，这个是不变的。
+

@@ -159,3 +159,4 @@ PBKDF2简单而言就是将salted hash进行多次重复计算，这个次数是
 [如何生成安全的密码 Hash：MD5, SHA, PBKDF2, BCrypt 示例](https://www.cnblogs.com/interdrp/p/4935819.html)
 
 [scrypt - Tarsnap](https://www.tarsnap.com/scrypt/scrypt-slides.pdf)
+
