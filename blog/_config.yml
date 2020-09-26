@@ -103,5 +103,6 @@ deploy:
   repo: 
         github: git@github.com:JNhua/JNhua.github.io.git
         # coding: git@git.dev.tencent.com:JNhua/JNhua.coding.me.git
+        my: git@47.103.200.176:/home/git/repos/blog.git
   branch: master
 
