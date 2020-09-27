@@ -1,11 +1,10 @@
 ---
 title: clion-remote-rust
+categories:
+  - Other
+tags: []
 copyright: true
 date: 2020-09-07 10:05:55
-categories:
-- Other
-tags:
-- 远程调试
 ---
 
 # 目标
@@ -61,4 +60,5 @@ tags:
 ## 调试设置
 
 添加GDB Remote Debug，就可以本地测试啦。
+
 
