@@ -85,7 +85,7 @@ byte b = (byte)i;
 # 修饰符
 ## 访问控制
 
-![image-20200325153359075](JavaBasics/image-20200325153359075.png)
+![image-20200325153359075](http://image-jennerblog.test.upcdn.net/img/image-20200325153359075.png)
 
 ### 默认访问修饰符-不使用任何关键字
 
@@ -384,11 +384,11 @@ Scanner s = new Scanner(System.in);
 
 在读取前我们一般需要 使用 hasNext 与 hasNextLine 判断是否还有输入的数据。
 
-![img](JavaBasics/iostream2xx.png)
+![iostream2xx](http://image-jennerblog.test.upcdn.net/img/iostream2xx.png)
 
 # Java 异常处理
 
-![exception](JavaBasics/exception.jpg)
+![exception](http://image-jennerblog.test.upcdn.net/img/exception.jpg)
 
 java中的异常分为两大类，强制性异常(CheckedException)和非强制性异常(UncheckedException)。而java中除了RuntimeException外，都是强制性异常。 
 

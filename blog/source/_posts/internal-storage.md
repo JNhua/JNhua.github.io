@@ -12,11 +12,11 @@ tags:
 
 <!-- more -->
 
-<img src="internal-storage/execute.png" alt="java程序执行流程" style="zoom:70%;" />
+![execute](http://image-jennerblog.test.upcdn.net/img/execute.png)
 
 # 编译
 
-![img](internal-storage/javadebug.gif)
+![jvmdebug](http://image-jennerblog.test.upcdn.net/img/jvmdebug.gif)
 
 Java 源码编译由以下三个过程组成：
 
@@ -34,7 +34,7 @@ Java 源码编译由以下三个过程组成：
 
 ## 类加载的生命周期（JVM执行class字节码）
 
-![lifetime](internal-storage/lifetime.png)
+![lifetime](http://image-jennerblog.test.upcdn.net/img/lifetime.png)
 
 ### 加载（loading）
 
@@ -78,7 +78,7 @@ Java 源码编译由以下三个过程组成：
 
 ## 实例：Tomcat的类加载器
 
-<img src="internal-storage/tomcat.jpg" alt="tomcat" style="zoom:50%;" />
+![tomcat](http://image-jennerblog.test.upcdn.net/img/tomcat.jpg)
 
 Tomcat自定义了Common、Catalina、Shared等类加载器，其实就是用来加载Tomcat自己的一些核心基础类库的。
 
@@ -94,9 +94,9 @@ Tomcat自定义了Common、Catalina、Shared等类加载器，其实就是用来
 
 运行时数据区，是常说的JVM内存。因此，在Java中我们常常说到的内存管理就是针对这段空间进行管理（如何分配和回收内存空间）。
 
-<img src="internal-storage/memory.png" alt="数据区" style="zoom:67%;" />
+![memory](http://image-jennerblog.test.upcdn.net/img/memory.png)
 
-![各内存区](internal-storage/memory2.png)
+![memory2](http://image-jennerblog.test.upcdn.net/img/memory2.png)
 
 #### 方法区
 
@@ -141,7 +141,7 @@ JDK1.8对JVM架构的改造将类元数据放到本地内存中，另外，将�
 
 堆被划分为新生代和老年代，新生代又被进一步划分为 Eden 和 Survivor 区，最后 Survivor 由 From Survivor 和 To Survivor 组成。
 
-![img](internal-storage/heap.png)
+![heap](http://image-jennerblog.test.upcdn.net/img/heap.png)
 
 新生代中存放的对象用完即回收。老年代中存放长久存活的对象，例如：多次被静态方法调用的静态对象，并且没有被触发回收。
 
@@ -193,7 +193,7 @@ jvm只有一个堆区(heap)被所有线程共享，堆中不存放基本类型�
 
 # 执行
 
-![img](internal-storage/jvmdebug.gif)
+![jvmdebug](http://image-jennerblog.test.upcdn.net/img/jvmdebug.gif)
 
 执行字节码指令时，需要用到“程序计数器”。
 

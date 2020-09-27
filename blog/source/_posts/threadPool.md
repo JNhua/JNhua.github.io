@@ -14,7 +14,7 @@ tags:
 
 <!-- more-->
 
-​	![api](threadPool/api.png)
+![api](http://image-jennerblog.test.upcdn.net/img/api.png)
 
 ## 构造函数
 
@@ -141,7 +141,7 @@ IO型任务：根据具体的IO阻塞时长考虑
 
 # 工作流程
 
-![workorder](threadPool/workorder.png)
+![workorder](http://image-jennerblog.test.upcdn.net/img/workorder.png)
 
 ## API
 * 接口Executor：定义了执行任务的`execute()`；
@@ -190,7 +190,7 @@ public void execute(Runnable command) {
 3. 是否达到线程池最大数量？没达到，则创建一个新的工作线程来执行任务（加开的线程如果没有任务会自动销毁）；
 4. 最后，拒绝执行。
 
-![execute](threadPool/execute.png)
+![execute](http://image-jennerblog.test.upcdn.net/img/execute.png)
 
 ### addWorker
 
@@ -266,7 +266,7 @@ public void execute(Runnable command) {
   }
   ```
 
-![addWorker](threadPool/addworker.png)
+![addworker](http://image-jennerblog.test.upcdn.net/img/addworker.png)
 
 ## Worker
 
@@ -340,9 +340,9 @@ final void runWorker(Worker w) {
 }
 ```
 
-![worker](threadPool/runWorkerflow.png)
+![runworkerflow](http://image-jennerblog.test.upcdn.net/img/runworkerflow.png)
 
-![runworker](threadPool/runworker.png)
+![runworker](http://image-jennerblog.test.upcdn.net/img/runworker.png)
 
 #### getTask
 

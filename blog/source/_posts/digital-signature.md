@@ -20,9 +20,7 @@ mathjax: true
 
 RSA算法的具体描述如下：
 
-（1）任意选取两个不同的大素数p和q计算乘积
-
-![image-20200909161240886](digital-signature/image-20200909161240886.png)
+（1）任意选取两个不同的大素数p和q计算乘积$n=pq, φ(n)=(p-1)(q-1);$
 
 n的二进制长度是密钥长度。实际应用中，RSA密钥一般是1024位，重要场合则为2048位。
 
@@ -32,17 +30,9 @@ n的二进制长度是密钥长度。实际应用中，RSA密钥一般是1024位
 
 （4）公开整数n和e，秘密保存d ；
 
-（5）将明文m（m<n是一个整数）加密成密文c，加密算法为
+（5）将明文m（m<n是一个整数）加密成密文c，加密算法为$c=E(m)=m^emodn$ , n和e为公钥；
 
-![image-20200909161524987](digital-signature/image-20200909161524987.png)
-
-n和e为公钥；
-
-（6）将密文c解密为明文m，解密算法为
-
-![image-20200909161536272](digital-signature/image-20200909161536272.png)
-
-n和d为私钥；
+（6）将密文c解密为明文m，解密算法为$m=D(c)=c^dmodn$，n和d为私钥；
 
 然而只根据n和e（注意：不是p和q）要计算出d是不可能的。因此，任何人都可对明文进行加密，但只有授权用户（知道d）才可对密文解密。
 
@@ -144,17 +134,17 @@ Alice 使用算法来签名的步骤如下：
 
 我们从  $P=u_1G + u_2H_A$ 开始，通过公钥的定义我们知道 $H_A = d_A G$ （  $d_A$是私钥），所以我们得到：
 
-![image-20200909163306958](digital-signature/image-20200909163306958.png)
+![image-20200909163306958](http://image-jennerblog.test.upcdn.net/img/image-20200909163306958.png)
 
 使用 $u_1$ 和  $u2$的定义，可以得到：
 
-![image-20200909163321840](digital-signature/image-20200909163321840.png)
+![image-20200909163321840](http://image-jennerblog.test.upcdn.net/img/image-20200909163321840.png)
 
 这里为了简单先忽略 mod n ，因为由 G 生成的循环子群的阶为 n ，所以这里的 mod n 其实也是没必要的。
 
 再往前，我们定义了 $s = k^{-1}(z+rd_A)[mod]n$ ，式子两边同乘以  k再同除  s，也就是:$k=s^{-1}(z+rd_A)[mod]n$，把这个结果带到上面关于 P 的等式中得到：
 
-![image-20200909163510588](digital-signature/image-20200909163510588.png)
+![image-20200909163510588](http://image-jennerblog.test.upcdn.net/img/image-20200909163510588.png)
 
 # Schnorr
 

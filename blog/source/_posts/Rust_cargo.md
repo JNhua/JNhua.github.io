@@ -66,7 +66,7 @@ Note：`Cargo`默认把连字符替换为下划线。
 
 如果存在与文件名同名的目录，则该目录下的模块都是该文件的子模块。
 
-![src目录结构](Rust_cargo/1.png)
+![1](http://image-jennerblog.test.upcdn.net/img/1.png)
 
 `read_func.rs`
 

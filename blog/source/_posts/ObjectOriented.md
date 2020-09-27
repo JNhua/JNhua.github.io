@@ -14,7 +14,7 @@ tags:
 
 需要注意的是 Java 不支持多继承，但支持多重继承。
 
-![img](ObjectOriented/types_of_inheritance-1.png)
+![types_of_inheritance-1](http://image-jennerblog.test.upcdn.net/img/types_of_inheritance-1.png)
 
 <!-- more -->
 

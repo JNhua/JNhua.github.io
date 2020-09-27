@@ -11,7 +11,7 @@ tags:
 
 以太坊的每个外部账户都是由一对密钥定义的。下图是比特币公私钥与账户地址的关系。
 
-<div align=center><img width="650" height="200" src="keystore/1.jpg"/></div> 
+![1](http://image-jennerblog.test.upcdn.net/img/1.jpg)
 
 <!-- more -->
 
@@ -89,9 +89,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 所以，您需要先得到**解密密钥**。实际上，记住你设置的密码即可，下小节讲解。
 
-<div align=center><img width="650" height="300" src="keystore/2.png"/></div> 
-
-<center>密文的对称解密</center>
+![2](http://image-jennerblog.test.upcdn.net/img/2.png)
 
 ## 2.用密码保护它
 
@@ -103,6 +101,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 - **kdf**是用于从密码短语计算（或“衍生”）**解密密钥**的密钥派生函数。这里，**kdf**的值是*scrypt* **。**
 - **kdfparams**是{% post_link KDF之Scrypt *scrypt* %}函数所需的参数。这里，*dklen*，*n*，*r*，*p*和*salt*是**kdf**函数的参数。
+  
   * `dklen：32`，- 派生密钥长度（以字节为单位）。对于某些密码设置，这必须匹配那些块大小。小于等于(2^32 - 1) * 32的正整数。
   * `n：262144`，- 迭代计数。geth的默认值为262144。 n 和 r 决定了占用的内存区域大小和哈希迭代次数（占用的内存大小为 128⋅n⋅r bytes，迭代次数为 2⋅n⋅r），可以修改的参数是 n。把 n 值定在 65536，这样可以兼容大部分低端配置的手机。必须大于1，是2的幂且小于2^(128 * r / 8)。
   *  `r：8`，- 底层散列的块大小，默认为8。决定了连续读大小（sequential read size），通常不应该修改。
@@ -125,9 +124,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 在这里，使用**kdfparams**参数调整*scrypt*函数并将其**输入**密码，您将获得我们的**解密密钥**作为密钥派生函数的输出。
 
-<div align=center><img width="650" height="300" src="keystore/3.png"/></div> 
-
-<center>密码短语的关键衍生功能</center>
+![3](http://image-jennerblog.test.upcdn.net/img/3.png)
 
 ## 3.确保您的密码是正确的
 
@@ -141,7 +138,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 在与**mac**进行比较之前，将**解密密钥**（仅第二个最左边的16个字节）和**密文**进行连接和散列（SHA3-256）。更多信息[在这里](https://github.com/hashcat/hashcat/issues/1228)。
 
-<div align=center><img width="700" height="300" src="keystore/4.png"/></div> 
+![4](http://image-jennerblog.test.upcdn.net/img/4.png)
 
 # 总结
 
@@ -149,7 +146,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 瞧！解密的结果是您的以太网私钥。您可以在这里查看整个过程：
 
-<div align=center><img width="750" height="360" src="keystore/5.png"/></div> 
+![5](http://image-jennerblog.test.upcdn.net/img/5.png)
 
 从图中可以看出，你的密码作为唯一的输入，你的以太网私钥作为唯一的输出。创建新的以太坊帐户时生成的keystore文件中提供了所需的其他信息。
 

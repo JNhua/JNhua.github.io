@@ -17,7 +17,7 @@ tags:
 
 # 钱包分类
 
-![image](wallet-introduction/1.jpg)
+![钱包分类](http://image-jennerblog.test.upcdn.net/img/%E9%92%B1%E5%8C%85%E5%88%86%E7%B1%BB.jpg)
 
 # 钱包发展历史
 

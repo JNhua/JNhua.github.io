@@ -24,9 +24,17 @@ tags:
 合约账户可以设置多重签名（multisign），比如一个简单示例是：现有一个合约账户，它要求一个转账由发起转账的人（Alice）和另一个人（Charles）签名均可。因此，当 Alice 通过这个合约向 Bob 转账 20 个 ETH 时，合约会通知 Charles 签名，在他签名后，Bob 才可以收到这 20 个 ETH。
 ## 交易结构
 ### 比特币
-交易结构：![交易结构](baseChain/交易结构.png)
-交易输入结构：![交易输入结构](baseChain/交易输入.png)
-交易输出结构：![交易输出](baseChain/交易输出.png)
+交易结构：
+
+![交易结构](http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E7%BB%93%E6%9E%84.png)
+
+交易输入结构：
+
+![交易输入](http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E8%BE%93%E5%85%A5.png)
+
+交易输出结构：
+
+![交易输出](http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E8%BE%93%E5%87%BA.png)
 
 ### 以太坊
 和比特币一样，以太坊的区块中存储的也是交易（transaction），它包括的字段主要有：接受者（接受的账户）、发送者的签名、发送者发给接受者的以太币金额等。
@@ -70,8 +78,12 @@ tags:
 8.构成输入部分
 #### 验证流程
 解锁脚本先进行入栈，然后锁定脚本入栈计算。
-如最为常见类型的比特币交易脚本（支付到公钥哈希：P2PKH（Pay-to-Public-Key-Hash））组合是这样：![d6d63e25337d1154d5b2f56eaf0d0472.jpeg](evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2196)
+如最为常见类型的比特币交易脚本（支付到公钥哈希：P2PKH（Pay-to-Public-Key-Hash））组合是这样：
+
+![脚本](http://image-jennerblog.test.upcdn.net/img/20200927144918.png)
+
 验证解锁脚本中的`PubK`（验证`PubKHash`）与`sig`（公钥验证）与锁定脚本的计算结果是否一致。
+
 ### 以太坊
 #### 验证交易的有效性
 * 数据量必须<32KB
@@ -89,11 +101,11 @@ tags:
 # 区块
 ## 区块结构
 ### 比特币
-![区块信息](baseChain/区块信息.png)
+![区块信息](http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97%E4%BF%A1%E6%81%AF.png)
 区块结构
-![区块](baseChain/区块.png)
+![区块](http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97.png)
 区块头
-![区块头](baseChain/区块头.png)
+![区块头](http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97%E5%A4%B4.png)
 
 ### 以太坊
 * ParentHash:父块的哈希值
