@@ -637,19 +637,19 @@ Rust不会自动创建“深拷贝”，需要自己用`Clone()`。但是，如�
 
 实现Copy的类型在堆上没有资源，值完全处于栈上。浅拷贝后，源与目标对象都可以访问，是独立的数据。为了`#[derive(Copy, Clone)]`工作，成员也必须实现`Copy`。
 
-> 在派生语句中的Clone是需要的，因为Copy的定义类似这样:pub trait Copy:Clone {}，即要实现Copy需要先实现Clone
+> 在派生语句中的Clone是需要的，因为Copy的定义类似这样:pub trait Copy:Clone {}，即要实现Copy需要先实现Clone。clone方法应该和Copy语义相容，等同于按位拷贝。
 
-Copy与Drop不能同时存在。
+Copy与Drop不能同时存在，原因见下面。
 
 ### Drop
 
 变量在离开作用范围时，编译器会自动销毁变量，如果变量类型有`Drop` trait，就先调用`Drop::drop`方法，做资源清理，一般会回收heap内存等资源，然后再收回变量所占用的stack内存。如果变量没有`Drop` trait，那就只收回stack内存。
 
-如果类型实现了`Copy` trait，在copy语义中并不会调用`Clone::clone`方法，不会做deep copy，那就会出现两个变量同时拥有一个资源（比如说是heap内存等），在这两个变量离开作用范围时，会分别调用`Drop::drop`方法释放资源，这就会出现double free错误。
+如果类型实现了`Copy` trait，在copy语义中并不会做deep copy，那就会出现两个变量同时拥有一个资源（比如说是heap内存等），在这两个变量离开作用范围时，会分别调用`Drop::drop`方法释放资源，这就会出现double free错误。所以Copy与Drop不能同时存在。
 
 ### Clone
 
-帮助实现“深拷贝”。
+根据不同的类型，实现不同的复制语义。例如对于Box类型，执行“深拷贝”。对于Rc类型，仅仅把引用计数加1。
 
 ## 释放
 
@@ -847,6 +847,8 @@ struct A {
 `Box`将数据从栈上移动到堆，栈上存放指向堆数据的指针。
 
 ```rust
+pub struct Box<T: ?Sized>(Unique<T>);
+
 struct Ocean {
     animals: Vec<Box<dyn NoiseMaker>>,
 }
@@ -866,6 +868,11 @@ let ocean = Ocean {
 引用计数指针，将数据从栈上移动到堆。允许其他`Rc`指针**不可变引用**同一个数据。单线程。
 
 ```rust
+pub struct Rc<T: ?Sized> {
+    ptr: NonNull<RcBox<T>>,
+    phantom: PhantomData<RcBox<T>>,
+}
+
 let heap_pie = Rc::new(Pie);
 let heap_pie2 = heap_pie.clone();
 
@@ -880,6 +887,11 @@ heap_pie.eat();
 一个智能指针容器。可变与不可变引用都可以，引用规则与之前一样。单线程。
 
 ```rust
+pub struct RefCell<T: ?Sized> {
+    borrow: Cell<BorrowFlag>,
+    value: UnsafeCell<T>,
+}
+
 fn main() {
     // RefCell validates memory safety at runtime
     // notice: pie_cell is not mut!
@@ -926,7 +938,7 @@ fn main() {
     if let Some(link) = a.tail() {
         *link.borrow_mut() = Rc::downgrade(&b);
     }
-    // 3, a strong count = 1, weak count = 1
+  // 3, a strong count = 1, weak count = 1
 	// 3, b strong count = 1, weak count = 1
 	// 3, a tail = Some(RefCell { value: (Weak) })
 }

@@ -29,7 +29,7 @@ Raft与Paxos在私链、分布式数据库中使用。
 #### heartbeat
 
 leader以心跳周期给followers发送Append entry，直到出现新的term的leader，回到follower状态。
-如果ollower在election timeout内没有收到心跳，以候选人开启新的term，选出新的leader。
+如果follower在election timeout内没有收到心跳，以候选人开启新的term，选出新的leader。
 
 ## 任期
 
