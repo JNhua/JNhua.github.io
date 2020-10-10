@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="OCW喂价什么时候使用OCW 例如：长时间运行的任务、外部服务请求（http）、数据的加解密和签名等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Off-Chain Workers喂价">
+<meta property="og:url" content="http://munan.tech/2020/03/23/offchainWorker/index.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="OCW喂价什么时候使用OCW 例如：长时间运行的任务、外部服务请求（http）、数据的加解密和签名等。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/off-chain-workers-v2.png">
+<meta property="article:published_time" content="2020-03-23T08:34:51.000Z">
+<meta property="article:modified_time" content="2020-10-06T09:54:00.339Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust">
+<meta property="article:tag" content="区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image-jennerblog.test.upcdn.net/img/off-chain-workers-v2.png">
+
+<link rel="canonical" href="http://munan.tech/2020/03/23/offchainWorker/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true
+  };
+</script>
+
+  <title>Off-Chain Workers喂价 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jenner's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/2020/03/23/offchainWorker/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Off-Chain Workers喂价
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-23 16:34:51" itemprop="dateCreated datePublished" datetime="2020-03-23T16:34:51+08:00">2020-03-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-06 17:54:00" itemprop="dateModified" datetime="2020-10-06T17:54:00+08:00">2020-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/" itemprop="url" rel="index"><span itemprop="name">BlockChain</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/Substrate/" itemprop="url" rel="index"><span itemprop="name">Substrate</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/Substrate/base/" itemprop="url" rel="index"><span itemprop="name">base</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/23/offchainWorker/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/03/23/offchainWorker/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="OCW喂价"><a href="#OCW喂价" class="headerlink" title="OCW喂价"></a>OCW喂价</h1><h2 id="什么时候使用OCW"><a href="#什么时候使用OCW" class="headerlink" title="什么时候使用OCW"></a>什么时候使用OCW</h2><p><img src="http://image-jennerblog.test.upcdn.net/img/off-chain-workers-v2.png" alt="off-chain-workers-v2"></p>
+<p>例如：长时间运行的任务、外部服务请求（http）、数据的加解密和签名等。</p>
+<a id="more"></a>
+<h2 id="在Runtime中使用"><a href="#在Runtime中使用" class="headerlink" title="在Runtime中使用"></a>在Runtime中使用</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// For better debugging (printout) support</span></span><br><span class="line"><span class="keyword">use</span> support::&#123; debug, dispatch &#125;;</span><br><span class="line"><span class="keyword">use</span> system::offchain;</span><br><span class="line"><span class="keyword">use</span> sp_runtime::transaction_validity::&#123;</span><br><span class="line">  TransactionValidity, TransactionLongevity, ValidTransaction, InvalidTransaction</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>在配置 trait 中包括以下关联类型，用于从链下工作机发送已签名和未签名的交易。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">trait</span> <span class="title">Trait</span></span>: timestamp::Trait + system::Trait &#123;</span><br><span class="line">  <span class="comment">/// 总的事件类型</span></span><br><span class="line">  <span class="class"><span class="keyword">type</span> <span class="title">Event</span></span>: <span class="built_in">From</span>&lt;Event&lt;<span class="keyword">Self</span>&gt;&gt; + <span class="built_in">Into</span>&lt;&lt;<span class="keyword">Self</span> <span class="keyword">as</span> system::Trait&gt;::Event&gt;;</span><br><span class="line">  <span class="class"><span class="keyword">type</span> <span class="title">Call</span></span>: <span class="built_in">From</span>&lt;Call&lt;<span class="keyword">Self</span>&gt;&gt;;</span><br><span class="line">  <span class="class"><span class="keyword">type</span> <span class="title">SubmitUnsignedTransaction</span></span>: offchain::SubmitUnsignedTransaction&lt;<span class="keyword">Self</span>, &lt;<span class="keyword">Self</span> <span class="keyword">as</span> Trait&gt;::Call&gt;;</span><br><span class="line">  <span class="class"><span class="keyword">type</span> <span class="title">BlockFetchDur</span></span> = BlockFetchDur;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在宏 <code>decl_module！</code> 模块中，定义 <code>offchain_worker</code> 函数。此函数作为链下工作机的入口点，并在每次导入区块后运行。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">decl_module! &#123;</span><br><span class="line">  <span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Module</span></span>&lt;T: Trait&gt; <span class="keyword">for</span> <span class="class"><span class="keyword">enum</span> <span class="title">Call</span></span> <span class="keyword">where</span> origin: T::Origin &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">offchain_worker</span></span>(block_number: T::BlockNumber) &#123;</span><br><span class="line">      <span class="keyword">let</span> duration = T::BlockFetchDur::get();</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Type I task: fetch price</span></span><br><span class="line">      <span class="keyword">if</span> duration &gt; <span class="number">0</span>.into() &amp;&amp; block % duration == <span class="number">0</span>.into() &#123;</span><br><span class="line">        <span class="keyword">for</span> (sym, remote_src, remote_url) <span class="keyword">in</span> FETCHED_CRYPTOS.iter() &#123;</span><br><span class="line">          <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Err</span>(e) = Self::fetch_price(block, *sym, *remote_src, *remote_url) &#123;</span><br><span class="line">            debug::error!(<span class="string">"Error fetching: &#123;:?&#125;, &#123;:?&#125;: &#123;:?&#125;"</span>,</span><br><span class="line">              core::<span class="built_in">str</span>::from_utf8(sym).unwrap(),</span><br><span class="line">              core::<span class="built_in">str</span>::from_utf8(remote_src).unwrap(),</span><br><span class="line">              e);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Type II task: aggregate price</span></span><br><span class="line">      &lt;TokenSrcPPMap&lt;T&gt;&gt;::enumerate()</span><br><span class="line">        <span class="comment">// filter those to be updated</span></span><br><span class="line">        .filter(|(_, vec)| vec.len() &gt; <span class="number">0</span>)</span><br><span class="line">        .for_each(|(sym, _)| &#123;</span><br><span class="line">          <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Err</span>(e) = Self::aggregate_pp(block, &amp;sym) &#123;</span><br><span class="line">            debug::error!(<span class="string">"Error aggregating price of &#123;:?&#125;: &#123;:?&#125;"</span>,</span><br><span class="line">              core::<span class="built_in">str</span>::from_utf8(&amp;sym).unwrap(), e);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125; <span class="comment">// end of `fn offchain_worker()`</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>默认情况下，链下工作机无法直接访问用户密钥（即使在开发环境中），由于安全原因，只能访问应用特定的子密钥（subkeys）。需要在 runtime 顶部定义 <code>KeyTypeId</code> 用于将应用特定的子密钥分组，如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 密钥类型ID可以是任何4个字符的字符串</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">const</span> KEY_TYPE: KeyTypeId = KeyTypeId(*<span class="string">b"btc!"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">mod</span> crypto &#123;</span><br><span class="line">  <span class="keyword">pub</span> <span class="keyword">use</span> super::KEY_TYPE;</span><br><span class="line">  <span class="keyword">use</span> sp_runtime::app_crypto::&#123;app_crypto, sr25519&#125;;</span><br><span class="line">  app_crypto!(sr25519, KEY_TYPE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>和任何其他 pallet 一样，runtime 必须实现 pallet 的配置 trait。进入位于 <code>runtime/src/lib.rs</code> 的 runtime <code>lib.rs</code>。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义交易签名人</span></span><br><span class="line"><span class="class"><span class="keyword">type</span> <span class="title">SubmitTransaction</span></span> = system::offchain::TransactionSubmitter&lt;</span><br><span class="line">  offchain_pallet::crypto::Public, Runtime, UncheckedExtrinsic&gt;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> price_fetch::Trait <span class="keyword">for</span> Runtime &#123;</span><br><span class="line">	<span class="class"><span class="keyword">type</span> <span class="title">Event</span></span> = Event;</span><br><span class="line">	<span class="class"><span class="keyword">type</span> <span class="title">Call</span></span> = Call;</span><br><span class="line">	<span class="class"><span class="keyword">type</span> <span class="title">SubmitUnsignedTransaction</span></span> = SubmitPFTransaction;</span><br><span class="line">	<span class="class"><span class="keyword">type</span> <span class="title">BlockFetchDur</span></span> = BlockFetchDur;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在宏 <code>contrast_runtime!</code> 中，将所有不同的 pallet 作为 runtime 的一部分。 如果在链下工作机中使用未签名的交易，则添加另外一个参数 <code>ValidateUnsigned</code>。需要为此编写自定义验证逻辑。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">construct_runtime!(</span><br><span class="line">  <span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">Runtime</span></span> <span class="keyword">where</span></span><br><span class="line">    Block = Block,</span><br><span class="line">    NodeBlock = opaque::Block,</span><br><span class="line">    UncheckedExtrinsic = UncheckedExtrinsic</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用未签名交易</span></span><br><span class="line">    PriceFetch: price_fetch::&#123;Module, Call, Storage, Event&lt;T&gt;, ValidateUnsigned&#125;,</span><br><span class="line">  &#125;</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<h3 id="在-service-rs-中添加密钥（Keys）"><a href="#在-service-rs-中添加密钥（Keys）" class="headerlink" title="在 service.rs 中添加密钥（Keys）"></a>在 <code>service.rs</code> 中添加密钥（Keys）</h3><p>使用<code>KeyTypeId</code>指定本地密钥库来存储特定于应用的密钥，链下工作机可以访问这些密钥来签署交易。需要通过以下两种方式之一添加密钥。</p>
+<h3 id="选项-1（开发阶段）：添加第一个用户密钥作为应用的子密钥"><a href="#选项-1（开发阶段）：添加第一个用户密钥作为应用的子密钥" class="headerlink" title="选项 1（开发阶段）：添加第一个用户密钥作为应用的子密钥"></a>选项 1（开发阶段）：添加第一个用户密钥作为应用的子密钥</h3><p>在开发环境中，可以添加第一个用户的密钥作为应用的子密钥。更新 <code>node/src/service.rs</code> 如下所示。该config的参数需要在启动结点时，加入参数。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">new_full</span></span>&lt;C: <span class="built_in">Send</span> + <span class="built_in">Default</span> + <span class="symbol">'static</span>&gt;(config: Configuration&lt;C, GenesisConfig&gt;)</span><br><span class="line">  -&gt; <span class="built_in">Result</span>&lt;<span class="keyword">impl</span> AbstractService, ServiceError&gt;</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 给Alice clone密钥</span></span><br><span class="line">  <span class="keyword">let</span> dev_seed = config.dev_key_seed.clone();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">let</span> service = builder.with_network_protocol(|_| <span class="literal">Ok</span>(NodeProtocol::new()))?</span><br><span class="line">    .with_finality_proof_provider(|client, backend|</span><br><span class="line">      <span class="literal">Ok</span>(Arc::new(GrandpaFinalityProofProvider::new(backend, client)) <span class="keyword">as</span> _)</span><br><span class="line">    )?</span><br><span class="line">    .build()?;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 添加以下部分以将密钥添加到keystore</span></span><br><span class="line">  <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(seed) = dev_seed &#123;</span><br><span class="line">    service</span><br><span class="line">      .keystore()</span><br><span class="line">      .write()</span><br><span class="line">      .insert_ephemeral_from_seed_by_type::&lt;runtime::offchain_pallet::crypto::Pair&gt;(</span><br><span class="line">        &amp;seed,</span><br><span class="line">        runtime::offchain_pallet::KEY_TYPE,</span><br><span class="line">      )</span><br><span class="line">      .expect(<span class="string">"Dev Seed should always succeed."</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样就可以签名交易了。这仅对 <strong>开发阶段</strong> 有利。</p>
+<h3 id="选项2：通过-CLI-添加应用的子密钥"><a href="#选项2：通过-CLI-添加应用的子密钥" class="headerlink" title="选项2：通过 CLI 添加应用的子密钥"></a>选项2：通过 CLI 添加应用的子密钥</h3><p>在更实际的环境中，在设置 Substrate 节点后，可以通过命令行接口添加一个新的应用子密钥。如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># 生成一个新帐户</span><br><span class="line">$ subkey -s generate</span><br><span class="line"></span><br><span class="line"># 通过RPC提交一个新密钥</span><br><span class="line">$ curl -X POST -vk <span class="symbol">'http</span>:<span class="comment">//localhost:9933' -H "Content-Type:application/json;charset=utf-8" \</span></span><br><span class="line">  -d '&#123;</span><br><span class="line">    <span class="string">"jsonrpc"</span>:<span class="number">2.0</span>,</span><br><span class="line">    <span class="string">"id"</span>:<span class="number">1</span>,</span><br><span class="line">    <span class="string">"method"</span>:<span class="string">"author_insertKey"</span>,</span><br><span class="line">    <span class="string">"params"</span>: [</span><br><span class="line">      <span class="string">"&lt;YourKeyTypeId&gt;"</span>,</span><br><span class="line">      <span class="string">"&lt;YourSeedPhrase&gt;"</span>,</span><br><span class="line">      <span class="string">"&lt;YourPublicKey&gt;"</span></span><br><span class="line">    ]</span><br><span class="line">  &#125;'</span><br></pre></td></tr></table></figure>
+<p>新密钥已添加到本地密钥库（keystore）中。</p>
+<h3 id="未签名交易"><a href="#未签名交易" class="headerlink" title="未签名交易"></a>未签名交易</h3><p>使用以下代码，可以将未签名的交易发送回链。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">decl_module! &#123;</span><br><span class="line">  <span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Module</span></span>&lt;T: Trait&gt; <span class="keyword">for</span> <span class="class"><span class="keyword">enum</span> <span class="title">Call</span></span> <span class="keyword">where</span> origin: T::Origin &#123;</span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">record_price</span></span>(</span><br><span class="line">      origin,</span><br><span class="line">      _block: T::BlockNumber,</span><br><span class="line">      crypto_info: (StrVecBytes, StrVecBytes, StrVecBytes),</span><br><span class="line">      price: <span class="built_in">u64</span></span><br><span class="line">    ) -&gt; dispatch::DispatchResult &#123;</span><br><span class="line">      <span class="comment">// Ensuring this is an unsigned tx</span></span><br><span class="line">      ensure_none(origin)?;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">let</span> (sym, remote_src) = (crypto_info.<span class="number">0</span>, crypto_info.<span class="number">1</span>);</span><br><span class="line">      <span class="keyword">let</span> now = &lt;timestamp::Module&lt;T&gt;&gt;::get();</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Debug printout</span></span><br><span class="line">      debug::info!(<span class="string">"record_price: &#123;:?&#125;, &#123;:?&#125;, &#123;:?&#125;"</span>,</span><br><span class="line">        core::<span class="built_in">str</span>::from_utf8(&amp;sym).map_err(|_| <span class="string">"`sym` conversion error"</span>)?,</span><br><span class="line">        core::<span class="built_in">str</span>::from_utf8(&amp;remote_src).map_err(|_| <span class="string">"`remote_src` conversion error"</span>)?,</span><br><span class="line">        price</span><br><span class="line">      );</span><br><span class="line"></span><br><span class="line">      &lt;TokenSrcPPMap&lt;T&gt;&gt;::mutate(&amp;sym, |pp_vec| pp_vec.push((now, price)));</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Spit out an event and Add to storage</span></span><br><span class="line">      Self::deposit_event(RawEvent::FetchedPrice(sym, remote_src, now, price));</span><br><span class="line"></span><br><span class="line">      <span class="literal">Ok</span>(())</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">offchain_worker</span></span>(block: T::BlockNumber) &#123;</span><br><span class="line">      <span class="comment">// -- snip --</span></span><br><span class="line">      <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Err</span>(e) = Self::fetch_price(block, *sym, *remote_src, *remote_url)&#123;</span><br><span class="line">     			<span class="comment">// ...</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">fetch_price</span></span>&lt;<span class="symbol">'a</span>&gt;(</span><br><span class="line">        block: T::BlockNumber,</span><br><span class="line">        sym: &amp;<span class="symbol">'a</span> [<span class="built_in">u8</span>],</span><br><span class="line">        remote_src: &amp;<span class="symbol">'a</span> [<span class="built_in">u8</span>],</span><br><span class="line">        remote_url: &amp;<span class="symbol">'a</span> [<span class="built_in">u8</span>]</span><br><span class="line">    ) -&gt; <span class="built_in">Result</span>&lt;()&gt; &#123;</span><br><span class="line">      debug::info!(<span class="string">"fetch price: &#123;:?&#125;:&#123;:?&#125;"</span>,</span><br><span class="line">        core::<span class="built_in">str</span>::from_utf8(sym).unwrap(),</span><br><span class="line">        core::<span class="built_in">str</span>::from_utf8(remote_src).unwrap()</span><br><span class="line">      );</span><br><span class="line">      <span class="keyword">let</span> json = Self::fetch_json(remote_url)?;</span><br><span class="line">      <span class="keyword">let</span> price = <span class="keyword">match</span> remote_src &#123;</span><br><span class="line">        <span class="comment">// -- snip --</span></span><br><span class="line">      &#125;?;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 这里指定下一个区块导入阶段的链上回调函数。</span></span><br><span class="line">      <span class="keyword">let</span> call = Call::record_price(</span><br><span class="line">        block,</span><br><span class="line">        (sym.to_vec(), remote_src.to_vec(), remote_url.to_vec()),</span><br><span class="line">        price</span><br><span class="line">      );</span><br><span class="line">      <span class="comment">// Unsigned tx</span></span><br><span class="line">      T::SubmitUnsignedTransaction::submit_unsigned(call)</span><br><span class="line">        .map_err(|_| <span class="string">"fetch_price: submit_unsigned(call) error"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>默认情况下，所有未签名的交易都被视为无效交易。需要在<code>my_offchain_worker.rs</code>中添加以下代码段，以显式允许提交未签名的交易。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">decl_module! &#123;</span><br><span class="line">  <span class="comment">// --snip--</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T: Trait&gt; Module&lt;T&gt; &#123;</span><br><span class="line">  <span class="comment">// --snip--</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[allow(deprecated)]</span></span><br><span class="line"><span class="keyword">impl</span>&lt;T: Trait&gt; support::unsigned::ValidateUnsigned <span class="keyword">for</span> Module&lt;T&gt; &#123;</span><br><span class="line">  <span class="class"><span class="keyword">type</span> <span class="title">Call</span></span> = Call&lt;T&gt;;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">fn</span> <span class="title">validate_unsigned</span></span>(call: &amp;Self::Call) -&gt; TransactionValidity &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">match</span> call &#123;</span><br><span class="line">      Call::record_price(block, input) =&gt; <span class="literal">Ok</span>(ValidTransaction &#123;</span><br><span class="line">        priority: <span class="number">0</span>,</span><br><span class="line">        requires: <span class="built_in">vec!</span>[],</span><br><span class="line">        provides: <span class="built_in">vec!</span>[(block, input).encode()],</span><br><span class="line">        longevity: TransactionLongevity::max_value(),</span><br><span class="line">        propagate: <span class="literal">true</span>,</span><br><span class="line">      &#125;),</span><br><span class="line">      _ =&gt; InvalidTransaction::Call.into()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>添加 <code>deprecated</code> 属性，以防止显示警告消息。这是因为这一部分API仍然处于过渡阶段，并将在即将发布的 Substrate 版本中进行更新。请暂时谨慎使用。</p>
+<p>了解更多关于 <a href="https://zhuanlan.zhihu.com/p/99809960/conceptual/node/extrinsics.md#unsigned-transactions" target="_blank" rel="noopener">未签名交易</a> 的信息。</p>
+<h3 id="链上回调函数中的参数"><a href="#链上回调函数中的参数" class="headerlink" title="链上回调函数中的参数"></a>链上回调函数中的参数</h3><p>在进行链上回调时，我们的实现会将函数名称及其所有参数值一起哈希。回调将在下次区块导入时被存储和调用。如果我们发现哈希值存在，这意味着之前已经调用了具有相同参数集的函数，那么对于签名交易，如果以更高的优先级调用该函数，则该函数将被替换；对于未签名交易，此回调将被忽略。</p>
+<p>如果你的 pallet 定期进行链上回调，并希望它偶尔有重复的参数集，则始终可以从<code>offchain_worker</code>函数传入当前区块号外的其他参数。该数字只会增加，并且保证是唯一的。</p>
+<h3 id="获取外部数据"><a href="#获取外部数据" class="headerlink" title="获取外部数据"></a>获取外部数据</h3><p>要从第三方API获取外部数据，请在 <code>my_offchain_worker.rs</code> 中使用 <code>offchain::http</code> 库，如下所示。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> sp_runtime::&#123;</span><br><span class="line">  offchain::http,</span><br><span class="line">  transaction_validity::&#123;</span><br><span class="line">    TransactionValidity, TransactionLongevity, ValidTransaction, InvalidTransaction</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// --snip--</span></span><br><span class="line"></span><br><span class="line">decl_module! &#123;</span><br><span class="line">  <span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Module</span></span>&lt;T: Trait&gt; <span class="keyword">for</span> <span class="class"><span class="keyword">enum</span> <span class="title">Call</span></span> <span class="keyword">where</span> origin: T::Origin &#123;</span><br><span class="line">    <span class="comment">// --snip--</span></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">offchain_worker</span></span>(block: T::BlockNumber) &#123;</span><br><span class="line">      <span class="keyword">match</span> Self::fetch_data() &#123;</span><br><span class="line">        <span class="literal">Ok</span>(res) =&gt; debug::info!(<span class="string">"Result: &#123;&#125;"</span>, core::<span class="built_in">str</span>::from_utf8(&amp;res).unwrap()),</span><br><span class="line">        <span class="literal">Err</span>(e) =&gt; debug::error!(<span class="string">"Error fetch_data: &#123;&#125;"</span>, e),</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T: Trait&gt; Module&lt;T&gt; &#123;</span><br><span class="line">  <span class="function"><span class="keyword">fn</span> <span class="title">fetch_data</span></span>() -&gt; <span class="built_in">Result</span>&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;, &amp;<span class="symbol">'static</span> <span class="built_in">str</span>&gt; &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 指定请求</span></span><br><span class="line">    <span class="keyword">let</span> pending = http::Request::get(<span class="string">"https://min-api.cryptocompare.com/data/price?fsym=BTC&amp;tsyms=USD"</span>)</span><br><span class="line">      .send()</span><br><span class="line">      .map_err(|_| <span class="string">"Error in sending http GET request"</span>)?;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 等待响应</span></span><br><span class="line">    <span class="keyword">let</span> response = pending.wait()</span><br><span class="line">      .map_err(|_| <span class="string">"Error in waiting http response back"</span>)?;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 检查HTTP响应是否正确</span></span><br><span class="line">    <span class="keyword">if</span> response.code != <span class="number">200</span> &#123;</span><br><span class="line">      debug::warn!(<span class="string">"Unexpected status code: &#123;&#125;"</span>, response.code);</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">Err</span>(<span class="string">"Non-200 status code returned from http request"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 以字节形式收集结果</span></span><br><span class="line">    <span class="literal">Ok</span>(response.body().collect::&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;&gt;())</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>之后可能需要将结果解析为JSON格式。我们这里有一个在 <code>no_std</code> 环境中，使用外部库解析JSON的 <a href="https://link.zhihu.com/?target=https%3A//github.com/jimmychu0807/substrate-offchain-pricefetch/blob/047ad8094dc21e2bced2d055707756265be32e95/node/runtime/src/price_fetch.rs%23L250-L260">示例</a>。</p>
+<h3 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h3><ul>
+<li>Substrate <code>im-online 模块</code>，一个 Substrate 内部的 pallet，使用链下工作机通知其他节点，网络中的验证人在线。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/2020/03/23/offchainWorker/" title="Off-Chain Workers喂价">http://munan.tech/2020/03/23/offchainWorker/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/10/16/grandpa_model/" rel="prev" title="grandpa模块剖析">
+      <i class="fa fa-chevron-left"></i> grandpa模块剖析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/03/25/JavaBasics/" rel="next" title="JavaBasics">
+      JavaBasics <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OCW喂价"><span class="nav-number">1.</span> <span class="nav-text">OCW喂价</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么时候使用OCW"><span class="nav-number">1.1.</span> <span class="nav-text">什么时候使用OCW</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在Runtime中使用"><span class="nav-number">1.2.</span> <span class="nav-text">在Runtime中使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#在-service-rs-中添加密钥（Keys）"><span class="nav-number">1.2.1.</span> <span class="nav-text">在 service.rs 中添加密钥（Keys）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选项-1（开发阶段）：添加第一个用户密钥作为应用的子密钥"><span class="nav-number">1.2.2.</span> <span class="nav-text">选项 1（开发阶段）：添加第一个用户密钥作为应用的子密钥</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#选项2：通过-CLI-添加应用的子密钥"><span class="nav-number">1.2.3.</span> <span class="nav-text">选项2：通过 CLI 添加应用的子密钥</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#未签名交易"><span class="nav-number">1.2.4.</span> <span class="nav-text">未签名交易</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#链上回调函数中的参数"><span class="nav-number">1.2.5.</span> <span class="nav-text">链上回调函数中的参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#获取外部数据"><span class="nav-number">1.2.6.</span> <span class="nav-text">获取外部数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文档"><span class="nav-number">1.2.7.</span> <span class="nav-text">参考文档</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+  
+  
+    <canvas class="fireworks" style="position: fixed;left: 0;top: 0;z-index: 1; pointer-events: none;" ></canvas>
+    <script src="//cdn.bootcss.com/animejs/2.2.0/anime.min.js"></script>
+    <script src="/js/cursor/explosion.min.js"></script>
+  
+  
+
+
+</body>
+</html>

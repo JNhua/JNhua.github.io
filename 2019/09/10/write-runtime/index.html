@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="开始本地启动substrate节点 12.&#x2F;target&#x2F;release&#x2F;substratekitties purge-chain --dev.&#x2F;target&#x2F;release&#x2F;substratekitties --dev">
+<meta property="og:type" content="article">
+<meta property="og:title" content="write-runtime">
+<meta property="og:url" content="http://munan.tech/2019/09/10/write-runtime/index.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="开始本地启动substrate节点 12.&#x2F;target&#x2F;release&#x2F;substratekitties purge-chain --dev.&#x2F;target&#x2F;release&#x2F;substratekitties --dev">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-09-10T06:53:46.000Z">
+<meta property="article:modified_time" content="2020-10-06T09:54:00.341Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust">
+<meta property="article:tag" content="区块链">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://munan.tech/2019/09/10/write-runtime/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true
+  };
+</script>
+
+  <title>write-runtime | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jenner's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/2019/09/10/write-runtime/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          write-runtime
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-10 14:53:46" itemprop="dateCreated datePublished" datetime="2019-09-10T14:53:46+08:00">2019-09-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-06 17:54:00" itemprop="dateModified" datetime="2020-10-06T17:54:00+08:00">2020-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/" itemprop="url" rel="index"><span itemprop="name">BlockChain</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/Substrate/" itemprop="url" rel="index"><span itemprop="name">Substrate</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/Substrate/base/" itemprop="url" rel="index"><span itemprop="name">base</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/10/write-runtime/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/09/10/write-runtime/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="开始"><a href="#开始" class="headerlink" title="开始"></a>开始</h1><p>本地启动substrate节点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;target&#x2F;release&#x2F;substratekitties purge-chain --dev</span><br><span class="line">.&#x2F;target&#x2F;release&#x2F;substratekitties --dev</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p>如果你要开始一个新项目并希望获得最新版本的 Substrate，你可以通过运行以下命令来构建自己的 Substrate 包：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">substrate-node-new &lt;project_name&gt;&lt;your_name&gt;</span><br><span class="line">substrate-ui-new &lt;project_name&gt;</span><br></pre></td></tr></table></figure>
+<p>就像之前说过的，该方法的一个缺点就是这些脚本直接从不同的 GitHub 仓库中提取，这意味着在有 breaking changes 时可能会出现不兼容的情况。</p>
+<p>使用 <a href="https://github.com/paritytech/oo7/tree/master/packages/oo7-substrate" target="_blank" rel="noopener">oo7-substrate library</a> 库构建的 <a href="https://github.com/paritytech/substrate-ui" target="_blank" rel="noopener">Substrate UI</a> 是另一个可替代 <a href="https://github.com/polkadot-js/apps" target="_blank" rel="noopener">Polkadot-JS Apps UI</a> 的前端界面, 它们都可以用于与你的 Substrate 链进行交互。</p>
+<p>构建自己的 UI 时，请记住参考 <a href="https://polkadot.js.org/api/" target="_blank" rel="noopener">Polkadot-JS API 文档</a> 和 <a href="https://paritytech.github.io/oo7/" target="_blank" rel="noopener">oo7 API 文档</a>。</p>
+<p>两种编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./build.sh               // Build Wasm</span><br><span class="line">cargo build --release    // Build binary</span><br></pre></td></tr></table></figure>
+<h1 id="创建Module"><a href="#创建Module" class="headerlink" title="创建Module"></a>创建Module</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">substratekitties</span><br><span class="line">|</span><br><span class="line">+-- runtime</span><br><span class="line">    |</span><br><span class="line">    +-- src</span><br><span class="line">        |</span><br><span class="line">        +-- lib.rs</span><br><span class="line">        |</span><br><span class="line">        +-- * substratekitties.rs</span><br></pre></td></tr></table></figure>
+<p>module文件的位置</p>
+<h2 id="lib-rs操作"><a href="#lib-rs操作" class="headerlink" title="lib.rs操作"></a>lib.rs操作</h2><p>在runtime的lib.rs中导入module文件，<code>mod kitties</code></p>
+<p>实现其Trait， <code>impl kitties::Trait for Runtime</code></p>
+<p>将该module包含在construct_runtime!宏中, <code>Substratekitties: substratekitties::{Module, Call, Storage}</code></p>
+<h2 id="module文件"><a href="#module文件" class="headerlink" title="module文件"></a>module文件</h2><h3 id="decl-storage"><a href="#decl-storage" class="headerlink" title="decl_storage!"></a>decl_storage!</h3><p>srml/support 有storage相关函数； put ，get，和storage声明带有的getter函数</p>
+<h3 id="decl-module"><a href="#decl-module" class="headerlink" title="decl_module!"></a>decl_module!</h3><p>处理逻辑的所有入口；函数的第一个参数常常是origin；返回类型是support::dispatch中的Result类型，ok(())或者Err()，不要panic。</p>
+<p>ensure_signed(origin)?在system::ensure_signed中；</p>
+<p>support::StorageMap</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//声明</span></span><br><span class="line">SomeValue get(some_value_getter): map <span class="built_in">u32</span> =&gt; <span class="built_in">u32</span>;</span><br><span class="line">MyValue: map T::AccountId =&gt; <span class="built_in">u32</span>;</span><br><span class="line"><span class="comment">//插入</span></span><br><span class="line">&lt;SomeValue&lt;T&gt;&gt;::insert(key, value);</span><br><span class="line"><span class="comment">//查询</span></span><br><span class="line"><span class="keyword">let</span> my_value = &lt;SomeValue&lt;T&gt;&gt;::get(key);</span><br><span class="line"><span class="keyword">let</span> also_my_value = Self::some_value_getter(key);</span><br></pre></td></tr></table></figure>
+<p>结构体</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> parity_codec_derive::&#123;Encode, Decode&#125;;</span><br><span class="line"><span class="meta">#[derive(Encode, Decode, Default, Clone, PartialEq)]</span> <span class="comment">//允许基本地实现某些 trait</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#[cfg_attr(feature = <span class="meta-string">"std"</span>, derive(Debug))]</span> </span><br><span class="line"><span class="comment">//对 Debug trait 做了同样的事情，但仅在使用“标准”库时启用，即在编译本机二进制文件而不是 Wasm 的时候。</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">MyStruct</span></span>&lt;A, B&gt; &#123;</span><br><span class="line">    some_number: <span class="built_in">u32</span>,</span><br><span class="line">    some_generic: A,</span><br><span class="line">    some_other_generic: B,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MyItem: map T::AccountId =&gt; MyStruct&lt;T::Balance, T::Hash&gt;;</span><br></pre></td></tr></table></figure>
+<p>初始化</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> hash_of_zero = &lt;T <span class="keyword">as</span> system::Trait&gt;::Hashing::hash_of(&amp;<span class="number">0</span>);</span><br><span class="line"><span class="keyword">let</span> my_zero_balance = &lt;T::Balance <span class="keyword">as</span> As&lt;<span class="built_in">u64</span>&gt;&gt;::sa(<span class="number">0</span>); <span class="comment">//as 和 sa 转换</span></span><br></pre></td></tr></table></figure>
+<p>导入liballoc库来使用string；</p>
+<p>在UI里注册结构体，在 <strong>Settings</strong> app 页面的 <strong>Developer</strong> 部分中，你可以提交包含有自定义 struct 的 JSON 文件或者通过代码编辑器手动添加。</p>
+<p>随机数生成</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> sender = ensure_signed(origin)?;</span><br><span class="line"><span class="keyword">let</span> nonce = &lt;Nonce&lt;T&gt;&gt;::get();</span><br><span class="line"><span class="keyword">let</span> random_seed = &lt;system::Module&lt;T&gt;&gt;::random_seed();</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> random_hash = (random_seed, sender, nonce).using_encoded(&lt;T <span class="keyword">as</span> system::Trait&gt;::Hashing::hash);</span><br><span class="line"></span><br><span class="line">&lt;Nonce&lt;T&gt;&gt;::mutate(|n| *n += <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+<p><strong><em>Substrate</em> Rutime中要先验证再写入</strong></p>
+<p>可以使用映射和计数器模拟列表 代替list；</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">AllPeopleArray get(person): map <span class="built_in">u32</span> =&gt; T::AccountId;</span><br><span class="line">AllPeopleCount get(num_of_people): <span class="built_in">u32</span>;</span><br><span class="line"><span class="keyword">let</span> all_people_count = Self::num_of_people();</span><br><span class="line"><span class="keyword">let</span> new_all_people_count = all_people_count.checked_add(<span class="number">1</span>).ok_or(<span class="string">"Overflow adding a new person"</span>)?;</span><br><span class="line"><span class="comment">//记住加？号</span></span><br></pre></td></tr></table></figure>
+<p>使用tuple模拟二维数组</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MyFriendsArray get(my_friends_array): map (T::AccountId, <span class="built_in">u32</span>) =&gt; T::AccountId;</span><br><span class="line">MyFriendsCount get(my_friends_count): map T::AccountId =&gt; <span class="built_in">u32</span>;</span><br></pre></td></tr></table></figure>
+<hr>
+<h3 id="decl-event"><a href="#decl-event" class="headerlink" title="decl_event!"></a>decl_event!</h3><p>事件声明，在lib.rs也需要更新；</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">trait</span> <span class="title">Trait</span></span>: balances::Trait &#123;</span><br><span class="line">    <span class="class"><span class="keyword">type</span> <span class="title">Event</span></span>: <span class="built_in">From</span>&lt;Event&lt;<span class="keyword">Self</span>&gt;&gt; + <span class="built_in">Into</span>&lt;&lt;<span class="keyword">Self</span> <span class="keyword">as</span> system::Trait&gt;::Event&gt;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">decl_event!(</span><br><span class="line">    <span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">Event</span></span>&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        &lt;T <span class="keyword">as</span> system::Trait&gt;::AccountId,</span><br><span class="line">        &lt;T <span class="keyword">as</span> system::Trait&gt;::Hash</span><br><span class="line">    &#123;</span><br><span class="line">        Created(AccountId, Hash),</span><br><span class="line">    &#125;</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line"><span class="comment">//调用</span></span><br><span class="line">Self::deposit_event(RawEvent::Created(sender, random_hash));</span><br></pre></td></tr></table></figure>
+<hr>
+<p>公有接口和私有函数，供decl_module! 调用</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;T: Trait&gt; Module&lt;T&gt; &#123;</span><br><span class="line">    <span class="comment">// Your functions here</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>更新前检查值的存在</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ensure!(&lt;MyObject&lt;T&gt;&gt;::exists(object_id));</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/2019/09/10/write-runtime/" title="write-runtime">http://munan.tech/2019/09/10/write-runtime/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/09/06/Rust-Macro/" rel="prev" title="Rust_Macro">
+      <i class="fa fa-chevron-left"></i> Rust_Macro
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/09/16/Rust-PhantomData/" rel="next" title="Rust_PhantomData">
+      Rust_PhantomData <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#开始"><span class="nav-number">1.</span> <span class="nav-text">开始</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#创建Module"><span class="nav-number">2.</span> <span class="nav-text">创建Module</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#lib-rs操作"><span class="nav-number">2.1.</span> <span class="nav-text">lib.rs操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#module文件"><span class="nav-number">2.2.</span> <span class="nav-text">module文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#decl-storage"><span class="nav-number">2.2.1.</span> <span class="nav-text">decl_storage!</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#decl-module"><span class="nav-number">2.2.2.</span> <span class="nav-text">decl_module!</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#decl-event"><span class="nav-number">2.2.3.</span> <span class="nav-text">decl_event!</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+  
+  
+    <canvas class="fireworks" style="position: fixed;left: 0;top: 0;z-index: 1; pointer-events: none;" ></canvas>
+    <script src="//cdn.bootcss.com/animejs/2.2.0/anime.min.js"></script>
+    <script src="/js/cursor/explosion.min.js"></script>
+  
+  
+
+
+</body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Security Token Standard证券型代币(Security Token)表示对资产的部分或完全所有权，公司、房地产甚至知识产权的股票，都可以用证券型代币来表示。证券型代币的好处，不仅适用于区块链融资，它还有可能改变传统的纸股范式，从而提高效率以及改善分配。例如，智能合约的很多应用，可以和证券型代币一起使用，以优化公司治理中的投票表决，提高其透明度。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ERC1400">
+<meta property="og:url" content="http://munan.tech/2019/07/09/ERC1400/index.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="Security Token Standard证券型代币(Security Token)表示对资产的部分或完全所有权，公司、房地产甚至知识产权的股票，都可以用证券型代币来表示。证券型代币的好处，不仅适用于区块链融资，它还有可能改变传统的纸股范式，从而提高效率以及改善分配。例如，智能合约的很多应用，可以和证券型代币一起使用，以优化公司治理中的投票表决，提高其透明度。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/relationship.jpg">
+<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/mind.png">
+<meta property="article:published_time" content="2019-07-09T06:54:41.000Z">
+<meta property="article:modified_time" content="2020-10-06T09:54:00.332Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust">
+<meta property="article:tag" content="区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://image-jennerblog.test.upcdn.net/img/relationship.jpg">
+
+<link rel="canonical" href="http://munan.tech/2019/07/09/ERC1400/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true
+  };
+</script>
+
+  <title>ERC1400 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jenner's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/2019/07/09/ERC1400/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ERC1400
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-07-09 14:54:41" itemprop="dateCreated datePublished" datetime="2019-07-09T14:54:41+08:00">2019-07-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-06 17:54:00" itemprop="dateModified" datetime="2020-10-06T17:54:00+08:00">2020-10-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/" itemprop="url" rel="index"><span itemprop="name">BlockChain</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/Substrate/" itemprop="url" rel="index"><span itemprop="name">Substrate</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/BlockChain/Substrate/contract/" itemprop="url" rel="index"><span itemprop="name">contract</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/07/09/ERC1400/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/07/09/ERC1400/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Security-Token-Standard"><a href="#Security-Token-Standard" class="headerlink" title="Security Token Standard"></a>Security Token Standard</h1><p>证券型代币(Security Token)表示对资产的部分或完全所有权，公司、房地产甚至知识产权的股票，都可以用证券型代币来表示。证券型代币的好处，不仅适用于区块链融资，它还有可能改变传统的纸股范式，从而提高效率以及改善分配。例如，智能合约的很多应用，可以和证券型代币一起使用，以优化公司治理中的投票表决，提高其透明度。</p>
+<a id="more"></a>
+<h1 id="ERC1400"><a href="#ERC1400" class="headerlink" title="ERC1400"></a>ERC1400</h1><p>ERC1400 是证券通证标准，它是由 Gosselin, Adam Dossa, Pablo Ruiz, 以及 Fabian Vogelsteller 共同撰写的标准，其中 Gosselin 和 Dossa 是在 Polymath 工作。而 Ruiz 具有国际商业和金融方面的背景知识，而 Dossa 则是一名以太坊开发者和网页设计师。</p>
+<p>根据标准作者指出，ERC1400 应该是和 ERC20 以及 ERC777 标准相兼容的，但是证券通证与功能型通证有很大的不同，并且需要链上以及链下参与者之间进行更复杂的交互，因此该 EIP 标准具有能力进行强制转移，目的是以防法律诉讼，并用于资金追回。此外，通证也必须是不可替换的（或者至少是「部分可替换的」），ERC1400 标准可以允许提供证券的各方，基于一组条件授予或拒绝交易。根据作者介绍，该通证标准需要用到 ERC1066。</p>
+<p>ERC1400标准依赖于ERC1410标准，在设计上，将token的余额通过一个叫做分片（tranche）的属性，划分成不同的部分。</p>
+<h2 id="ERC1410"><a href="#ERC1410" class="headerlink" title="ERC1410"></a>ERC1410</h2><p>ERC1410 通证标准是由 Adam Dossa、(@adamdossa), Pablo Ruiz (@pabloruiz55), Fabian Vogelsteller (@frozeman) 以及 Stephane Gosselin (@thegostep) 共同撰写的通证标准。</p>
+<p>其标准名为：部分可替代通证标准（Partially Fungible Token Standard）。</p>
+<p>ERC1410 需要用到 ERC777，该标准是 ERC777 的扩展，因此和 ERC20 以及 ERC777 是隐式兼容的。</p>
+<h2 id="ERC777"><a href="#ERC777" class="headerlink" title="ERC777"></a>ERC777</h2><p>ERC777 是 ERC20 的加强版，旨在加强用户的控制权限，具体有：</p>
+<ol>
+<li><p>随交易发送可以附带描述数据，以供某些业务场景使用</p>
+</li>
+<li><p>设置一些转账限制，如黑名单</p>
+</li>
+<li><p>支持一些高级交易</p>
+</li>
+</ol>
+<p>无论是 ERC20 还是 ERC777，每个单位的 Token 都是相同的，并无附加属性，属于 fungible token（同质化代币/可互换 Token）。ERC721标准的 Token，每个 Token 均有不同的ID，不同ID可以有不同的解释，属于 no-fungible token（非同质化 Token，不可互换 Token）</p>
+<p>ERC1410标准的 Token 属于Partially-Fungible Token (部分可互换 Token )，将 ERC20/ERC777 中不存在解释属性的余额，附加额外的信息，从而划分成不同的部分，就可以做一些操作上的限制（例如：某些操作只限定于指定 tranche 的 Token，某些操作优先消耗指定tranche的 Token）</p>
+<h2 id="EIPs之间的关系"><a href="#EIPs之间的关系" class="headerlink" title="EIPs之间的关系"></a>EIPs之间的关系</h2><p><img src="http://image-jennerblog.test.upcdn.net/img/relationship.jpg" alt="relationship"></p>
+<h1 id="Implement"><a href="#Implement" class="headerlink" title="Implement"></a>Implement</h1><p><img src="http://image-jennerblog.test.upcdn.net/img/mind.png" alt="mind"></p>
+<h2 id="ERC1400-1"><a href="#ERC1400-1" class="headerlink" title="ERC1400"></a>ERC1400</h2><p>getDocument;<br>setDocument;<br>isControllable;<br>isIssuable;<br>issueByPartition;<br>redeemByPartition;<br>operatorRedeemByPartition;<br>canTransferByPartition;<br>canOperatorTransferByPartition;</p>
+<h3 id="ERC1410-1"><a href="#ERC1410-1" class="headerlink" title="ERC1410"></a>ERC1410</h3><p>balanceOfByPartition;<br>partitionOf;<br>transferByPartition;<br>operatorTransferByPartition;<br>getDefaultPartitions;<br>setDefaultPartitions;<br>controllersByPartition;<br>authorizeOperatorByPartition;<br>revokeOperatorByPartition;<br>isOperatorForPartition;</p>
+<h4 id="ERC777-1"><a href="#ERC777-1" class="headerlink" title="ERC777"></a>ERC777</h4><p>name;<br>symbol;<br>totalSupply;<br>balanceOf;<br>granularity;<br>controllers;<br>authorizeOperator;<br>revokeOperator;<br>isOperatorFor;<br>transferWithData;<br>transferFromWithData;<br>redeem;<br>redeemFrom;</p>
+<ul>
+<li>SafeMath</li>
+<li>Ownable</li>
+<li>ReentrancyGuard</li>
+<li>ERC1820Client</li>
+<li>CertificateController</li>
+<li>IERC777TokensSender</li>
+<li>IERC777TokensRecipient</li>
+</ul>
+<h3 id="MinterRole"><a href="#MinterRole" class="headerlink" title="MinterRole"></a>MinterRole</h3><h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><ol>
+<li><a href="https://www.jianshu.com/p/da778c4b0031" target="_blank" rel="noopener">Security Token（证券型代币）标准——ERC1400,ERC1404,ST-20,R-Token的对比</a></li>
+<li><a href="https://github.com/ethereum/EIPs/issues/1400" target="_blank" rel="noopener">ERC-1400: Security Token Standard</a></li>
+<li><a href="https://blog.polymath.network/erc-1400-evolution-of-a-security-token-standard-1e25d12b9261" target="_blank" rel="noopener">ERC-1400: Evolution of a Security Token Standard</a></li>
+<li><a href="https://docs.google.com/presentation/d/e/2PACX-1vS6pUx-VjdwSfELQwFVlXzq3Ekvxa9wpGTrNJqkp6-CnHxBPecjTEcVq21V6Nsbc-Bp4yq4dZTtp6Kn/pub?start=false&amp;loop=false&amp;delayms=3000&amp;slide=id.g594e042d60_2_165" target="_blank" rel="noopener">ERC-1400 doc</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/2019/07/09/ERC1400/" title="ERC1400">http://munan.tech/2019/07/09/ERC1400/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/05/21/edgeware/" rel="prev" title="Edgeware简介/白皮书中文翻译">
+      <i class="fa fa-chevron-left"></i> Edgeware简介/白皮书中文翻译
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/08/22/Spring-Mongodb/" rel="next" title="Spring_Mongodb之update">
+      Spring_Mongodb之update <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Security-Token-Standard"><span class="nav-number">1.</span> <span class="nav-text">Security Token Standard</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ERC1400"><span class="nav-number">2.</span> <span class="nav-text">ERC1400</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ERC1410"><span class="nav-number">2.1.</span> <span class="nav-text">ERC1410</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ERC777"><span class="nav-number">2.2.</span> <span class="nav-text">ERC777</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EIPs之间的关系"><span class="nav-number">2.3.</span> <span class="nav-text">EIPs之间的关系</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Implement"><span class="nav-number">3.</span> <span class="nav-text">Implement</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ERC1400-1"><span class="nav-number">3.1.</span> <span class="nav-text">ERC1400</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ERC1410-1"><span class="nav-number">3.1.1.</span> <span class="nav-text">ERC1410</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ERC777-1"><span class="nav-number">3.1.1.1.</span> <span class="nav-text">ERC777</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MinterRole"><span class="nav-number">3.1.2.</span> <span class="nav-text">MinterRole</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Reference"><span class="nav-number">4.</span> <span class="nav-text">Reference</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">43</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+  
+  
+    <canvas class="fireworks" style="position: fixed;left: 0;top: 0;z-index: 1; pointer-events: none;" ></canvas>
+    <script src="//cdn.bootcss.com/animejs/2.2.0/anime.min.js"></script>
+    <script src="/js/cursor/explosion.min.js"></script>
+  
+  
+
+
+</body>
+</html>
