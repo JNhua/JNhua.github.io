@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://munan.tech/2019/09/06/Rust-Macro/</loc>
+    
+    <lastmod>2020-10-11T03:15:16.538Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://munan.tech/2019/09/04/Rust-essentials/</loc>
     
     <lastmod>2020-10-10T15:07:47.115Z</lastmod>
@@ -16,303 +23,296 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/tags/index.html</loc>
-    
-    <lastmod>2020-10-06T09:54:00.342Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/04/20/what-is-Substrate/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.341Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/10/write-runtime/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.341Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/04/%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%BD%91%E7%BB%9C%E8%AE%BE%E7%BD%AE/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.341Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/index.html</loc>
-    
-    <lastmod>2020-10-06T09:54:00.341Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/19/wallet-introduction/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.340Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/23/offchainWorker/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.339Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/19/scrypt/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.339Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/27/static/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.339Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/10/15/substrate_contract/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.339Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/06/16/threadPool/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.339Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/05/19/internal-storage/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.338Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/31/java8/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.338Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/31/javaMySQL/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.338Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/19/keystore/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.338Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/30/multithread/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.338Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/21/digital-signature/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.337Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/05/20/garbage-collection/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.337Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/21/edgeware/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.337Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/10/16/grandpa_model/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.337Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/01/goForCircle/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.337Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/08/22/Spring-Mongodb/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.336Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/04/Rust_cargo/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.336Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/01/baseChain/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.336Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/04/19/Substrate-1/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.336Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/30/Socket/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.336Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/07/clion-remote-rust/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.336Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/06/18/crosDomain/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.336Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/12/Rust-thread/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.335Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/12/Rust-pattern/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.335Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/05/Rust-trait/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.335Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/12/Rust-unsafe/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.335Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/06/Rust-Macro/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.334Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/16/Rust-PhantomData/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.334Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/18/Rust-asynchronous/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.334Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/25/JavaBasics/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.333Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/27/ObjectOriented/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.333Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/15/PBFT/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.333Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/05/17/PAT/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.333Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/21/Paxos/</loc>
-    
-    <lastmod>2020-10-06T09:54:00.333Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>http://munan.tech/2020/03/31/DocComment/</loc>
     
-    <lastmod>2020-10-06T09:54:00.332Z</lastmod>
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://munan.tech/2019/09/30/ByzantineFinalityGadgets/</loc>
     
-    <lastmod>2020-10-06T09:54:00.332Z</lastmod>
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://munan.tech/2019/07/09/ERC1400/</loc>
     
-    <lastmod>2020-10-06T09:54:00.332Z</lastmod>
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/25/JavaBasics/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/27/ObjectOriented/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/05/17/PAT/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/15/PBFT/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/21/Paxos/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/09/16/Rust-PhantomData/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/18/Rust-asynchronous/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/12/Rust-thread/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/12/Rust-pattern/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/09/05/Rust-trait/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/12/Rust-unsafe/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/30/Socket/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/09/04/Rust_cargo/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/01/baseChain/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/04/19/Substrate-1/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/08/22/Spring-Mongodb/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/07/clion-remote-rust/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/21/digital-signature/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/06/18/crosDomain/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/05/21/edgeware/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/01/goForCircle/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/05/20/garbage-collection/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/10/16/grandpa_model/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/05/19/internal-storage/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/31/java8/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/31/javaMySQL/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/05/19/keystore/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/23/offchainWorker/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/30/multithread/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/05/19/scrypt/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/03/27/static/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/10/15/substrate_contract/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/06/16/threadPool/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/04/20/what-is-Substrate/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/05/19/wallet-introduction/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/09/10/write-runtime/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2019/09/04/%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%BD%91%E7%BB%9C%E8%AE%BE%E7%BD%AE/</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/index.html</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/tags/index.html</loc>
+    
+    <lastmod>2020-10-06T09:54:00.000Z</lastmod>
     
   </url>
   
