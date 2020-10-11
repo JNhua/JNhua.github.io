@@ -78,7 +78,7 @@ rustc -Z unstable-options --pretty=expanded main.rs
 ```rust
 #[macro_export]
 macro_rules! my_vec { 
-  // x 为重复匹配到的表达式，“，”可以根据情况忽略
+  // x 为重复匹配到的表达式，“，”可以根据情况忽略, 不支持my_vec!(1,2,)的写法
     ($($x: expr), *) => {
         {
             let mut temp_vec = Vec::new();
@@ -302,7 +302,7 @@ pub fn attr_with_args(args: TokenStream, input: TokenStream)
 }
 ```
 
-在引号的括号要用`{% raw %}`{{`{% endraw %}`转义，最内部的`{}`是给`args`占位的。
+在引号的括号要用`{% raw %}{{ {} }}{% endraw %}`转义，最内部的`{}`是给`args`占位的。
 
 ## Bang宏/类函数宏
 
