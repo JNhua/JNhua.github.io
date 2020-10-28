@@ -216,9 +216,9 @@
 <h2 id="交易结构"><a href="#交易结构" class="headerlink" title="交易结构"></a>交易结构</h2><h3 id="比特币-1"><a href="#比特币-1" class="headerlink" title="比特币"></a>比特币</h3><p>交易结构：</p>
 <p><img src="https://raw.githubusercontent.com/JNhua/blog_images/main/img/20201028200932.png" alt="交易结构"></p>
 <p>交易输入结构：</p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E8%BE%93%E5%85%A5.png" alt="交易输入"></p>
+<p><img src="https://raw.githubusercontent.com/JNhua/blog_images/main/img/20201028203333.png" alt="交易输入"></p>
 <p>交易输出结构：</p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E8%BE%93%E5%87%BA.png" alt="交易输出"></p>
+<p><img src="https://raw.githubusercontent.com/JNhua/blog_images/main/img/20201028203345.png" alt="交易输出"></p>
 <h3 id="以太坊-1"><a href="#以太坊-1" class="headerlink" title="以太坊"></a>以太坊</h3><p>和比特币一样，以太坊的区块中存储的也是交易（transaction），它包括的字段主要有：接受者（接受的账户）、发送者的签名、发送者发给接受者的以太币金额等。<br>与比特币的区块中存储的是交易不同，以太坊的区块中以梅克尔帕特里夏树（Merkle Patricia Tree,MPT）形式存储的是相应的以太坊账户的状态。<br>以太坊的交易是所谓的状态转换函数，一个交易触发它的执行，它将相应的账户从一个状态转变成新状态，然后新状态被存储在区块链的数据区块中。<br>外部账户可以创建交易,用自己的私钥进行签名之发送消息给另一个外部账户或合约账户。两个外部账户之间传送的消息即为转账操作。从外部账户到合约账户的消息会激活合约账户的代码，执行各种操作，也就是我们常说的调用智能合约。可以通过向0地址发起交易来创建合约账户。交易包含以下主要字段：</p>
 <ul>
 <li>Type：交易的类型，ContractCreation（创建合约）还是MessageCall（调用合约或转账）</li>
@@ -246,7 +246,7 @@
 <p>每一个比特币节点会通过同时执行这解锁和锁定脚本（不是当前的锁定脚本，是指上一个交易的锁定脚本）来验证一笔交易，脚本组合结果为真，则为有效交易。</p>
 <h4 id="签名流程"><a href="#签名流程" class="headerlink" title="签名流程"></a>签名流程</h4><p>1.查找该笔交易对应的UTXO<br>2.获得该UTXO对应的锁定脚本<br>3.复制该交易对象，并在复制副本中将该Input的解锁脚本字段的值设置为<em>之前</em>  交易输出部分的锁定脚本的字段<br>4.清除其他Input的解锁脚本字段<br>5.对这个改造后的交易对象计算Hash<br>6.使用私钥对Hash进行签名<br>7.将签名结果<code>sig</code>和签名人的地址<code>PubK</code>放入input的解锁脚本中<br>8.构成输入部分</p>
 <h4 id="验证流程"><a href="#验证流程" class="headerlink" title="验证流程"></a>验证流程</h4><p>解锁脚本先进行入栈，然后锁定脚本入栈计算。<br>如最为常见类型的比特币交易脚本（支付到公钥哈希：P2PKH（Pay-to-Public-Key-Hash））组合是这样：</p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/20200927144918.png" alt="脚本"></p>
+<p><img src="https://raw.githubusercontent.com/JNhua/blog_images/main/img/20201028203356.png" alt="脚本"></p>
 <p>验证解锁脚本中的<code>PubK</code>（验证<code>PubKHash</code>）与<code>sig</code>（公钥验证）与锁定脚本的计算结果是否一致。</p>
 <h3 id="以太坊-2"><a href="#以太坊-2" class="headerlink" title="以太坊"></a>以太坊</h3><h4 id="验证交易的有效性"><a href="#验证交易的有效性" class="headerlink" title="验证交易的有效性"></a>验证交易的有效性</h4><ul>
 <li>数据量必须&lt;32KB</li>
@@ -259,7 +259,7 @@
 <li>交易的gas limit必须大于对应数据量所需的最低gas水平<h4 id="验证签名"><a href="#验证签名" class="headerlink" title="验证签名"></a>验证签名</h4>用消息和签名推导出对方的公钥。再通过公钥，签名，消息的哈希值计算出一个叫 r 的值，这个 r 是签名的一部分，校验签名就是拿计算出来的 r 和签名中携带的 r 经行对比，如果一致就校验通过。</li>
 </ul>
 <p>交易验证后，提交到txPool中，还需要广播出去，一方面通知EVM执行该交易，另一方面要把交易信息广播给其他结点。</p>
-<h1 id="区块"><a href="#区块" class="headerlink" title="区块"></a>区块</h1><h2 id="区块结构"><a href="#区块结构" class="headerlink" title="区块结构"></a>区块结构</h2><h3 id="比特币-3"><a href="#比特币-3" class="headerlink" title="比特币"></a>比特币</h3><p><img src="http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97%E4%BF%A1%E6%81%AF.png" alt="区块信息"><br>区块结构<br><img src="http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97.png" alt="区块"><br>区块头<br><img src="http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97%E5%A4%B4.png" alt="区块头"></p>
+<h1 id="区块"><a href="#区块" class="headerlink" title="区块"></a>区块</h1><h2 id="区块结构"><a href="#区块结构" class="headerlink" title="区块结构"></a>区块结构</h2><h3 id="比特币-3"><a href="#比特币-3" class="headerlink" title="比特币"></a>比特币</h3><p><img src="https://raw.githubusercontent.com/JNhua/blog_images/main/img/20201028203425.png" alt="区块信息"><br>区块结构<br><img src="https://raw.githubusercontent.com/JNhua/blog_images/main/img/20201028203438.png" alt="区块"><br>区块头<br><img src="https://raw.githubusercontent.com/JNhua/blog_images/main/img/20201028203451.png" alt="区块头"></p>
 <h3 id="以太坊-3"><a href="#以太坊-3" class="headerlink" title="以太坊"></a>以太坊</h3><ul>
 <li>ParentHash:父块的哈希值</li>
 <li>Number:块编号</li>
