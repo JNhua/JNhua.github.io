@@ -24,14 +24,14 @@
 <meta property="og:site_name" content="Jenner&#39;s Blog">
 <meta property="og:description" content="基本概念，substrate 合约与以太坊合约的一些联系与区别，上传合约代码 put_code 和实例化合约 instantiate 两个外部接口的实现。ChainX团队的这篇文章已经阐述过了： https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;ad1320ef9904  本文将介绍合约模块的第三个外部接口合约调用 call 的基本逻辑，并且会详细介绍下 substrate 关于合约收费的设计">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/execute_wasm.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110611.png">
 <meta property="article:published_time" content="2019-10-15T04:49:49.000Z">
-<meta property="article:modified_time" content="2020-10-06T09:54:00.000Z">
+<meta property="article:modified_time" content="2020-10-29T03:06:54.660Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="区块链">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://image-jennerblog.test.upcdn.net/img/execute_wasm.png">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110611.png">
 
 <link rel="canonical" href="http://munan.tech/2019/10/15/substrate_contract/">
 
@@ -225,7 +225,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-06 17:54:00" itemprop="dateModified" datetime="2020-10-06T17:54:00+08:00">2020-10-06</time>
+                <time title="修改时间：2020-10-29 11:06:54" itemprop="dateModified" datetime="2020-10-29T11:06:54+08:00">2020-10-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -282,7 +282,7 @@
 <a id="more"></a>
 <h1 id="call-：调用合约"><a href="#call-：调用合约" class="headerlink" title="call ：调用合约"></a><code>call</code> ：调用合约</h1><p>首先是调用了账户查找<code>lookup</code>，返回给<code>dest</code>的是<code>AccountId</code>。</p>
 <p>接着主要是调用了<code>bare_call</code>这个函数，和<code>instantiate</code>一样走得是<code>execute_wasm</code>。<code>ctx.call</code>实际上调用的是  <code>ExecutionContext::call</code>。</p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/execute_wasm.png" alt="execute_wasm"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110611.png" alt="execute_wasm"></p>
 <p>在<code>ExecutionContext::call</code>中，首先判断了调用深度，然后收取调用合约的gas费用，接着调用<code>pay_rent</code>收取存储空间的租用费用。代码在 <code>srml/contracts/src/rent.rs</code>，<code>try_evict</code>和<code>pay_rent</code>都是走<code>try_evict_or_and_pay_rent</code>。该函数涉及费用计算，因此在<strong>合约收费</strong>中介绍。支付<code>rent</code>费用后，若合约状态变更为<code>tomestone</code>，则直接返回错误信息。</p>
 <p>如果<code>value</code>不为0的话，会调用<code>transfer</code>将<code>value</code>传给<code>dest</code>账户（不一定是合约账户 ）。</p>
 <p>然后调用<code>nested.overlay.get_code_hash(account)</code>得到合约账户对应的合约哈希，根据<code>dest_code_hash</code>执行合约。<code>nested.loader.load_main(&amp;dest_code_hash)</code>会得到包含合约的调用接口<code>call</code>的<code>executable</code>：<code>load_main</code>调用了<code>load_code</code>，它会比较 schedule 的版本，之前在 <code>put_code</code>的最后是写入了两个存储，一个是原始代码，一个是原始代码预处理后的 <code>prefab_module</code>。如果当前版本大于已经预处理好的版本， 那么需要重新预处理，否则直接返回已经存储的 <code>prefab_module</code>。<code>load_init</code> 最终返回 <code>WasmExecutable</code> 结构体 <code>executable</code>。 </p>

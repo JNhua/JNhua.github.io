@@ -24,21 +24,21 @@
 <meta property="og:site_name" content="Jenner&#39;s Blog">
 <meta property="og:description" content="Java程序执行流程">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/execute.png">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/jvmdebug.gif">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/lifetime.png">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/tomcat.jpg">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/memory.png">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/memory2.png">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/heap.png">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/jvmdebug.gif">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105824.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105833.gif">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105839.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105848.jpg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105855.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105902.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105909.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105917.gif">
 <meta property="article:published_time" content="2020-05-19T03:25:22.000Z">
-<meta property="article:modified_time" content="2020-10-06T09:54:00.000Z">
+<meta property="article:modified_time" content="2020-10-29T02:59:24.929Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="区块链">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://image-jennerblog.test.upcdn.net/img/execute.png">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105824.png">
 
 <link rel="canonical" href="http://munan.tech/2020/05/19/internal-storage/">
 
@@ -232,7 +232,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-06 17:54:00" itemprop="dateModified" datetime="2020-10-06T17:54:00+08:00">2020-10-06</time>
+                <time title="修改时间：2020-10-29 10:59:24" itemprop="dateModified" datetime="2020-10-29T10:59:24+08:00">2020-10-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -281,8 +281,8 @@
 
       
         <h1 id="Java程序执行流程"><a href="#Java程序执行流程" class="headerlink" title="Java程序执行流程"></a>Java程序执行流程</h1><a id="more"></a>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/execute.png" alt="execute"></p>
-<h1 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h1><p><img src="http://image-jennerblog.test.upcdn.net/img/jvmdebug.gif" alt="jvmdebug"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105824.png" alt="execute"></p>
+<h1 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h1><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105833.gif" alt="jvmdebug"></p>
 <p>Java 源码编译由以下三个过程组成：</p>
 <ul>
 <li>分析和输入到符号表</li>
@@ -295,7 +295,7 @@
 <li>元数据。对应于 Java 源码中声明与常量的信息。包含类/继承的超类/实现的接口的声明信息、域与方法声明信息和常量池。</li>
 <li>方法信息。对应 Java 源码中语句和表达式对应的信息。包含字节码、异常处理器表、求值栈与局部变量区大小、求值栈的类型记录、调试符号信息。</li>
 </ul>
-<h1 id="类加载"><a href="#类加载" class="headerlink" title="类加载"></a>类加载</h1><h2 id="类加载的生命周期（JVM执行class字节码）"><a href="#类加载的生命周期（JVM执行class字节码）" class="headerlink" title="类加载的生命周期（JVM执行class字节码）"></a>类加载的生命周期（JVM执行class字节码）</h2><p><img src="http://image-jennerblog.test.upcdn.net/img/lifetime.png" alt="lifetime"></p>
+<h1 id="类加载"><a href="#类加载" class="headerlink" title="类加载"></a>类加载</h1><h2 id="类加载的生命周期（JVM执行class字节码）"><a href="#类加载的生命周期（JVM执行class字节码）" class="headerlink" title="类加载的生命周期（JVM执行class字节码）"></a>类加载的生命周期（JVM执行class字节码）</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105839.png" alt="lifetime"></p>
 <h3 id="加载（loading）"><a href="#加载（loading）" class="headerlink" title="加载（loading）"></a>加载（loading）</h3><p>”加载“是”类加载机制”的第一个过程，在加载阶段，虚拟机主要完成三件事：</p>
 <p>（1）通过一个类的全限定名来获取其定义的二进制字节流</p>
 <p>（2）将这个字节流所代表的的静态存储结构转化为方法区的运行时数据结构</p>
@@ -312,15 +312,15 @@
 <blockquote>
 <p>委托机制的优点是能够提高软件系统的安全性。因为在此机制下，用户自定义的类加载器不可能加载应该由父加载器加载的可靠类，从而防止不可靠甚至恶意的代码代替由父加载器加载的可靠代码。例如，java.lang.Object类总是由根类加载器加载，其他任何用户自定义的类加载器都不可能加载含有恶意代码的java.lang.Object类。</p>
 </blockquote>
-<h2 id="实例：Tomcat的类加载器"><a href="#实例：Tomcat的类加载器" class="headerlink" title="实例：Tomcat的类加载器"></a>实例：Tomcat的类加载器</h2><p><img src="http://image-jennerblog.test.upcdn.net/img/tomcat.jpg" alt="tomcat"></p>
+<h2 id="实例：Tomcat的类加载器"><a href="#实例：Tomcat的类加载器" class="headerlink" title="实例：Tomcat的类加载器"></a>实例：Tomcat的类加载器</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105848.jpg" alt="tomcat"></p>
 <p>Tomcat自定义了Common、Catalina、Shared等类加载器，其实就是用来加载Tomcat自己的一些核心基础类库的。</p>
 <p>然后Tomcat为每个部署在里面的Web应用都有一个对应的WebApp类加载器，负责加载我们部署的这个Web应用的类</p>
 <p>至于Jsp类加载器，则是给每个JSP都准备了一个Jsp类加载器。</p>
 <p>而且大家一定要记得，Tomcat是打破了双亲委派机制的</p>
 <p>每个WebApp负责加载自己对应的那个Web应用的class文件，也就是我们写好的某个系统打包好的war包中的所有class文件，不会传导给上层类加载器去加载。</p>
 <h1 id="运行时数据区"><a href="#运行时数据区" class="headerlink" title="运行时数据区"></a>运行时数据区</h1><p>运行时数据区，是常说的JVM内存。因此，在Java中我们常常说到的内存管理就是针对这段空间进行管理（如何分配和回收内存空间）。</p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/memory.png" alt="memory"></p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/memory2.png" alt="memory2"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105855.png" alt="memory"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105902.png" alt="memory2"></p>
 <h4 id="方法区"><a href="#方法区" class="headerlink" title="方法区"></a>方法区</h4><p>方法区又叫静态区，跟堆一样，被所有的线程共享。方法区包含所有的class和static变量。方法区中包含的都是在整个程序中永远唯一的元素。<strong>主要是用来存放已被虚拟机加载的类相关信息</strong>，包括类信息、运行时常量池、字符串常量池。类信息又包括了类的版本、字段、方法、接口和父类等信息。</p>
 <p>方法区是<strong>java虚拟机规范去中定义的一种概念上的区域（不是具体空间，可以在堆上，也可以在本地内存里）</strong>，具有什么功能，但并没有规定这个区域到底应该位于何处，因此对于实现者来说，如何来实际方法区是有着很大自由度的。</p>
 <p>永生代是hotspot中的一个概念，其他jvm实现未必有，例如jrockit就没这东西。java8之前，hotspot使用在内存中划分出一块区域来存储类的元信息、类变量以及内部字符串（interned string）等内容，称之为永生代，把它作为方法区来使用。</p>
@@ -341,7 +341,7 @@
 <p>所以对于方法区，Java8之后的变化：</p>
 <p>移除了永久代（PermGen），替换为元空间（Metaspace）；<br>永久代中的 class metadata 转移到了 native memory（本地内存，而不是虚拟机）；<br><strong><em>永久代中的 interned Strings 和 class static variables 转移到了 Java heap；(方法区和堆存在了交集)</em></strong><br>永久代参数 （PermSize MaxPermSize） -&gt; 元空间参数（MetaspaceSize MaxMetaspaceSize）</p>
 <p>堆被划分为新生代和老年代，新生代又被进一步划分为 Eden 和 Survivor 区，最后 Survivor 由 From Survivor 和 To Survivor 组成。</p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/heap.png" alt="heap"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105909.png" alt="heap"></p>
 <p>新生代中存放的对象用完即回收。老年代中存放长久存活的对象，例如：多次被静态方法调用的静态对象，并且没有被触发回收。</p>
 <h4 id="虚拟机栈（VM-stack）"><a href="#虚拟机栈（VM-stack）" class="headerlink" title="虚拟机栈（VM stack）"></a>虚拟机栈（VM stack）</h4><p>每一个运行在Java虚拟机里的线程都拥有自己的线程栈。这个线程栈包含了这个线程调用的方法当前执行点相关的信息。一个线程仅能访问自己的线程栈。<strong>一个线程创建的本地变量对其它线程不可见，仅自己可见。</strong>即使两个线程执行同样的代码，这两个线程任然在在自己的线程栈中的代码来创建本地变量。因此，每个线程拥有每个本地变量的独有版本。</p>
 <p>所有原始类型的本地变量都存放在线程栈上，因此对其它线程不可见。一个线程可能向另一个线程传递一个原始类型变量的拷贝，但是它不能共享这个原始类型变量自身。每个线程包含一个栈区，栈中只保存基础数据类型的对象和自定义对象的<strong>引用</strong>(不是对象)，对象都存放在堆区中。</p>
@@ -360,7 +360,7 @@
 <p>存放在堆上的对象可以被所有持有对这个对象引用的线程访问。当一个线程可以访问一个对象时，它也可以访问这个对象的成员变量。如果两个线程同时调用同一个对象上的同一个方法，它们将会都访问这个对象的成员变量，但是每一个线程都拥有这个本地变量的私有拷贝。</p>
 <h4 id="程序计数器（Program-Counter-Register）"><a href="#程序计数器（Program-Counter-Register）" class="headerlink" title="程序计数器（Program Counter Register）"></a>程序计数器（Program Counter Register）</h4><p>程序计数器是一块很小的内存空间，主要用来记录各个线程执行的字节码的地址，例如，分支、循环、跳转、异常、线程恢复等都依赖于计数器。</p>
 <p>由于 Java 是多线程语言，当执行的线程数量超过 CPU 数量时，线程之间会根据时间片轮询争夺 CPU 资源。如果一个线程的时间片用完了，或者是其它原因导致这个线程的 CPU 资源被提前抢夺，那么这个退出的线程就需要单独的一个程序计数器，来记录下一条运行的指令。</p>
-<h1 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h1><p><img src="http://image-jennerblog.test.upcdn.net/img/jvmdebug.gif" alt="jvmdebug"></p>
+<h1 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h1><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105917.gif" alt="jvmdebug"></p>
 <p>执行字节码指令时，需要用到“程序计数器”。</p>
 
     </div>

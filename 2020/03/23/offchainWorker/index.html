@@ -24,14 +24,14 @@
 <meta property="og:site_name" content="Jenner&#39;s Blog">
 <meta property="og:description" content="OCW喂价什么时候使用OCW 例如：长时间运行的任务、外部服务请求（http）、数据的加解密和签名等。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/off-chain-workers-v2.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110225.png">
 <meta property="article:published_time" content="2020-03-23T08:34:51.000Z">
-<meta property="article:modified_time" content="2020-10-06T09:54:00.000Z">
+<meta property="article:modified_time" content="2020-10-29T03:02:33.159Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="区块链">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://image-jennerblog.test.upcdn.net/img/off-chain-workers-v2.png">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110225.png">
 
 <link rel="canonical" href="http://munan.tech/2020/03/23/offchainWorker/">
 
@@ -225,7 +225,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-06 17:54:00" itemprop="dateModified" datetime="2020-10-06T17:54:00+08:00">2020-10-06</time>
+                <time title="修改时间：2020-10-29 11:02:33" itemprop="dateModified" datetime="2020-10-29T11:02:33+08:00">2020-10-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -277,7 +277,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="OCW喂价"><a href="#OCW喂价" class="headerlink" title="OCW喂价"></a>OCW喂价</h1><h2 id="什么时候使用OCW"><a href="#什么时候使用OCW" class="headerlink" title="什么时候使用OCW"></a>什么时候使用OCW</h2><p><img src="http://image-jennerblog.test.upcdn.net/img/off-chain-workers-v2.png" alt="off-chain-workers-v2"></p>
+        <h1 id="OCW喂价"><a href="#OCW喂价" class="headerlink" title="OCW喂价"></a>OCW喂价</h1><h2 id="什么时候使用OCW"><a href="#什么时候使用OCW" class="headerlink" title="什么时候使用OCW"></a>什么时候使用OCW</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110225.png" alt="off-chain-workers-v2"></p>
 <p>例如：长时间运行的任务、外部服务请求（http）、数据的加解密和签名等。</p>
 <a id="more"></a>
 <h2 id="在Runtime中使用"><a href="#在Runtime中使用" class="headerlink" title="在Runtime中使用"></a>在Runtime中使用</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// For better debugging (printout) support</span></span><br><span class="line"><span class="keyword">use</span> support::&#123; debug, dispatch &#125;;</span><br><span class="line"><span class="keyword">use</span> system::offchain;</span><br><span class="line"><span class="keyword">use</span> sp_runtime::transaction_validity::&#123;</span><br><span class="line">  TransactionValidity, TransactionLongevity, ValidTransaction, InvalidTransaction</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
