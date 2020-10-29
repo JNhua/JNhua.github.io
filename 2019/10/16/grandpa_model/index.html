@@ -24,14 +24,14 @@
 <meta property="og:site_name" content="Jenner&#39;s Blog">
 <meta property="og:description" content="简介之前已经翻译了部分Byzantine Finality Gadgets，可以看我之前发布的拜占庭终结工具。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://image-jennerblog.test.upcdn.net/img/run_grandpa_voter.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105752.png">
 <meta property="article:published_time" content="2019-10-16T09:45:28.000Z">
-<meta property="article:modified_time" content="2020-10-06T09:54:00.000Z">
+<meta property="article:modified_time" content="2020-10-29T02:57:58.013Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust">
 <meta property="article:tag" content="区块链">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://image-jennerblog.test.upcdn.net/img/run_grandpa_voter.png">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105752.png">
 
 <link rel="canonical" href="http://munan.tech/2019/10/16/grandpa_model/">
 
@@ -225,7 +225,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-06 17:54:00" itemprop="dateModified" datetime="2020-10-06T17:54:00+08:00">2020-10-06</time>
+                <time title="修改时间：2020-10-29 10:57:58" itemprop="dateModified" datetime="2020-10-29T10:57:58+08:00">2020-10-29</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -282,7 +282,7 @@
 <h1 id="相关模块"><a href="#相关模块" class="headerlink" title="相关模块"></a>相关模块</h1><p>在Substrate中，关于终结块机制的模块主要有：<code>core/finality-grandpa</code>、<code>srml/grandpa</code>和<code>srml/finality-tracker</code>。其中，<code>srml/grandpa</code>管理了GRANDPA的authority集合，<code>srml/finality-tracker</code>跟踪块生产者能感知到的最后终结块，<code>core/finality-grandpa</code>是GRANDPA的核心代码部分。</p>
 <h1 id="关键函数"><a href="#关键函数" class="headerlink" title="关键函数"></a>关键函数</h1><p>初始时，默认GRANDPA的authority为验证节点集合。在本文中，仅讨论验证节点上的GRANDPA运行流程。</p>
 <p>GRANDPA的核心运行函数是<code>core/finality-grandpa/src/lib.rs</code>中的<code>run_grandpa_voter</code>，以Substrate上的node为例，介绍该函数的调用过程：</p>
-<p><img src="http://image-jennerblog.test.upcdn.net/img/run_grandpa_voter.png" alt="run_grandpa_voter"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105752.png" alt="run_grandpa_voter"></p>
 <p>注意，在当前版本e84f6158b383880ba5fc86cb62c9fea10f5f3071中，服务的future统一在service中去执行。使用<code>service.spawn_essential_task</code>或者<code>service.spawn_task</code>将服务的future发送到通道<code>to_spawn_tx</code>中，然后在service中的<code>poll()</code>中，循环用<code>to_spawn_rx</code>接收所有服务的future，并用<code>tokio_executor</code>执行任务，直到退出。</p>
 <p>运行<code>run_grandpa_voter</code>前，必要的需要实现<code>block_import</code>和得到<code>LinkHalf</code>，这两个在宏<code>new_full_start</code>完成。</p>
 <p>在<code>run_grandpa_voter</code>中，先建立了<code>NetworkBridge</code>，返回服务句柄和一个future——<code>network_startup</code>。<code>network_startup</code>在<code>tokio_executor</code>注册了3个任务：rebroadcast、announce和reporting。接着为<code>finality_tracker</code>模块注册了<code>inherent_data_providers</code>，并且读取<code>client.backend().blockchain().info().finalized_num</code>存入<code>Inherent_data</code>。然后如果之前建立的<code>telemetry_on_connect</code>不为空，就建立一个<code>telemetry_task</code>的future，之后会检查一次，确保不会因为该任务的意外中断而导致grandpa停止，因为最后有<code>voter_work.select2(telemetry_task)</code>。</p>
