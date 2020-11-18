@@ -13,7 +13,7 @@ tags:
 
 ## 什么时候使用OCW
 
-![off-chain-workers-v2](http://image-jennerblog.test.upcdn.net/img/off-chain-workers-v2.png)
+![off-chain-workers-v2](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110225.png)
 
 例如：长时间运行的任务、外部服务请求（http）、数据的加解密和签名等。
 

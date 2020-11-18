@@ -11,7 +11,7 @@ tags:
 
 以太坊的每个外部账户都是由一对密钥定义的。下图是比特币公私钥与账户地址的关系。
 
-![1](http://image-jennerblog.test.upcdn.net/img/1.jpg)
+![1](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110007.jpg)
 
 <!-- more -->
 
@@ -89,7 +89,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 所以，您需要先得到**解密密钥**。实际上，记住你设置的密码即可，下小节讲解。
 
-![2](http://image-jennerblog.test.upcdn.net/img/2.png)
+![2](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110012.png)
 
 ## 2.用密码保护它
 
@@ -124,7 +124,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 在这里，使用**kdfparams**参数调整*scrypt*函数并将其**输入**密码，您将获得我们的**解密密钥**作为密钥派生函数的输出。
 
-![3](http://image-jennerblog.test.upcdn.net/img/3.png)
+![3](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110022.png)
 
 ## 3.确保您的密码是正确的
 
@@ -138,7 +138,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 在与**mac**进行比较之前，将**解密密钥**（仅第二个最左边的16个字节）和**密文**进行连接和散列（SHA3-256）。更多信息[在这里](https://github.com/hashcat/hashcat/issues/1228)。
 
-![4](http://image-jennerblog.test.upcdn.net/img/4.png)
+![4](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110029.png)
 
 # 总结
 
@@ -146,7 +146,7 @@ $ cat~ / .ethereum / keystore / UTC  -  <created_date_time>  -  008aeeda4d805471
 
 瞧！解密的结果是您的以太网私钥。您可以在这里查看整个过程：
 
-![5](http://image-jennerblog.test.upcdn.net/img/5.png)
+![5](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110041.png)
 
 从图中可以看出，你的密码作为唯一的输入，你的以太网私钥作为唯一的输出。创建新的以太坊帐户时生成的keystore文件中提供了所需的其他信息。
 

@@ -15,7 +15,7 @@ scrypt算法最早被用于的数字货币是Tenebrix，之后被莱特币使用
 
 先看一下scrypt算法与内部相关函数的关系：
 
-![1](http://image-jennerblog.test.upcdn.net/img/1.jpg)
+![1](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110543.jpg)
 
 接下来，从调用角度，从里到外介绍scrypt算法涉及的相应函数。
 

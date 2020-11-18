@@ -25,7 +25,7 @@ tags:
 
 GRANDPA的核心运行函数是`core/finality-grandpa/src/lib.rs`中的`run_grandpa_voter`，以Substrate上的node为例，介绍该函数的调用过程：
 
-![run_grandpa_voter](http://image-jennerblog.test.upcdn.net/img/run_grandpa_voter.png)
+![run_grandpa_voter](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105752.png)
 
 注意，在当前版本e84f6158b383880ba5fc86cb62c9fea10f5f3071中，服务的future统一在service中去执行。使用`service.spawn_essential_task`或者`service.spawn_task`将服务的future发送到通道`to_spawn_tx`中，然后在service中的`poll()`中，循环用`to_spawn_rx`接收所有服务的future，并用`tokio_executor`执行任务，直到退出。
 

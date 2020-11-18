@@ -17,7 +17,7 @@ Raft与Paxos在私链、分布式数据库中使用。
 ## 状态转移
 
 启动时都是follower状态。
-![5D9C4562-02AD-48F1-9273-3DC7D66DBCB8](http://image-jennerblog.test.upcdn.net/img/5D9C4562-02AD-48F1-9273-3DC7D66DBCB8.png)
+![5D9C4562-02AD-48F1-9273-3DC7D66DBCB8](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110432.png)
 
 ### timeout
 
@@ -33,7 +33,7 @@ leader以心跳周期给followers发送Append entry，直到出现新的term的l
 
 ## 任期
 
-![3D62AE1A-FA35-42DD-967B-9D63D11A3AD6](http://image-jennerblog.test.upcdn.net/img/3D62AE1A-FA35-42DD-967B-9D63D11A3AD6.png)
+![3D62AE1A-FA35-42DD-967B-9D63D11A3AD6](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110440.png)
 term（任期）以选举（election）开始，然后就是一段或长或短的稳定工作期（normal Operation）。从上图可以看到，任期是递增的，这就充当了逻辑时钟的作用；另外，term 3 展示了一种情况，就是说没有选举出 leader 就结束了，然后会发起新的选举，这是平票 split vote 的情况。
 
 ### split vote

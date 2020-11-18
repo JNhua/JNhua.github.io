@@ -134,17 +134,17 @@ Alice 使用算法来签名的步骤如下：
 
 我们从  $P=u_1G + u_2H_A$ 开始，通过公钥的定义我们知道 $H_A = d_A G$ （  $d_A$是私钥），所以我们得到：
 
-![image-20200909163306958](http://image-jennerblog.test.upcdn.net/img/image-20200909163306958.png)
+![image-20200909163306958](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105612.png)
 
 使用 $u_1$ 和  $u2$的定义，可以得到：
 
-![image-20200909163321840](http://image-jennerblog.test.upcdn.net/img/image-20200909163321840.png)
+![image-20200909163321840](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105620.png)
 
 这里为了简单先忽略 mod n ，因为由 G 生成的循环子群的阶为 n ，所以这里的 mod n 其实也是没必要的。
 
 再往前，我们定义了 $s = k^{-1}(z+rd_A)[mod]n$ ，式子两边同乘以  k再同除  s，也就是:$k=s^{-1}(z+rd_A)[mod]n$，把这个结果带到上面关于 P 的等式中得到：
 
-![image-20200909163510588](http://image-jennerblog.test.upcdn.net/img/image-20200909163510588.png)
+![image-20200909163510588](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105644.png)
 
 # Schnorr
 

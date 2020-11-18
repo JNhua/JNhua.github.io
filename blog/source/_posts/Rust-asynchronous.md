@@ -4,7 +4,7 @@ copyright: true
 date: 2020-08-18 14:12:47
 categories:
 - Rust
-- base
+- asynchronous
 tags:
 ---
 

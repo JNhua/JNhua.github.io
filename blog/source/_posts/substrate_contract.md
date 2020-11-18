@@ -21,7 +21,7 @@ tag:
 
 接着主要是调用了`bare_call`这个函数，和`instantiate`一样走得是`execute_wasm`。`ctx.call`实际上调用的是  `ExecutionContext::call`。
 
-![execute_wasm](http://image-jennerblog.test.upcdn.net/img/execute_wasm.png)
+![execute_wasm](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110611.png)
 
 在`ExecutionContext::call`中，首先判断了调用深度，然后收取调用合约的gas费用，接着调用`pay_rent`收取存储空间的租用费用。代码在 `srml/contracts/src/rent.rs`，`try_evict`和`pay_rent`都是走`try_evict_or_and_pay_rent`。该函数涉及费用计算，因此在**合约收费**中介绍。支付`rent`费用后，若合约状态变更为`tomestone`，则直接返回错误信息。
 

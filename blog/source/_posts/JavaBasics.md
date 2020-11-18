@@ -384,11 +384,11 @@ Scanner s = new Scanner(System.in);
 
 在读取前我们一般需要 使用 hasNext 与 hasNextLine 判断是否还有输入的数据。
 
-![iostream2xx](http://image-jennerblog.test.upcdn.net/img/iostream2xx.png)
+![iostream2xx](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105940.png)
 
 # Java 异常处理
 
-![exception](http://image-jennerblog.test.upcdn.net/img/exception.jpg)
+![exception](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105949.jpg)
 
 java中的异常分为两大类，强制性异常(CheckedException)和非强制性异常(UncheckedException)。而java中除了RuntimeException外，都是强制性异常。 
 

@@ -34,21 +34,21 @@ date: 2020-09-07 10:05:55
 
 1. Tools -> Deployment -> Configuration
 
-![image-20200907102258454](http://image-jennerblog.test.upcdn.net/img/image-20200907102258454.png)
+![image-20200907102258454](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105330.png)
 
-![image-20200907102510024](http://image-jennerblog.test.upcdn.net/img/image-20200907102510024.png)
+![image-20200907102510024](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105403.png)
 
 2. 在Mapppings中添加映射。
    1. 添加代码文件夹的映射；
    2. 添加本地target_remote 到 远程target的映射，为了让Linux的target文件与本地Mac OS的target文件区分开。所以，还需要在Excluded Paths中，把本地的target文件夹排除掉。
 
-![image-20200907103320500](http://image-jennerblog.test.upcdn.net/img/image-20200907103320500.png)
+![image-20200907103320500](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105417.png)
 
-![image-20200907103404223](http://image-jennerblog.test.upcdn.net/img/image-20200907103404223.png)
+![image-20200907103404223](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105426.png)
 
 3. 上传代码文件，在项目的根目录点击右键，然后上传
 
-![image-20200907103748150](http://image-jennerblog.test.upcdn.net/img/image-20200907103748150.png)
+![image-20200907103748150](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105437.png)
 
 ## 在远程端编译
 

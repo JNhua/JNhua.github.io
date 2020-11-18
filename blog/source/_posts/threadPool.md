@@ -14,7 +14,7 @@ tags:
 
 <!-- more-->
 
-![api](http://image-jennerblog.test.upcdn.net/img/api.png)
+![api](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110704.png)
 
 ## 构造函数
 
@@ -141,7 +141,7 @@ IO型任务：根据具体的IO阻塞时长考虑
 
 # 工作流程
 
-![workorder](http://image-jennerblog.test.upcdn.net/img/workorder.png)
+![workorder](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110710.png)
 
 ## API
 * 接口Executor：定义了执行任务的`execute()`；
@@ -190,7 +190,7 @@ public void execute(Runnable command) {
 3. 是否达到线程池最大数量？没达到，则创建一个新的工作线程来执行任务（加开的线程如果没有任务会自动销毁）；
 4. 最后，拒绝执行。
 
-![execute](http://image-jennerblog.test.upcdn.net/img/execute.png)
+![execute](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110738.png)
 
 ### addWorker
 
@@ -266,7 +266,7 @@ public void execute(Runnable command) {
   }
   ```
 
-![addworker](http://image-jennerblog.test.upcdn.net/img/addworker.png)
+![addworker](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110745.png)
 
 ## Worker
 
@@ -340,9 +340,9 @@ final void runWorker(Worker w) {
 }
 ```
 
-![runworkerflow](http://image-jennerblog.test.upcdn.net/img/runworkerflow.png)
+![runworkerflow](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110754.png)
 
-![runworker](http://image-jennerblog.test.upcdn.net/img/runworker.png)
+![runworker](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110802.png)
 
 #### getTask
 

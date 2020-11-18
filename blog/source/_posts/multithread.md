@@ -261,7 +261,7 @@ ObjectMonitor() {
 ```
 * 每个线程都有两个 `ObjectMonitor` 对象列表，分别为 `free` 和 `used `列表，如果当前 `free `列表为空，线程将向全局 `global ListLock` 请求分配 `ObjectMonitor`
 * `ObjectMonitor` 对象中有两个队列：`_WaitSet` 和 `_EntryList`，用来保存 `ObjectWaiter` 对象列表；`_owner` 指向获得 `ObjectMonitor `对象的线程
-![objectMonitor](http://image-jennerblog.test.upcdn.net/img/objectMonitor.png)
+![objectMonitor](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110105.png)
 * 每个等待锁的线程都会被封装成 `ObjectWaiter` 对象
     * ObjectWaiter 对象是双向链表结构，保存了_thread（当前线程）以及当前的状态 TState等数据
     ![objectWaiter](http://image-jennerblog.test.upcdn.net/img/objectWaiter.png)
@@ -322,7 +322,7 @@ void ATTR ObjectMonitor::enter(TRAPS) {
   }
 }
 ```
-![lockenter](http://image-jennerblog.test.upcdn.net/img/lockenter.png)
+![lockenter](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110112.png)
 * `ObjectMonitor` 释放锁是通过 `void ATTR exit(TRAPS)` 方法
 ```java
 void ATTR ObjectMonitor::exit(TRAPS) {
@@ -360,7 +360,7 @@ void ATTR ObjectMonitor::exit(TRAPS) {
    // 省略部分代码，根据不同的策略（由 QMode 指定），从 cxq 或 EntryList 中获取头节点，通过ObjectMonitor::ExitEpilog 方法唤醒该节点封装的线程，唤醒操作最终由 unpark 完成。
 
 ```
-![lockexit](http://image-jennerblog.test.upcdn.net/img/lockexit.png)
+![lockexit](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110121.png)
 * `lock.wait()` 方法最终通过 `ObjectMonitor` 的 `void wait(jlong millis, bool interruptable, TRAPS)` 实现:
     1. 将当前线程封装成 `ObjectWaiter` 对象 node
     2. 通过 `ObjectMonitor::AddWaiter` 方法将 node 添加到 `_WaitSet` 列表中

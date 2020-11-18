@@ -26,15 +26,15 @@ tags:
 ### 比特币
 交易结构：
 
-![交易结构](http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E7%BB%93%E6%9E%84.png)
+![交易结构](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104521.png)
 
 交易输入结构：
 
-![交易输入](http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E8%BE%93%E5%85%A5.png)
+![交易输入](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104357.png)
 
 交易输出结构：
 
-![交易输出](http://image-jennerblog.test.upcdn.net/img/%E4%BA%A4%E6%98%93%E8%BE%93%E5%87%BA.png)
+![交易输出](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104503.png)
 
 ### 以太坊
 和比特币一样，以太坊的区块中存储的也是交易（transaction），它包括的字段主要有：接受者（接受的账户）、发送者的签名、发送者发给接受者的以太币金额等。
@@ -80,7 +80,7 @@ tags:
 解锁脚本先进行入栈，然后锁定脚本入栈计算。
 如最为常见类型的比特币交易脚本（支付到公钥哈希：P2PKH（Pay-to-Public-Key-Hash））组合是这样：
 
-![脚本](http://image-jennerblog.test.upcdn.net/img/20200927144918.png)
+![脚本](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104627.png)
 
 验证解锁脚本中的`PubK`（验证`PubKHash`）与`sig`（公钥验证）与锁定脚本的计算结果是否一致。
 
@@ -101,11 +101,11 @@ tags:
 # 区块
 ## 区块结构
 ### 比特币
-![区块信息](http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97%E4%BF%A1%E6%81%AF.png)
+![区块信息](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104642.png)
 区块结构
-![区块](http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97.png)
+![区块](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201028203438.png)
 区块头
-![区块头](http://image-jennerblog.test.upcdn.net/img/%E5%8C%BA%E5%9D%97%E5%A4%B4.png)
+![区块头](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105249.png)
 
 ### 以太坊
 * ParentHash:父块的哈希值

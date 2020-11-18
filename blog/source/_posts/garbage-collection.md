@@ -40,7 +40,7 @@ Minor GC/Young GC的触发条件：新生代内存区满，而又有新进入的
 
 > 永久代在1.8中已经移除，替换为元空间，使用本地内存，突破了**-XX:MaxPermSize**的限制。
 
-![jvm_memory](http://image-jennerblog.test.upcdn.net/img/jvm_memory.jpg)
+![jvm_memory](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105731.jpg)
 
 应用框架设置JVM参数：Spring Boot其实就是启动的时候可以加上JVM参数，Tomcat就是在bin目录下的catalina.sh中可以加入JVM参数。
 
