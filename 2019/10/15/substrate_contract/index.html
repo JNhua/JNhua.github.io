@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 4.2.0">
+<meta name="generator" content="Hexo 5.2.0">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
 
 <link rel="stylesheet" href="/css/main.css">
@@ -14,7 +14,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta name="description" content="基本概念，substrate 合约与以太坊合约的一些联系与区别，上传合约代码 put_code 和实例化合约 instantiate 两个外部接口的实现。ChainX团队的这篇文章已经阐述过了： https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;ad1320ef9904  本文将介绍合约模块的第三个外部接口合约调用 call 的基本逻辑，并且会详细介绍下 substrate 关于合约收费的设计">
@@ -28,8 +28,7 @@
 <meta property="article:published_time" content="2019-10-15T04:49:49.000Z">
 <meta property="article:modified_time" content="2020-10-29T03:06:54.660Z">
 <meta property="article:author" content="Jenner">
-<meta property="article:tag" content="Rust">
-<meta property="article:tag" content="区块链">
+<meta property="article:tag" content="Rust,区块链">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110611.png">
 
@@ -451,7 +450,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#call-：调用合约"><span class="nav-number">1.</span> <span class="nav-text">call ：调用合约</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#合约收费"><span class="nav-number">2.</span> <span class="nav-text">合约收费</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#存储收费"><span class="nav-number">2.1.</span> <span class="nav-text">存储收费</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#操作的gas费用"><span class="nav-number">2.2.</span> <span class="nav-text">操作的gas费用</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#call-%EF%BC%9A%E8%B0%83%E7%94%A8%E5%90%88%E7%BA%A6"><span class="nav-number">1.</span> <span class="nav-text">call ：调用合约</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%88%E7%BA%A6%E6%94%B6%E8%B4%B9"><span class="nav-number">2.</span> <span class="nav-text">合约收费</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E6%94%B6%E8%B4%B9"><span class="nav-number">2.1.</span> <span class="nav-text">存储收费</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E7%9A%84gas%E8%B4%B9%E7%94%A8"><span class="nav-number">2.2.</span> <span class="nav-text">操作的gas费用</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -474,7 +473,7 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-count">18</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
