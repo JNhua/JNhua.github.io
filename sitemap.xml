@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://munan.tech/2020/11/18/Rust-coroutine/</loc>
+    
+    <lastmod>2020-11-18</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://munan.tech/2020/08/18/Rust-asynchronous/</loc>
     
     <lastmod>2020-11-18</lastmod>

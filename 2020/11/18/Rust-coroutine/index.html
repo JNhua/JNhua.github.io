@@ -17,26 +17,20 @@
     var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="目标在CLion下远程调试Rust代码。">
+  <meta name="description" content="历史背景多线程编程早起基于操作系统提供的线程的概念来实现并发编程，一个连接一个线程。在连接数目渐渐增多的时候，可扩展性很差，因为操作系统本身并不擅长处理大量的线程：任何一个线程的创建都需要设计到栈空间的分配、线程私有资源的创建和维护；同时大量的线程在操作系统层面被调度的时候，也很难保证调度策略的公平和有效。这也是C10K问题的由来。 解决方案操作系统层面通过在内核层面的IO多路复用角度触发，通过引">
 <meta property="og:type" content="article">
-<meta property="og:title" content="clion-remote-rust">
-<meta property="og:url" content="http://munan.tech/2020/09/07/clion-remote-rust/index.html">
+<meta property="og:title" content="Rust-coroutine">
+<meta property="og:url" content="http://munan.tech/2020/11/18/Rust-coroutine/index.html">
 <meta property="og:site_name" content="Jenner&#39;s Blog">
-<meta property="og:description" content="目标在CLion下远程调试Rust代码。">
+<meta property="og:description" content="历史背景多线程编程早起基于操作系统提供的线程的概念来实现并发编程，一个连接一个线程。在连接数目渐渐增多的时候，可扩展性很差，因为操作系统本身并不擅长处理大量的线程：任何一个线程的创建都需要设计到栈空间的分配、线程私有资源的创建和维护；同时大量的线程在操作系统层面被调度的时候，也很难保证调度策略的公平和有效。这也是C10K问题的由来。 解决方案操作系统层面通过在内核层面的IO多路复用角度触发，通过引">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105330.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105403.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105417.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105426.png">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105437.png">
-<meta property="article:published_time" content="2020-09-07T02:05:55.000Z">
-<meta property="article:modified_time" content="2020-10-29T02:54:49.329Z">
+<meta property="article:published_time" content="2020-11-18T02:34:33.000Z">
+<meta property="article:modified_time" content="2020-11-18T02:35:39.857Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust,区块链">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105330.png">
 
-<link rel="canonical" href="http://munan.tech/2020/09/07/clion-remote-rust/">
+<link rel="canonical" href="http://munan.tech/2020/11/18/Rust-coroutine/">
 
 
 <script id="page-configurations">
@@ -48,7 +42,7 @@
   };
 </script>
 
-  <title>clion-remote-rust | Jenner's Blog</title>
+  <title>Rust-coroutine | Jenner's Blog</title>
   
 
 
@@ -198,7 +192,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://munan.tech/2020/09/07/clion-remote-rust/">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/2020/11/18/Rust-coroutine/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -211,7 +205,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          clion-remote-rust
+          Rust-coroutine
         </h1>
 
         <div class="post-meta">
@@ -220,23 +214,21 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2020-09-07 10:05:55" itemprop="dateCreated datePublished" datetime="2020-09-07T10:05:55+08:00">2020-09-07</time>
+              <time title="创建时间：2020-11-18 10:34:33 / 修改时间：10:35:39" itemprop="dateCreated datePublished" datetime="2020-11-18T10:34:33+08:00">2020-11-18</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-10-29 10:54:49" itemprop="dateModified" datetime="2020-10-29T10:54:49+08:00">2020-10-29</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="fa fa-folder-o"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Other/" itemprop="url" rel="index"><span itemprop="name">Other</span></a>
+                  <a href="/categories/Rust/" itemprop="url" rel="index"><span itemprop="name">Rust</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Rust/asynchronous/" itemprop="url" rel="index"><span itemprop="name">asynchronous</span></a>
                 </span>
             </span>
 
@@ -256,8 +248,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2020/09/07/clion-remote-rust/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/09/07/clion-remote-rust/" itemprop="commentCount"></span>
+    <a title="valine" href="/2020/11/18/Rust-coroutine/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/11/18/Rust-coroutine/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -272,42 +264,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h1><p>在CLion下远程调试Rust代码。</p>
-<a id="more"></a>
-<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
-<li>本地Mac OS，远程Ubuntu。</li>
-<li>IDE：CLion2019.3.4</li>
+        <h1 id="历史背景"><a href="#历史背景" class="headerlink" title="历史背景"></a>历史背景</h1><h2 id="多线程编程"><a href="#多线程编程" class="headerlink" title="多线程编程"></a>多线程编程</h2><p>早起基于操作系统提供的线程的概念来实现并发编程，一个连接一个线程。在连接数目渐渐增多的时候，可扩展性很差，因为操作系统本身并不擅长处理大量的线程：任何一个线程的创建都需要设计到栈空间的分配、线程私有资源的创建和维护；同时大量的线程在操作系统层面被调度的时候，也很难保证调度策略的公平和有效。这也是C10K问题的由来。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><h3 id="操作系统层面"><a href="#操作系统层面" class="headerlink" title="操作系统层面"></a>操作系统层面</h3><p>通过在内核层面的IO多路复用角度触发，通过引入epoll等技术来允许一个单一的用户线程的IO调用可以管理海量的网络连接而完美地解决了传统的select调用层面的问题。<br>这个方案解决了一个线程处理海量网络IO的问题，但是对和网络无关的并发任务并没有多少帮助。同时，这种方案下的异步代码损失了可读性。</p>
+<h3 id="用户态线程-Green-Thread"><a href="#用户态线程-Green-Thread" class="headerlink" title="用户态线程/Green Thread"></a>用户态线程/Green Thread</h3><p>将逻辑线程的管理逻辑都放在操作系统的用户态来管理，而操作系统层面对这些机制一无所知。 运行在用户态的线程管理程序（往往是比较底层的基础库或者组件）自己负责这些线程状态的管理和调度。</p>
+<h1 id="协程"><a href="#协程" class="headerlink" title="协程"></a>协程</h1><p>通过引入一个逻辑上抽象的概念来简化编程模型。某种程度上说，可以将一个协程看作是一段可以以非阻塞的方式高效执行的代码；而多个协程之间可以通过特定关键字或者语句的方式进行组合，以便程序员可以直接写出看起来是同步执行而实际上底层却是被异步调度执行的代码。这种方案既解决了程序员在异步编程上的心智负担，又解决了C10K问题。</p>
+<h1 id="Go的有栈协程"><a href="#Go的有栈协程" class="headerlink" title="Go的有栈协程"></a>Go的有栈协程</h1><p>go语言被设计为天生支持协程，在代码中使用 go 关键字就能启动一个goroutinue，也就是协程。go的runtime两大主要职责：一个是垃圾回收，另一个就是调度协程。 go的协程调度模型可以称作GMP模型，其中：</p>
+<ul>
+<li>G 表示 goroutinue，也就是协程</li>
+<li>M 表示 os thread</li>
+<li>P 表示调度上下文，每个M必须要先获取一个P，才能够开始执行G。</li>
 </ul>
-<h1 id="机器设置"><a href="#机器设置" class="headerlink" title="机器设置"></a>机器设置</h1><h2 id="远程端"><a href="#远程端" class="headerlink" title="远程端"></a>远程端</h2><p>需要打开端口ssh的TCP 22，gdbserver的TCP 2345。</p>
-<p>需要安装rust与gdb。</p>
-<h2 id="本地端"><a href="#本地端" class="headerlink" title="本地端"></a>本地端</h2><p>安装好Clion，rust插件与rust。</p>
-<h3 id="CLion配置"><a href="#CLion配置" class="headerlink" title="CLion配置"></a>CLion配置</h3><ol>
-<li>Tools -&gt; Deployment -&gt; Configuration</li>
-</ol>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105330.png" alt="image-20200907102258454"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105403.png" alt="image-20200907102510024"></p>
-<ol>
-<li>在Mapppings中添加映射。<ol>
-<li>添加代码文件夹的映射；</li>
-<li>添加本地target_remote 到 远程target的映射，为了让Linux的target文件与本地Mac OS的target文件区分开。所以，还需要在Excluded Paths中，把本地的target文件夹排除掉。</li>
-</ol>
-</li>
-</ol>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105417.png" alt="image-20200907103320500"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105426.png" alt="image-20200907103404223"></p>
-<ol>
-<li>上传代码文件，在项目的根目录点击右键，然后上传</li>
-</ol>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105437.png" alt="image-20200907103748150"></p>
-<h2 id="在远程端编译"><a href="#在远程端编译" class="headerlink" title="在远程端编译"></a>在远程端编译</h2><ul>
-<li><code>cargo build</code>生成target文件夹。</li>
-<li>开启gdbserver，例如：<code>gdbserver 0.0.0.0:2345 ./target/debug/cita-executor</code>。</li>
-<li>本地同步远程端，把target文件夹下载到本地的target_remote文件夹。<ul>
-<li><strong>Tools→Deployment→Browse Remote Host</strong>，找到target文件夹，右键选择Dowanload from here。</li>
+<p>最初的调度模型中没有P的概念，在1.1版本后，go的调度器中引入了P，这么做主要是为了提升调度的性能，尽力的保证每个可运行的G都能够尽快运行。调度机制主要特点如下：</p>
+<ul>
+<li>每个P都有一个可运行的G队列</li>
+<li>另外有一个全局的可以运行G队列</li>
+<li>M获取到P后，从P的运行队列中获取G来运行</li>
+<li>如果P本地的运行队列为空，则尝试从全局队列中获取G来运行</li>
+<li>如果全局的运行队列也为空，则尝试从其他P的运行队列中获取G</li>
 </ul>
-</li>
-</ul>
-<h2 id="调试设置"><a href="#调试设置" class="headerlink" title="调试设置"></a>调试设置</h2><p>添加GDB Remote Debug，就可以本地测试啦。</p>
+<p>每个G运行的时间是由调度器来控制的，不会出现让某个G一直运行，而让其他G长时间的等待。如果M在运行G的时候发生了阻塞，比如block在某个系统调用，M则也会被阻塞住，P的本地队列会调度到其他M上执行。<br>P的数量可以通过GOMAXPROCS函数来设置，因为每个M对应一个P，因此这个函数也可以认为是设置了go程序最大的线程数量。（注意，M是可以大于P的，例如：一个M阻塞住了，那么正在运行的M数目还是和P的数目一样，这样总的M数目就大于P了。）</p>
+<p>go语言中，协程的实现与操作系统多线程非常相似，依托于操作系统的多线程，在Runtime实现了一个协作式的调度器。go的系统调用是对底层系统调用的一个封装，被执行时，会将协程的上下文保存到堆栈中。</p>
+<h1 id="Rust的协程"><a href="#Rust的协程" class="headerlink" title="Rust的协程"></a>Rust的协程</h1><p>Rust早期也是支持一个与go协程类似的绿色线程。在0.7以后，绿色线程就被删除了。因为Rust中Native thread与协程运行库的API很难统一。</p>
+<h2 id="无栈协程"><a href="#无栈协程" class="headerlink" title="无栈协程"></a>无栈协程</h2><p>Rust的无栈协程将协程上下文放到Generator生成的状态机中，保存在全局栈中，而不必为每个协程分配一个动态大小的栈。<br>无栈协程不需要与CPU相关的代码来分配栈内存，有了更好的跨平台能力。</p>
+<h2 id="await和async"><a href="#await和async" class="headerlink" title="await和async"></a>await和async</h2><p>在Rust1.36稳定版中加入了两个新的关键字：await和async。<br>引入这两个关键字使得Rust异步代码能够像同步顺序代码一样书写，避免手写poll方法的繁琐。</p>
+<h1 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a>Reference</h1><p><a target="_blank" rel="noopener" href="https://skyscribe.github.io/post/2019/12/07/rust-asynchronous-model-and-features/">Rust语言的异步编程模型和协程支持</a><br><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000024462355">无栈协程 | Rust学习笔记</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/a609a2d8e998">go和rust的协程模型</a></p>
 
     </div>
 
@@ -338,7 +318,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://munan.tech/2020/09/07/clion-remote-rust/" title="clion-remote-rust">http://munan.tech/2020/09/07/clion-remote-rust/</a>
+    <a href="http://munan.tech/2020/11/18/Rust-coroutine/" title="Rust-coroutine">http://munan.tech/2020/11/18/Rust-coroutine/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -355,13 +335,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/09/01/goForCircle/" rel="prev" title="go for循环的一个问题">
-      <i class="fa fa-chevron-left"></i> go for循环的一个问题
+    <a href="/2020/09/15/PBFT/" rel="prev" title="PBFT">
+      <i class="fa fa-chevron-left"></i> PBFT
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2020/09/15/raft/" rel="next" title="raft">
-      raft <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -422,7 +399,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%AE%E6%A0%87"><span class="nav-number">1.</span> <span class="nav-text">目标</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83"><span class="nav-number">1.1.</span> <span class="nav-text">环境</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%BA%E5%99%A8%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">机器设置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9C%E7%A8%8B%E7%AB%AF"><span class="nav-number">2.1.</span> <span class="nav-text">远程端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E7%AB%AF"><span class="nav-number">2.2.</span> <span class="nav-text">本地端</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CLion%E9%85%8D%E7%BD%AE"><span class="nav-number">2.2.1.</span> <span class="nav-text">CLion配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E8%BF%9C%E7%A8%8B%E7%AB%AF%E7%BC%96%E8%AF%91"><span class="nav-number">2.3.</span> <span class="nav-text">在远程端编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E8%AF%95%E8%AE%BE%E7%BD%AE"><span class="nav-number">2.4.</span> <span class="nav-text">调试设置</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8E%86%E5%8F%B2%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">历史背景</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%BC%96%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">多线程编程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">1.2.</span> <span class="nav-text">解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%B1%82%E9%9D%A2"><span class="nav-number">1.2.1.</span> <span class="nav-text">操作系统层面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8%E6%88%B7%E6%80%81%E7%BA%BF%E7%A8%8B-Green-Thread"><span class="nav-number">1.2.2.</span> <span class="nav-text">用户态线程&#x2F;Green Thread</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">协程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Go%E7%9A%84%E6%9C%89%E6%A0%88%E5%8D%8F%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text">Go的有栈协程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Rust%E7%9A%84%E5%8D%8F%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">Rust的协程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A0%E6%A0%88%E5%8D%8F%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">无栈协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#await%E5%92%8Casync"><span class="nav-number">4.2.</span> <span class="nav-text">await和async</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Reference"><span class="nav-number">5.</span> <span class="nav-text">Reference</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
