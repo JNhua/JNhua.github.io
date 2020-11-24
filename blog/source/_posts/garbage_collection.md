@@ -7,6 +7,7 @@ category:
   - Java
   - JVM
 mathjax: true
+abbrlink: 1e17edb
 ---
 # 垃圾回收条件
 ## 新生代

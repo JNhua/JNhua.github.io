@@ -7,6 +7,7 @@ category:
   - 区块链
   - 共识协议
 mathjax: true
+abbrlink: 5372f47e
 ---
 PBFT、DBFT在联盟链中使用。
 <!--more-->

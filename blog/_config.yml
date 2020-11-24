@@ -16,8 +16,12 @@ keywords: Rust,区块链
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
 url: http://munan.tech
 root: /
-permalink: :year/:month/:day/:title/
-permalink_defaults:
+# permalink: :year/:month/:day/:title/
+# permalink_defaults:
+permalink: blog/:abbrlink.html
+abbrlink:
+	alg: crc32
+	rep: hex
 
 # Directory
 source_dir: source

@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+abbrlink: bf56e353
 ---
 # 编译过程
 整体流程：[源代码]->分词->[Tokens词条流]->解析->[AST]->语法分析，宏扩展→[高级中间语言HIR]->类型检查->[中级中间语言MIR]->转换->[LLVM IR]->LLVM->[目标文件]->链接->[可执行程序]

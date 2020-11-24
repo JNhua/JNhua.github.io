@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+abbrlink: 78c491e
 ---
 # 线程基本使用
 ## 创建线程

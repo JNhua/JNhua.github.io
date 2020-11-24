@@ -7,6 +7,7 @@ category:
   - Java
   - 路线与基础
 mathjax: true
+abbrlink: 80c02825
 ---
 # 修饰用法
 ## 基本用法

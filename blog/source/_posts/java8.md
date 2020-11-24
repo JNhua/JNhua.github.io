@@ -7,6 +7,7 @@ category:
   - Java
   - 路线与基础
 mathjax: true
+abbrlink: 92a2fe0d
 ---
 # Lambda 表达式
 语法格式：

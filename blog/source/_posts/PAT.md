@@ -7,6 +7,7 @@ category:
   - 考研
   - 数据结构
 mathjax: true
+abbrlink: 16991c0b
 ---
 # 算法初步
 ## 排序

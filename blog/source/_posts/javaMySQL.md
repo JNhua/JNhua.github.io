@@ -7,6 +7,7 @@ category:
   - Java
   - 数据库
 mathjax: true
+abbrlink: 59b2296b
 ---
 # MySQL 连接
 使用 JDBC 连接 MySQL 数据库。

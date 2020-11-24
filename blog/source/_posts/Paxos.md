@@ -7,6 +7,7 @@ category:
   - 区块链
   - 共识协议
 mathjax: true
+abbrlink: c20c6b6
 ---
 # Paxos
 用于达成共识性问题，即对多个节点产生的值，该算法能保证只选出唯一一个值。主要有三类节点：

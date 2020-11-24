@@ -7,6 +7,7 @@ category:
   - 区块链
   - 密码学
 mathjax: true
+abbrlink: 2475f3a5
 ---
 # Keystore简介
 以太坊的每个外部账户都是由一对密钥定义的。

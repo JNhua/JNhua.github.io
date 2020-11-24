@@ -7,6 +7,7 @@ category:
   - Java
   - 路线与基础
 mathjax: true
+abbrlink: 5e568bb
 ---
 # Socket 编程
 

@@ -7,6 +7,7 @@ category:
   - Rust
   - 异步
 mathjax: true
+abbrlink: '757e7540'
 ---
 # 异步入门
 ## 为什么需要异步？

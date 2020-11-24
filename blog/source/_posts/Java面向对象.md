@@ -7,6 +7,7 @@ category:
   - Java
   - 路线与基础
 mathjax: true
+abbrlink: 5f8d3e42
 ---
 # Java 继承
 ## 继承类型

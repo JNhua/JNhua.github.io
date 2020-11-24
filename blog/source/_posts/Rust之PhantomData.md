@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+abbrlink: a3f13347
 ---
 `PhantomData<T>`是一个零大小类型的标记结构体。
 <!--more-->

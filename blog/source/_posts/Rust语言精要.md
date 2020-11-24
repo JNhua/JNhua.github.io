@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+abbrlink: 23c8ad1e
 ---
 # 变量
 声明变量关键字：`let`

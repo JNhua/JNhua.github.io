@@ -7,6 +7,7 @@ category:
   - 编程
   - 编程
 mathjax: true
+abbrlink: '75283104'
 ---
 # 目标
 在CLion下远程调试Rust代码。

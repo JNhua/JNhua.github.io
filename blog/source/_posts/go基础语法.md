@@ -7,6 +7,7 @@ category:
   - go
   - Go
 mathjax: true
+abbrlink: f700becf
 ---
 # 语言结构
 * 包声明

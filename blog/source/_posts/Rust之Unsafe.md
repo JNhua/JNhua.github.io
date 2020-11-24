@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+abbrlink: 22fa27d4
 ---
 # Unsafe
 

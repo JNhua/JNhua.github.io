@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+abbrlink: '3164e534'
 ---
 # 模式
 模式由如下内容组成：

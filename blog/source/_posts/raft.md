@@ -7,6 +7,7 @@ category:
   - 区块链
   - 共识协议
 mathjax: true
+abbrlink: 6d9ac026
 ---
 Raft与Paxos在私链、分布式数据库中使用。
 <!--more-->

@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+abbrlink: 35f77f38
 ---
 # 行为上对类型的约束
 
