@@ -1,18 +1,16 @@
 ---
 title: PAT
-copyright: true
-date: 2020-05-17 12:24:31
-categories:
-- Other
-tags:
+date: '2020/6/16 15:06:08'
+updated: '2020/11/23 19:56:46'
+tags: []
+category:
+  - 考研
+  - 数据结构
+mathjax: true
 ---
-
 # 算法初步
-
 ## 排序
-
 使用sort函数，必要时需要自定义cmp比较函数；
-
 <!--more-->
 
 ## 散列

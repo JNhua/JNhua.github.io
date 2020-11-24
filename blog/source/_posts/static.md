@@ -1,24 +1,20 @@
 ---
 title: static
-copyright: true
-date: 2020-03-27 18:22:26
-categories:
-- Java
-- base
-tags:
+date: '2020/11/23 20:11:18'
+updated: '2020/11/23 20:11:34'
+tags: []
+category:
+  - Java
+  - 路线与基础
+mathjax: true
 ---
-
 # 修饰用法
-
 ## 基本用法
-
 一般用来修饰成员变量或函数，可以在没有创建对象的情况下来进行调用。
-
+<!--more-->
 ## 修饰类
-
 普通类是不允许声明为静态的，只有内部类才可以。
 
-<!-- more -->
 
 ## 修饰函数/方法
 

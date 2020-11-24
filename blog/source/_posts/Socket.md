@@ -1,22 +1,21 @@
 ---
-title: Socket
-copyright: true
-date: 2020-03-30 16:37:08
-categories:
-- Java
-- base
-tags:
+title: socket
+date: '2020/5/25 11:12:29'
+updated: '2020/5/25 11:12:43'
+tags: []
+category:
+  - Java
+  - 路线与基础
+mathjax: true
 ---
-
 # Socket 编程
 
+<!--more-->
 套接字使用TCP提供了两台计算机之间的通信机制。 客户端程序创建一个套接字，并尝试连接服务器的套接字。
 
 当连接建立时，服务器会创建一个 Socket 对象。客户端和服务器现在可以通过对 Socket 对象的写入和读取来进行通信。
 
 java.net.Socket 类代表一个套接字，并且 java.net.ServerSocket 类为服务器程序提供了一种来监听客户端，并与他们建立连接的机制。
-
-<!-- more -->
 
 以下步骤在两台计算机之间使用套接字建立TCP连接时会出现：
 

@@ -1,16 +1,15 @@
 ---
 title: PBFT
-copyright: true
-date: 2020-09-15 11:14:26
-categories:
-- BlockChain
-- Distributed Consensus
-tags:
+date: '2020/9/12 22:28:04'
+updated: '2020/11/23 19:58:16'
+tags: []
+category:
+  - 区块链
+  - 共识协议
+mathjax: true
 ---
-
 PBFT、DBFT在联盟链中使用。
-
-<!-- more -->
+<!--more-->
 
 # 最大容错数量
 

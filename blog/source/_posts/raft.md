@@ -1,16 +1,15 @@
 ---
-title: raft
-copyright: true
-date: 2020-09-15 09:52:31
-categories:
-- BlockChain
-- Distributed Consensus
-tags:
+title: Raft
+date: '2020/8/28 10:55:23'
+updated: '2020/11/23 19:58:53'
+tags: []
+category:
+  - 区块链
+  - 共识协议
+mathjax: true
 ---
-
 Raft与Paxos在私链、分布式数据库中使用。
-
-<!-- more -->
+<!--more-->
 
 # leader选举
 

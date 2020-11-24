@@ -1,22 +1,19 @@
 ---
 title: Paxos
-copyright: true
-date: 2020-08-21 12:54:24
-categories:
-- BlockChain
-- Distributed Consensus
-tags:
+date: '2020/9/08 19:22:56'
+updated: '2020/11/23 19:57:31'
+tags: []
+category:
+  - 区块链
+  - 共识协议
+mathjax: true
 ---
-
 # Paxos
-
 用于达成共识性问题，即对多个节点产生的值，该算法能保证只选出唯一一个值。主要有三类节点：
-
+<!--more-->
 * 提议者（Proposer）：提议一个值；
 * 接受者（Acceptor）：对每个提议进行投票；
 * 告知者（Learner）：被告知投票的结果，不参与投票过程。
-
-<!-- more -->
 
 ![4990FBD6-0AFD-4C25-9FD1-3E983330C9E1](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110243.jpg)
 

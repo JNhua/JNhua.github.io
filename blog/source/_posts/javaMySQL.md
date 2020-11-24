@@ -1,21 +1,17 @@
 ---
-title: javaMySQL
-copyright: true
-date: 2020-03-31 18:03:54
-categories:
-- Java
-- Database
-- MySQL
-tags:
+title: JavaMYSQL
+date: '2020/11/23 19:52:26'
+updated: '2020/11/23 19:52:55'
+tags: []
+category:
+  - Java
+  - 数据库
+mathjax: true
 ---
-
 # MySQL 连接
-
 使用 JDBC 连接 MySQL 数据库。
-
-Java 连接 MySQL 需要驱动包，然后在对应的项目中导入该库文件。
-
 <!--more-->
+Java 连接 MySQL 需要驱动包，然后在对应的项目中导入该库文件。
 
 **MySQL 8.0 以上版本的数据库连接有所不同：**
 

@@ -1,18 +1,16 @@
 ---
-title: threadPool
-copyright: true
-date: 2020-06-16 16:49:55
-categories:
-- Java
-- Concurrent
-tags:
+title: ThreadPool
+date: '2020/11/23 20:11:55'
+updated: '2020/11/23 20:18:51'
+tags: []
+category:
+  - Java
+  - 并发
+mathjax: true
 ---
-
-# **线程池 ( ThreadPoolExecutor)**
-
-- 线程池是为了避免线程频繁的创建和销毁带来的性能消耗，而建立的一种池化技术，它是把已创建的线程放入“池”中，当有任务来临时就可以重用已有的线程，无需等待创建的过程，这样就可以有效提高程序的响应速度
-
-<!-- more-->
+# 线程池 ( ThreadPoolExecutor)
+- 线程池是为了避免线程频繁的创建和销毁带来的性能消耗，而建立的一种池化技术，它是把已创建的线程放入“池”中，当有任务来临时就可以重用已有的线程，无需等待创建的过程，这样就可以有效提高程序的响应速度。
+<!--more-->
 
 ![api](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110704.png)
 
@@ -30,8 +28,6 @@ public ThreadPoolExecutor(int corePoolSize,
   ......
 }
 ```
-
-
 
 1. `corePoolSize `表示线程池的常驻核心线程数。如果设置为 0，则表示在没有任何任务时，销毁线程池；如果大于 0，即使没有任务时也会保证线程池的线程数量等于此值。但需要注意，此值如果设置的比较小，则会频繁的创建和销毁线程；如果设置的比较大，则会浪费系统资源，所以开发者需要根据自己的实际业务来调整此值
 
@@ -144,6 +140,7 @@ IO型任务：根据具体的IO阻塞时长考虑
 ![workorder](https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110710.png)
 
 ## API
+
 * 接口Executor：定义了执行任务的`execute()`；
 * 接口ExecutorService：继承了接口Executor，拓展了Callable、Future、关闭方法；
 * 接口ScheduledExecutorService：继承了接口ExecutorService，增加了定时任务相关方法；
@@ -519,6 +516,7 @@ private long completedTaskCount;
   * mainLock 也用于在中断线程`interruptIdleWorkers`的时候串行执行，否则可能会并发进行线程中断，引起不必要的中断高峰。否则退出中的线程会并发地中断那些还没有被中断的线程。
 
 ## 停止
+
 shutdown：不接收新任务，等待任务执行结束；
 shutdownNow：立即结束所有线程，队列中线程不再执行，不接收新任务，返回未结束任务列表（队列中的）。
 

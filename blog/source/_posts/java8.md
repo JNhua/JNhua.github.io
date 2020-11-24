@@ -1,29 +1,24 @@
 ---
 title: java8
-copyright: true
-date: 2020-03-31 13:20:40
-categories:
-- Java
-- base
-tags:
+date: '2020/5/25 11:11:17'
+updated: '2020/11/23 19:50:50'
+tags: []
+category:
+  - Java
+  - 路线与基础
+mathjax: true
 ---
-
 # Lambda 表达式
-
 语法格式：
-
+<!--more-->
 ```java
 (parameters) -> expression
 或
 (parameters) ->{ statements; }
 ```
-
 使用 Lambda 表达式需要注意以下两点：
-
 - Lambda 表达式主要用来定义行内执行的方法类型接口，例如，一个简单方法接口。
 - Lambda 表达式免去了使用匿名方法的麻烦，并且给予Java简单但是强大的函数化的编程能力。
-
-<!--more-->
 
 ## 变量作用域
 
