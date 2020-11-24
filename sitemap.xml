@@ -16,7 +16,7 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/2020/11/23/ThreadPool/</loc>
+    <loc>http://munan.tech/2020/11/23/threadPool/</loc>
     
     <lastmod>2020-11-23</lastmod>
     
@@ -93,7 +93,7 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/2020/08/28/Raft/</loc>
+    <loc>http://munan.tech/2020/08/28/raft/</loc>
     
     <lastmod>2020-11-23</lastmod>
     
@@ -142,7 +142,7 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/2020/11/23/JavaMYSQL/</loc>
+    <loc>http://munan.tech/2020/11/23/javaMySQL/</loc>
     
     <lastmod>2020-11-23</lastmod>
     
@@ -282,7 +282,7 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/2020/05/25/socket/</loc>
+    <loc>http://munan.tech/2020/05/25/Socket/</loc>
     
     <lastmod>2020-05-25</lastmod>
     
@@ -300,13 +300,6 @@
 
   
   <url>
-    <loc>http://munan.tech/categories/Java/</loc>
-    <lastmod>2020-11-24</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://munan.tech/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/</loc>
     <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
@@ -314,28 +307,7 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/Java/%E6%95%B0%E6%8D%AE%E5%BA%93/</loc>
-    <lastmod>2020-11-24</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/Java/%E8%B7%AF%E7%BA%BF%E4%B8%8E%E5%9F%BA%E7%A1%80/</loc>
-    <lastmod>2020-11-24</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/Rust/</loc>
-    <lastmod>2020-11-24</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E5%AF%86%E7%A0%81%E5%AD%A6/</loc>
+    <loc>http://munan.tech/categories/Java/</loc>
     <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -349,14 +321,28 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/Java/Spring/</loc>
+    <loc>http://munan.tech/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E5%AF%86%E7%A0%81%E5%AD%A6/</loc>
     <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/%E7%BC%96%E7%A8%8B/</loc>
+    <loc>http://munan.tech/categories/Rust/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Java/%E8%B7%AF%E7%BA%BF%E4%B8%8E%E5%9F%BA%E7%A1%80/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Java/Spring/</loc>
     <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -384,6 +370,20 @@
   </url>
   
   <url>
+    <loc>http://munan.tech/categories/%E7%BC%96%E7%A8%8B/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Java/%E6%95%B0%E6%8D%AE%E5%BA%93/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://munan.tech/categories/Polkadot/</loc>
     <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
@@ -405,14 +405,14 @@
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/%E7%BC%96%E7%A8%8B/%E7%BC%96%E7%A8%8B/</loc>
+    <loc>http://munan.tech/categories/go/Go/</loc>
     <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/go/Go/</loc>
+    <loc>http://munan.tech/categories/%E7%BC%96%E7%A8%8B/%E7%BC%96%E7%A8%8B/</loc>
     <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>

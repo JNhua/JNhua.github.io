@@ -1,28 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>JavaMYSQL</title>
-    <url>/2020/11/23/JavaMYSQL/</url>
-    <content><![CDATA[<h1 id="MySQL-连接"><a href="#MySQL-连接" class="headerlink" title="MySQL 连接"></a>MySQL 连接</h1><p>使用 JDBC 连接 MySQL 数据库。<br><a id="more"></a><br>Java 连接 MySQL 需要驱动包，然后在对应的项目中导入该库文件。</p>
-<p><strong>MySQL 8.0 以上版本的数据库连接有所不同：</strong></p>
-<ul>
-<li>1、MySQL 8.0 以上版本驱动包版本 <a href="https://static.runoob.com/download/mysql-connector-java-8.0.16.jar">mysql-connector-java-8.0.16.jar</a>。</li>
-<li>2、<strong>com.mysql.jdbc.Driver</strong> 更换为 <strong>com.mysql.cj.jdbc.Driver</strong>。</li>
-<li>MySQL 8.0 以上版本不需要建立 SSL 连接的，需要显示关闭。</li>
-<li>最后还需要设置 CST。</li>
-</ul>
-<p>加载驱动与连接数据库方式如下：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class.forName(<span class="string">&quot;com.mysql.cj.jdbc.Driver&quot;</span>);</span><br><span class="line">conn = DriverManager.getConnection(<span class="string">&quot;jdbc:mysql://localhost:3306/test_demo?useSSL=false&amp;serverTimezone=UTC&quot;</span>,<span class="string">&quot;root&quot;</span>,<span class="string">&quot;password&quot;</span>);</span><br></pre></td></tr></table></figure>
-<h1 id="创建测试数据"><a href="#创建测试数据" class="headerlink" title="创建测试数据"></a>创建测试数据</h1><p>接下来我们在 MySQL 中创建 RUNOOB 数据库，并创建 websites 数据表，表结构如下：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">CREATE TABLE &#96;websites&#96; (</span><br><span class="line">  &#96;id&#96; int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  &#96;name&#96; char(20) NOT NULL DEFAULT &#39;&#39; COMMENT &#39;站点名称&#39;,</span><br><span class="line">  &#96;url&#96; varchar(255) NOT NULL DEFAULT &#39;&#39;,</span><br><span class="line">  &#96;alexa&#96; int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;Alexa 排名&#39;,</span><br><span class="line">  &#96;country&#96; char(10) NOT NULL DEFAULT &#39;&#39; COMMENT &#39;国家&#39;,</span><br><span class="line">  PRIMARY KEY (&#96;id&#96;)</span><br><span class="line">) ENGINE&#x3D;InnoDB AUTO_INCREMENT&#x3D;10 DEFAULT CHARSET&#x3D;utf8;</span><br></pre></td></tr></table></figure>
-<p>插入一些数据：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">INSERT INTO &#96;websites&#96; VALUES (&#39;1&#39;, &#39;Google&#39;, &#39;https:&#x2F;&#x2F;www.google.cm&#x2F;&#39;, &#39;1&#39;, &#39;USA&#39;), (&#39;2&#39;, &#39;淘宝&#39;, &#39;https:&#x2F;&#x2F;www.taobao.com&#x2F;&#39;, &#39;13&#39;, &#39;CN&#39;), (&#39;3&#39;, &#39;菜鸟教程&#39;, &#39;http:&#x2F;&#x2F;www.runoob.com&#39;, &#39;5892&#39;, &#39;&#39;), (&#39;4&#39;, &#39;微博&#39;, &#39;http:&#x2F;&#x2F;weibo.com&#x2F;&#39;, &#39;20&#39;, &#39;CN&#39;), (&#39;5&#39;, &#39;Facebook&#39;, &#39;https:&#x2F;&#x2F;www.facebook.com&#x2F;&#39;, &#39;3&#39;, &#39;USA&#39;);</span><br></pre></td></tr></table></figure>
-<h1 id="连接数据库"><a href="#连接数据库" class="headerlink" title="连接数据库"></a>连接数据库</h1><p>以下实例使用了 JDBC 连接 MySQL 数据库，注意一些数据如用户名，密码需要根据你的开发环境来配置：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> com.runoob.test;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">import</span> java.sql.*;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySQLDemo</span> </span>&#123;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// MySQL 8.0 以下版本 - JDBC 驱动名及数据库 URL</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String JDBC_DRIVER = <span class="string">&quot;com.mysql.jdbc.Driver&quot;</span>;  </span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String DB_URL = <span class="string">&quot;jdbc:mysql://localhost:3306/RUNOOB&quot;</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// MySQL 8.0 以上版本 - JDBC 驱动名及数据库 URL</span></span><br><span class="line">    <span class="comment">//static final String JDBC_DRIVER = &quot;com.mysql.cj.jdbc.Driver&quot;;  </span></span><br><span class="line">    <span class="comment">//static final String DB_URL = &quot;jdbc:mysql://localhost:3306/RUNOOB?useSSL=false&amp;serverTimezone=UTC&quot;;</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 数据库的用户名与密码，需要根据自己的设置</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String USER = <span class="string">&quot;root&quot;</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String PASS = <span class="string">&quot;123456&quot;</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Connection conn = <span class="keyword">null</span>;</span><br><span class="line">        Statement stmt = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            <span class="comment">// 注册 JDBC 驱动</span></span><br><span class="line">            Class.forName(JDBC_DRIVER);</span><br><span class="line">        </span><br><span class="line">            <span class="comment">// 打开链接</span></span><br><span class="line">            System.out.println(<span class="string">&quot;连接数据库...&quot;</span>);</span><br><span class="line">            conn = DriverManager.getConnection(DB_URL,USER,PASS);</span><br><span class="line">        </span><br><span class="line">            <span class="comment">// 执行查询</span></span><br><span class="line">            System.out.println(<span class="string">&quot; 实例化Statement对象...&quot;</span>);</span><br><span class="line">            stmt = conn.createStatement();</span><br><span class="line">            String sql;</span><br><span class="line">            sql = <span class="string">&quot;SELECT id, name, url FROM websites&quot;</span>;</span><br><span class="line">            ResultSet rs = stmt.executeQuery(sql);</span><br><span class="line">        </span><br><span class="line">            <span class="comment">// 展开结果集数据库</span></span><br><span class="line">            <span class="keyword">while</span>(rs.next())&#123;</span><br><span class="line">                <span class="comment">// 通过字段检索</span></span><br><span class="line">                <span class="keyword">int</span> id  = rs.getInt(<span class="string">&quot;id&quot;</span>);</span><br><span class="line">                String name = rs.getString(<span class="string">&quot;name&quot;</span>);</span><br><span class="line">                String url = rs.getString(<span class="string">&quot;url&quot;</span>);</span><br><span class="line">    </span><br><span class="line">                <span class="comment">// 输出数据</span></span><br><span class="line">                System.out.print(<span class="string">&quot;ID: &quot;</span> + id);</span><br><span class="line">                System.out.print(<span class="string">&quot;, 站点名称: &quot;</span> + name);</span><br><span class="line">                System.out.print(<span class="string">&quot;, 站点 URL: &quot;</span> + url);</span><br><span class="line">                System.out.print(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 完成后关闭</span></span><br><span class="line">            rs.close();</span><br><span class="line">            stmt.close();</span><br><span class="line">            conn.close();</span><br><span class="line">        &#125;<span class="keyword">catch</span>(SQLException se)&#123;</span><br><span class="line">            <span class="comment">// 处理 JDBC 错误</span></span><br><span class="line">            se.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">            <span class="comment">// 处理 Class.forName 错误</span></span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">finally</span>&#123;</span><br><span class="line">            <span class="comment">// 关闭资源</span></span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                <span class="keyword">if</span>(stmt!=<span class="keyword">null</span>) stmt.close();</span><br><span class="line">            &#125;<span class="keyword">catch</span>(SQLException se2)&#123;</span><br><span class="line">            &#125;<span class="comment">// 什么都不做</span></span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                <span class="keyword">if</span>(conn!=<span class="keyword">null</span>) conn.close();</span><br><span class="line">            &#125;<span class="keyword">catch</span>(SQLException se)&#123;</span><br><span class="line">                se.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(<span class="string">&quot;Goodbye!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    <title>KDF之Scrypt</title>
+    <url>/2020/11/23/KDF%E4%B9%8BScrypt/</url>
+    <content><![CDATA[<p>scrpyt算法是由著名的FreeBSD黑客 Colin Percival为他的备份服务 Tarsnap开发的，当初的设计是为了降低CPU负荷，尽量少的依赖cpu计算，利用CPU闲置时间进行计算，因此scrypt不仅计算所需时间长，而且占用的内存也多，使得并行计算多个摘要异常困难，因此利用rainbow table进行暴力攻击更加困难。scrypt没有在生产环境中大规模应用，并且缺乏仔细的审察和广泛的函数库支持。所以scrpyt一直没有推广开，但是由于其内存依赖的设计特别符合当时对抗专业矿机的设计，成为数字货币算法发展的一个主要应用方向。<br><a id="more"></a></p>
+<p>scrypt算法最早被用于的数字货币是Tenebrix，之后被莱特币使用，旨在减少攻击者通过使用定制的并行电路分解（break）基于密码的密钥推导函数而获得的优势，它提高了对内存的依赖性，降低并行运算效率。</p>
+<p>从调用角度，从里到外介绍scrypt算法涉及的相应函数。</p>
+<h1 id="Salsa20-8"><a href="#Salsa20-8" class="headerlink" title="Salsa20/8"></a>Salsa20/8</h1><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> R(a,b) (((a) <span class="meta-string">&lt;&lt; (b)) | ((a) &gt;&gt; (32 - (b))))</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">salsa20_word_specification</span><span class="params">(uint32 out[<span class="number">16</span>],uint32 in[<span class="number">16</span>])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    uint32 x[<span class="number">16</span>];</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>;i &lt; <span class="number">16</span>;++i) x[i] = in[i];</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">8</span>;i &gt; <span class="number">0</span>;i -= <span class="number">2</span>) &#123;</span><br><span class="line">        x[ <span class="number">4</span>] ^= R(x[ <span class="number">0</span>]+x[<span class="number">12</span>], <span class="number">7</span>); x[ <span class="number">8</span>] ^= R(x[ <span class="number">4</span>]+x[ <span class="number">0</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">12</span>] ^= R(x[ <span class="number">8</span>]+x[ <span class="number">4</span>],<span class="number">13</span>); x[ <span class="number">0</span>] ^= R(x[<span class="number">12</span>]+x[ <span class="number">8</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">9</span>] ^= R(x[ <span class="number">5</span>]+x[ <span class="number">1</span>], <span class="number">7</span>); x[<span class="number">13</span>] ^= R(x[ <span class="number">9</span>]+x[ <span class="number">5</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">1</span>] ^= R(x[<span class="number">13</span>]+x[ <span class="number">9</span>],<span class="number">13</span>); x[ <span class="number">5</span>] ^= R(x[ <span class="number">1</span>]+x[<span class="number">13</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">14</span>] ^= R(x[<span class="number">10</span>]+x[ <span class="number">6</span>], <span class="number">7</span>); x[ <span class="number">2</span>] ^= R(x[<span class="number">14</span>]+x[<span class="number">10</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">6</span>] ^= R(x[ <span class="number">2</span>]+x[<span class="number">14</span>],<span class="number">13</span>); x[<span class="number">10</span>] ^= R(x[ <span class="number">6</span>]+x[ <span class="number">2</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">3</span>] ^= R(x[<span class="number">15</span>]+x[<span class="number">11</span>], <span class="number">7</span>); x[ <span class="number">7</span>] ^= R(x[ <span class="number">3</span>]+x[<span class="number">15</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">11</span>] ^= R(x[ <span class="number">7</span>]+x[ <span class="number">3</span>],<span class="number">13</span>); x[<span class="number">15</span>] ^= R(x[<span class="number">11</span>]+x[ <span class="number">7</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">1</span>] ^= R(x[ <span class="number">0</span>]+x[ <span class="number">3</span>], <span class="number">7</span>); x[ <span class="number">2</span>] ^= R(x[ <span class="number">1</span>]+x[ <span class="number">0</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">3</span>] ^= R(x[ <span class="number">2</span>]+x[ <span class="number">1</span>],<span class="number">13</span>); x[ <span class="number">0</span>] ^= R(x[ <span class="number">3</span>]+x[ <span class="number">2</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">6</span>] ^= R(x[ <span class="number">5</span>]+x[ <span class="number">4</span>], <span class="number">7</span>); x[ <span class="number">7</span>] ^= R(x[ <span class="number">6</span>]+x[ <span class="number">5</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">4</span>] ^= R(x[ <span class="number">7</span>]+x[ <span class="number">6</span>],<span class="number">13</span>); x[ <span class="number">5</span>] ^= R(x[ <span class="number">4</span>]+x[ <span class="number">7</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">11</span>] ^= R(x[<span class="number">10</span>]+x[ <span class="number">9</span>], <span class="number">7</span>); x[ <span class="number">8</span>] ^= R(x[<span class="number">11</span>]+x[<span class="number">10</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">9</span>] ^= R(x[ <span class="number">8</span>]+x[<span class="number">11</span>],<span class="number">13</span>); x[<span class="number">10</span>] ^= R(x[ <span class="number">9</span>]+x[ <span class="number">8</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">12</span>] ^= R(x[<span class="number">15</span>]+x[<span class="number">14</span>], <span class="number">7</span>); x[<span class="number">13</span>] ^= R(x[<span class="number">12</span>]+x[<span class="number">15</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">14</span>] ^= R(x[<span class="number">13</span>]+x[<span class="number">12</span>],<span class="number">13</span>); x[<span class="number">15</span>] ^= R(x[<span class="number">14</span>]+x[<span class="number">13</span>],<span class="number">18</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>;i &lt; <span class="number">16</span>;++i) out[i] = x[i] + in[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Salsa20</strong>是一种<a href="https://zh.wikipedia.org/wiki/流加密">流加密</a>算法，由<a href="https://zh.wikipedia.org/w/index.php?title=丹尼尔·J·伯恩斯坦&amp;action=edit&amp;redlink=1">丹尼尔·J·伯恩斯坦</a>提交到<a href="https://zh.wikipedia.org/w/index.php?title=ESTREAM&amp;action=edit&amp;redlink=1">eSTREAM</a>。它创建在基于add-rotate-xor（ARX）操作的<a href="https://zh.wikipedia.org/wiki/伪随机">伪随机</a>函数之上——32位模加、<a href="https://zh.wikipedia.org/wiki/异或">异或</a>（XOR）和<a href="https://zh.wikipedia.org/wiki/位操作">循环移位操作</a>。Salsa20映射一个256<a href="https://zh.wikipedia.org/wiki/位元">位</a>密钥、一个64位<a href="https://zh.wikipedia.org/wiki/Nonce">nonce</a>以及一个64位流位置到一个512位的输出（也存在一个128位密钥的版本）。这使Salsa20具有了不同寻常的优势，用户可以在恒定时间内寻求输出流中的任何位置。它可以在现代<a href="https://zh.wikipedia.org/wiki/X86">x86</a>处理器中提供约每4–14次循环周期一字节的速度，并具有合理的硬件性能。它没有注册专利，并且Bernstein还撰写了几篇对常见<a href="https://zh.wikipedia.org/wiki/架构">架构</a>优化的<a href="https://zh.wikipedia.org/wiki/公有领域">公有领域</a>实现。</p>
+<p>而Salsa20/8是将轮数减少到8轮的Salsa20算法，从64字节的字符串散列到64字节的字符串。注意它不是加密哈希函数，它不能避免冲突。</p>
+<h1 id="scryptBlockMix"><a href="#scryptBlockMix" class="headerlink" title="scryptBlockMix"></a>scryptBlockMix</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Input:</span><br><span class="line">         B[0] || B[1] || ... || B[2 * r - 1]</span><br><span class="line">                Input octet string (of size 128 * r octets),</span><br><span class="line">                treated as 2 * r 64-octet blocks,</span><br><span class="line">                where each element in B is a 64-octet block.</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         B&#39;[0] || B&#39;[1] || ... || B&#39;[2 * r - 1]</span><br><span class="line">                Output octet string.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line">  1. X &#x3D; B[2 * r - 1]</span><br><span class="line"></span><br><span class="line">  2. for i &#x3D; 0 to 2 * r - 1 do</span><br><span class="line">       T &#x3D; X xor B[i]</span><br><span class="line">       X &#x3D; Salsa (T)</span><br><span class="line">       Y[i] &#x3D; X</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  3. B&#39; &#x3D; (Y[0], Y[2], ..., Y[2 * r - 2],</span><br><span class="line">           Y[1], Y[3], ..., Y[2 * r - 1])</span><br></pre></td></tr></table></figure>
+<p>将块打乱混合，用Salsa20/8作为hash函数。</p>
+<h1 id="scryptROMix"><a href="#scryptROMix" class="headerlink" title="scryptROMix"></a>scryptROMix</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Input:</span><br><span class="line">         r       Block size parameter.</span><br><span class="line">         B       Input octet vector of length 128 * r octets.</span><br><span class="line">         N       CPU&#x2F;Memory cost parameter, must be larger than 1,</span><br><span class="line">                 a power of 2, and less than 2^(128 * r &#x2F; 8).</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         B&#39;      Output octet vector of length 128 * r octets.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line">  1. X &#x3D; B</span><br><span class="line"></span><br><span class="line">  2. for i &#x3D; 0 to N - 1 do	&#x2F;&#x2F;N次循环  </span><br><span class="line">       V[i] &#x3D; X</span><br><span class="line">       X &#x3D; scryptBlockMix (X)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  3. for i &#x3D; 0 to N - 1 do</span><br><span class="line">       j &#x3D; Integerify (X) mod N</span><br><span class="line">              where Integerify (B[0] ... B[2 * r - 1]) is defined</span><br><span class="line">              as the result of interpreting B[2 * r - 1] as a</span><br><span class="line">              little-endian integer.</span><br><span class="line">       T &#x3D; X xor V[j]</span><br><span class="line">       X &#x3D; scryptBlockMix (T)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  4. B&#39; &#x3D; X</span><br></pre></td></tr></table></figure>
+<p>Integerify是一个映射函数，创造伪随机序列。N次循环调用scryptBlockMix进行散列。</p>
+<h1 id="scrypt"><a href="#scrypt" class="headerlink" title="scrypt"></a>scrypt</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Input:</span><br><span class="line">         P       Passphrase, an octet string.</span><br><span class="line">         S       Salt, an octet string.</span><br><span class="line">         N       CPU&#x2F;Memory cost parameter, must be larger than 1,</span><br><span class="line">                 a power of 2, and less than 2^(128 * r &#x2F; 8).</span><br><span class="line">         r       Block size parameter.</span><br><span class="line">         p       Parallelization parameter, a positive integer</span><br><span class="line">                 less than or equal to ((2^32-1) * hLen) &#x2F; MFLen</span><br><span class="line">                 where hLen is 32 and MFlen is 128 * r.</span><br><span class="line">         dkLen   Intended output length in octets of the derived</span><br><span class="line">                 key; a positive integer less than or equal to</span><br><span class="line">                 (2^32 - 1) * hLen where hLen is 32.</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         DK      Derived key, of length dkLen octets.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line"> 1. Initialize an array B consisting of p blocks of 128 * r octets</span><br><span class="line">    each:</span><br><span class="line">     B[0] || B[1] || ... || B[p - 1] &#x3D; PBKDF2-HMAC-SHA256 (P, S, 1, p * 128 * r)</span><br><span class="line"></span><br><span class="line"> 2. for i &#x3D; 0 to p - 1 do</span><br><span class="line">       B[i] &#x3D; scryptROMix (r, B[i], N)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line"> 3. DK &#x3D; PBKDF2-HMAC-SHA256 (P, B[0] || B[1] || ... || B[p - 1], 1, dkLen)</span><br></pre></td></tr></table></figure>
+<p>PBKDF2简单而言就是将salted hash进行多次重复计算，这个次数是可选择的。如果计算一次所需要的时间是1微秒，那么计算1百万次就需要1秒钟。假如攻击一个密码所需的rainbow table有1千万条，建立所对应的rainbow table所需要的时间就是115天。这个代价足以让大部分的攻击者忘而生畏。</p>
+<p>根据密码和设置的参数用PBKDF2-HMAC-SHA256生成一个itstream，将其用scryptROMix计算得到新的itstream。然后新的itstream和密码再次用PBKDF2-HMAC-SHA256计算得到derived key。</p>
+<h1 id="Refer"><a href="#Refer" class="headerlink" title="Refer"></a>Refer</h1><p><a href="https://www.cnblogs.com/interdrp/p/4935819.html">如何生成安全的密码 Hash：MD5, SHA, PBKDF2, BCrypt 示例</a><br><a href="https://www.tarsnap.com/scrypt/scrypt-slides.pdf">scrypt - Tarsnap</a></p>
 ]]></content>
       <categories>
-        <category>Java</category>
-        <category>数据库</category>
+        <category>区块链</category>
+        <category>密码学</category>
       </categories>
   </entry>
   <entry>
@@ -191,29 +189,6 @@
       </categories>
   </entry>
   <entry>
-    <title>KDF之Scrypt</title>
-    <url>/2020/11/23/KDF%E4%B9%8BScrypt/</url>
-    <content><![CDATA[<p>scrpyt算法是由著名的FreeBSD黑客 Colin Percival为他的备份服务 Tarsnap开发的，当初的设计是为了降低CPU负荷，尽量少的依赖cpu计算，利用CPU闲置时间进行计算，因此scrypt不仅计算所需时间长，而且占用的内存也多，使得并行计算多个摘要异常困难，因此利用rainbow table进行暴力攻击更加困难。scrypt没有在生产环境中大规模应用，并且缺乏仔细的审察和广泛的函数库支持。所以scrpyt一直没有推广开，但是由于其内存依赖的设计特别符合当时对抗专业矿机的设计，成为数字货币算法发展的一个主要应用方向。<br><a id="more"></a></p>
-<p>scrypt算法最早被用于的数字货币是Tenebrix，之后被莱特币使用，旨在减少攻击者通过使用定制的并行电路分解（break）基于密码的密钥推导函数而获得的优势，它提高了对内存的依赖性，降低并行运算效率。</p>
-<p>从调用角度，从里到外介绍scrypt算法涉及的相应函数。</p>
-<h1 id="Salsa20-8"><a href="#Salsa20-8" class="headerlink" title="Salsa20/8"></a>Salsa20/8</h1><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> R(a,b) (((a) <span class="meta-string">&lt;&lt; (b)) | ((a) &gt;&gt; (32 - (b))))</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">salsa20_word_specification</span><span class="params">(uint32 out[<span class="number">16</span>],uint32 in[<span class="number">16</span>])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    uint32 x[<span class="number">16</span>];</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>;i &lt; <span class="number">16</span>;++i) x[i] = in[i];</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">8</span>;i &gt; <span class="number">0</span>;i -= <span class="number">2</span>) &#123;</span><br><span class="line">        x[ <span class="number">4</span>] ^= R(x[ <span class="number">0</span>]+x[<span class="number">12</span>], <span class="number">7</span>); x[ <span class="number">8</span>] ^= R(x[ <span class="number">4</span>]+x[ <span class="number">0</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">12</span>] ^= R(x[ <span class="number">8</span>]+x[ <span class="number">4</span>],<span class="number">13</span>); x[ <span class="number">0</span>] ^= R(x[<span class="number">12</span>]+x[ <span class="number">8</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">9</span>] ^= R(x[ <span class="number">5</span>]+x[ <span class="number">1</span>], <span class="number">7</span>); x[<span class="number">13</span>] ^= R(x[ <span class="number">9</span>]+x[ <span class="number">5</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">1</span>] ^= R(x[<span class="number">13</span>]+x[ <span class="number">9</span>],<span class="number">13</span>); x[ <span class="number">5</span>] ^= R(x[ <span class="number">1</span>]+x[<span class="number">13</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">14</span>] ^= R(x[<span class="number">10</span>]+x[ <span class="number">6</span>], <span class="number">7</span>); x[ <span class="number">2</span>] ^= R(x[<span class="number">14</span>]+x[<span class="number">10</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">6</span>] ^= R(x[ <span class="number">2</span>]+x[<span class="number">14</span>],<span class="number">13</span>); x[<span class="number">10</span>] ^= R(x[ <span class="number">6</span>]+x[ <span class="number">2</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">3</span>] ^= R(x[<span class="number">15</span>]+x[<span class="number">11</span>], <span class="number">7</span>); x[ <span class="number">7</span>] ^= R(x[ <span class="number">3</span>]+x[<span class="number">15</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">11</span>] ^= R(x[ <span class="number">7</span>]+x[ <span class="number">3</span>],<span class="number">13</span>); x[<span class="number">15</span>] ^= R(x[<span class="number">11</span>]+x[ <span class="number">7</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">1</span>] ^= R(x[ <span class="number">0</span>]+x[ <span class="number">3</span>], <span class="number">7</span>); x[ <span class="number">2</span>] ^= R(x[ <span class="number">1</span>]+x[ <span class="number">0</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">3</span>] ^= R(x[ <span class="number">2</span>]+x[ <span class="number">1</span>],<span class="number">13</span>); x[ <span class="number">0</span>] ^= R(x[ <span class="number">3</span>]+x[ <span class="number">2</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">6</span>] ^= R(x[ <span class="number">5</span>]+x[ <span class="number">4</span>], <span class="number">7</span>); x[ <span class="number">7</span>] ^= R(x[ <span class="number">6</span>]+x[ <span class="number">5</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">4</span>] ^= R(x[ <span class="number">7</span>]+x[ <span class="number">6</span>],<span class="number">13</span>); x[ <span class="number">5</span>] ^= R(x[ <span class="number">4</span>]+x[ <span class="number">7</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">11</span>] ^= R(x[<span class="number">10</span>]+x[ <span class="number">9</span>], <span class="number">7</span>); x[ <span class="number">8</span>] ^= R(x[<span class="number">11</span>]+x[<span class="number">10</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">9</span>] ^= R(x[ <span class="number">8</span>]+x[<span class="number">11</span>],<span class="number">13</span>); x[<span class="number">10</span>] ^= R(x[ <span class="number">9</span>]+x[ <span class="number">8</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">12</span>] ^= R(x[<span class="number">15</span>]+x[<span class="number">14</span>], <span class="number">7</span>); x[<span class="number">13</span>] ^= R(x[<span class="number">12</span>]+x[<span class="number">15</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">14</span>] ^= R(x[<span class="number">13</span>]+x[<span class="number">12</span>],<span class="number">13</span>); x[<span class="number">15</span>] ^= R(x[<span class="number">14</span>]+x[<span class="number">13</span>],<span class="number">18</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>;i &lt; <span class="number">16</span>;++i) out[i] = x[i] + in[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><strong>Salsa20</strong>是一种<a href="https://zh.wikipedia.org/wiki/流加密">流加密</a>算法，由<a href="https://zh.wikipedia.org/w/index.php?title=丹尼尔·J·伯恩斯坦&amp;action=edit&amp;redlink=1">丹尼尔·J·伯恩斯坦</a>提交到<a href="https://zh.wikipedia.org/w/index.php?title=ESTREAM&amp;action=edit&amp;redlink=1">eSTREAM</a>。它创建在基于add-rotate-xor（ARX）操作的<a href="https://zh.wikipedia.org/wiki/伪随机">伪随机</a>函数之上——32位模加、<a href="https://zh.wikipedia.org/wiki/异或">异或</a>（XOR）和<a href="https://zh.wikipedia.org/wiki/位操作">循环移位操作</a>。Salsa20映射一个256<a href="https://zh.wikipedia.org/wiki/位元">位</a>密钥、一个64位<a href="https://zh.wikipedia.org/wiki/Nonce">nonce</a>以及一个64位流位置到一个512位的输出（也存在一个128位密钥的版本）。这使Salsa20具有了不同寻常的优势，用户可以在恒定时间内寻求输出流中的任何位置。它可以在现代<a href="https://zh.wikipedia.org/wiki/X86">x86</a>处理器中提供约每4–14次循环周期一字节的速度，并具有合理的硬件性能。它没有注册专利，并且Bernstein还撰写了几篇对常见<a href="https://zh.wikipedia.org/wiki/架构">架构</a>优化的<a href="https://zh.wikipedia.org/wiki/公有领域">公有领域</a>实现。</p>
-<p>而Salsa20/8是将轮数减少到8轮的Salsa20算法，从64字节的字符串散列到64字节的字符串。注意它不是加密哈希函数，它不能避免冲突。</p>
-<h1 id="scryptBlockMix"><a href="#scryptBlockMix" class="headerlink" title="scryptBlockMix"></a>scryptBlockMix</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Input:</span><br><span class="line">         B[0] || B[1] || ... || B[2 * r - 1]</span><br><span class="line">                Input octet string (of size 128 * r octets),</span><br><span class="line">                treated as 2 * r 64-octet blocks,</span><br><span class="line">                where each element in B is a 64-octet block.</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         B&#39;[0] || B&#39;[1] || ... || B&#39;[2 * r - 1]</span><br><span class="line">                Output octet string.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line">  1. X &#x3D; B[2 * r - 1]</span><br><span class="line"></span><br><span class="line">  2. for i &#x3D; 0 to 2 * r - 1 do</span><br><span class="line">       T &#x3D; X xor B[i]</span><br><span class="line">       X &#x3D; Salsa (T)</span><br><span class="line">       Y[i] &#x3D; X</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  3. B&#39; &#x3D; (Y[0], Y[2], ..., Y[2 * r - 2],</span><br><span class="line">           Y[1], Y[3], ..., Y[2 * r - 1])</span><br></pre></td></tr></table></figure>
-<p>将块打乱混合，用Salsa20/8作为hash函数。</p>
-<h1 id="scryptROMix"><a href="#scryptROMix" class="headerlink" title="scryptROMix"></a>scryptROMix</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Input:</span><br><span class="line">         r       Block size parameter.</span><br><span class="line">         B       Input octet vector of length 128 * r octets.</span><br><span class="line">         N       CPU&#x2F;Memory cost parameter, must be larger than 1,</span><br><span class="line">                 a power of 2, and less than 2^(128 * r &#x2F; 8).</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         B&#39;      Output octet vector of length 128 * r octets.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line">  1. X &#x3D; B</span><br><span class="line"></span><br><span class="line">  2. for i &#x3D; 0 to N - 1 do	&#x2F;&#x2F;N次循环  </span><br><span class="line">       V[i] &#x3D; X</span><br><span class="line">       X &#x3D; scryptBlockMix (X)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  3. for i &#x3D; 0 to N - 1 do</span><br><span class="line">       j &#x3D; Integerify (X) mod N</span><br><span class="line">              where Integerify (B[0] ... B[2 * r - 1]) is defined</span><br><span class="line">              as the result of interpreting B[2 * r - 1] as a</span><br><span class="line">              little-endian integer.</span><br><span class="line">       T &#x3D; X xor V[j]</span><br><span class="line">       X &#x3D; scryptBlockMix (T)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  4. B&#39; &#x3D; X</span><br></pre></td></tr></table></figure>
-<p>Integerify是一个映射函数，创造伪随机序列。N次循环调用scryptBlockMix进行散列。</p>
-<h1 id="scrypt"><a href="#scrypt" class="headerlink" title="scrypt"></a>scrypt</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Input:</span><br><span class="line">         P       Passphrase, an octet string.</span><br><span class="line">         S       Salt, an octet string.</span><br><span class="line">         N       CPU&#x2F;Memory cost parameter, must be larger than 1,</span><br><span class="line">                 a power of 2, and less than 2^(128 * r &#x2F; 8).</span><br><span class="line">         r       Block size parameter.</span><br><span class="line">         p       Parallelization parameter, a positive integer</span><br><span class="line">                 less than or equal to ((2^32-1) * hLen) &#x2F; MFLen</span><br><span class="line">                 where hLen is 32 and MFlen is 128 * r.</span><br><span class="line">         dkLen   Intended output length in octets of the derived</span><br><span class="line">                 key; a positive integer less than or equal to</span><br><span class="line">                 (2^32 - 1) * hLen where hLen is 32.</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         DK      Derived key, of length dkLen octets.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line"> 1. Initialize an array B consisting of p blocks of 128 * r octets</span><br><span class="line">    each:</span><br><span class="line">     B[0] || B[1] || ... || B[p - 1] &#x3D; PBKDF2-HMAC-SHA256 (P, S, 1, p * 128 * r)</span><br><span class="line"></span><br><span class="line"> 2. for i &#x3D; 0 to p - 1 do</span><br><span class="line">       B[i] &#x3D; scryptROMix (r, B[i], N)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line"> 3. DK &#x3D; PBKDF2-HMAC-SHA256 (P, B[0] || B[1] || ... || B[p - 1], 1, dkLen)</span><br></pre></td></tr></table></figure>
-<p>PBKDF2简单而言就是将salted hash进行多次重复计算，这个次数是可选择的。如果计算一次所需要的时间是1微秒，那么计算1百万次就需要1秒钟。假如攻击一个密码所需的rainbow table有1千万条，建立所对应的rainbow table所需要的时间就是115天。这个代价足以让大部分的攻击者忘而生畏。</p>
-<p>根据密码和设置的参数用PBKDF2-HMAC-SHA256生成一个itstream，将其用scryptROMix计算得到新的itstream。然后新的itstream和密码再次用PBKDF2-HMAC-SHA256计算得到derived key。</p>
-<h1 id="Refer"><a href="#Refer" class="headerlink" title="Refer"></a>Refer</h1><p><a href="https://www.cnblogs.com/interdrp/p/4935819.html">如何生成安全的密码 Hash：MD5, SHA, PBKDF2, BCrypt 示例</a><br><a href="https://www.tarsnap.com/scrypt/scrypt-slides.pdf">scrypt - Tarsnap</a></p>
-]]></content>
-      <categories>
-        <category>区块链</category>
-        <category>密码学</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Paxos</title>
     <url>/2020/09/08/Paxos/</url>
     <content><![CDATA[<h1 id="Paxos"><a href="#Paxos" class="headerlink" title="Paxos"></a>Paxos</h1><p>用于达成共识性问题，即对多个节点产生的值，该算法能保证只选出唯一一个值。主要有三类节点：<br><a id="more"></a></p>
@@ -230,55 +205,6 @@
 <h2 id="约束条件"><a href="#约束条件" class="headerlink" title="约束条件"></a>约束条件</h2><h3 id="1-正确性"><a href="#1-正确性" class="headerlink" title="1. 正确性"></a>1. 正确性</h3><p>指只有一个提议值会生效。因为 Paxos 协议要求每个生效的提议被多数 Acceptor 接收，并且 Acceptor 不会接受两个不同的提议，因此可以保证正确性。</p>
 <h3 id="2-可终止性"><a href="#2-可终止性" class="headerlink" title="2. 可终止性"></a>2. 可终止性</h3><p>指最后总会有一个提议生效。Paxos 协议能够让 Proposer 发送的提议朝着能被大多数 Acceptor 接受的那个提议靠拢，因此能够保证可终止性。</p>
 <h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://blog.csdn.net/qq_16038125/article/details/81059609">分布式-Paxos</a></p>
-]]></content>
-      <categories>
-        <category>区块链</category>
-        <category>共识协议</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Raft</title>
-    <url>/2020/08/28/Raft/</url>
-    <content><![CDATA[<p>Raft与Paxos在私链、分布式数据库中使用。<br><a id="more"></a></p>
-<h1 id="leader选举"><a href="#leader选举" class="headerlink" title="leader选举"></a>leader选举</h1><h2 id="状态转移"><a href="#状态转移" class="headerlink" title="状态转移"></a>状态转移</h2><p>启动时都是follower状态。<br><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110432.png" alt="5D9C4562-02AD-48F1-9273-3DC7D66DBCB8"></p>
-<h3 id="timeout"><a href="#timeout" class="headerlink" title="timeout"></a>timeout</h3><h4 id="election"><a href="#election" class="headerlink" title="election"></a>election</h4><p>时间在150ms到300ms之间随机选取，如果到期没有发现leader的心跳出现，就把自己的状态转换为candidate，给自己投一票，并且请求其他结点开始投票。如果接受到请求的结点在这个任期内没有投过票，就给候选人投票，并且把自己的election timeout重置。<br>一旦候选人得到大部分票选，就成为leader。</p>
-<h4 id="heartbeat"><a href="#heartbeat" class="headerlink" title="heartbeat"></a>heartbeat</h4><p>leader以心跳周期给followers发送Append entry，直到出现新的term的leader，回到follower状态。<br>如果follower在election timeout内没有收到心跳，以候选人开启新的term，选出新的leader。</p>
-<h2 id="任期"><a href="#任期" class="headerlink" title="任期"></a>任期</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110440.png" alt="3D62AE1A-FA35-42DD-967B-9D63D11A3AD6"><br>term（任期）以选举（election）开始，然后就是一段或长或短的稳定工作期（normal Operation）。从上图可以看到，任期是递增的，这就充当了逻辑时钟的作用；另外，term 3 展示了一种情况，就是说没有选举出 leader 就结束了，然后会发起新的选举，这是平票 split vote 的情况。</p>
-<h3 id="split-vote"><a href="#split-vote" class="headerlink" title="split vote"></a>split vote</h3><p>同时有多个候选人，得到了相同票数，无法选出leader。等待超时，重新发起投票。</p>
-<h1 id="log-replication"><a href="#log-replication" class="headerlink" title="log replication"></a>log replication</h1><h2 id="复制状态机"><a href="#复制状态机" class="headerlink" title="复制状态机"></a>复制状态机</h2><p>相同的初识状态 + 相同的输入 = 相同的结束状态。<br>在 raft 中，leader 将客户端请求（command）封装到一个个 log entry，将这些 log entries 复制（replicate）到所有 follower 节点，然后大家按相同顺序应用（apply）log entry 中的 command，则状态肯定是一致的。</p>
-<h2 id="请求完整流程"><a href="#请求完整流程" class="headerlink" title="请求完整流程"></a>请求完整流程</h2><p>当系统（leader）收到一个来自客户端的写请求，到返回给客户端，整个过程从 leader 的视角来看会经历以下步骤：</p>
-<ul>
-<li>leader append log entry</li>
-<li>leader issue AppendEntries RPC in parallel</li>
-<li>leader wait for majority response</li>
-<li>leader apply entry to state machine</li>
-<li>leader reply to client</li>
-<li>leader notify follower apply log</li>
-</ul>
-<h1 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h1><h2 id="选举安全"><a href="#选举安全" class="headerlink" title="选举安全"></a>选举安全</h2><p>在 raft 中，两点保证了这个属性：</p>
-<ul>
-<li>一个节点某一任期内最多只能投一票；</li>
-<li>只有获得 majority 投票的节点才会成为 leader。<br>任一任期内最多一个 leader 被选出。</li>
-</ul>
-<h2 id="log-匹配"><a href="#log-匹配" class="headerlink" title="log 匹配"></a>log 匹配</h2><p>如果两个节点上的某个 log entry 的 log index 相同且 term 相同，那么在该 index 之前的所有 log entry 应该都是相同的。<br>首先，leader 在某一 term 的任一位置只会创建一个 log entry，且 log entry 是 append-only。其次，consistency check。leader 在 AppendEntries 中包含最新 log entry 之前的一个 log 的 term 和 index，如果 follower 在对应的 term index 找不到日志，那么就会告知 leader 不一致。<br>当出现了 leader 与 follower 不一致的情况，leader 强制 follower 复制自己的 log。</p>
-<ul>
-<li>leader 初始化 nextIndex[x] 为 leader 最后一个 log index + 1</li>
-<li>AppendEntries 里 prevLogTerm prevLogIndex 来自 logs[nextIndex[x] - 1]</li>
-<li>如果 follower 判断 prevLogIndex 位置的 log term 不等于 prevLogTerm，那么返回 False，否则返回 True</li>
-<li>leader 收到 follower 的回复，如果返回值是 False，则 nextIndex[x] -= 1, 跳转到 第2步. </li>
-<li>否则，同步 nextIndex[x] 后的所有 log entries</li>
-</ul>
-<h2 id="leader完整性"><a href="#leader完整性" class="headerlink" title="leader完整性"></a>leader完整性</h2><p>leader 完整性：如果一个 log entry 在某个任期被提交（committed），那么这条日志一定会出现在所有更高 term 的 leader 的日志里面。<br>raft 与其他协议（Viewstamped Replication、mongodb）不同，raft 始终保证 leader 包含最新的已提交的日志，因此 leader 不会从 follower catchup 日志，这也大大简化了系统的复杂度。</p>
-<h1 id="边界条件"><a href="#边界条件" class="headerlink" title="边界条件"></a>边界条件</h1><h2 id="旧leader"><a href="#旧leader" class="headerlink" title="旧leader"></a>旧leader</h2><p>raft 保证 Election safety，即一个任期内最多只有一个 leader，但在网络分割（network partition）的情况下，可能会出现两个 leader，但两个 leader 所处的任期是不同的。<br>leader 如果收不到 majority 节点的消息，那么无法进行commit。如果网络恢复了，发现有更高term的leader，会转换到follower，并且把没有commit的entry回滚，同步到新的leader。</p>
-<h2 id="状态机安全"><a href="#状态机安全" class="headerlink" title="状态机安全"></a>状态机安全</h2><p>如果节点将某一位置的 log entry 应用到了状态机，那么其他节点在同一位置不能应用不同的日志。简单点来说，所有节点在同一位置（index in log entries）应该应用同样的日志。<br>某个 leader 选举成功之后，不会直接提交前任 leader 时期的日志，而是通过提交当前任期的日志的时候 “顺手” 把之前的日志也提交了，具体怎么实现了，在 log matching 部分有详细介绍。那么问题来了，如果 leader 被选举后没有收到客户端的请求呢，论文中有提到，在任期开始的时候发立即尝试复制、提交一条空的 log。</p>
-<h2 id="leader-crash"><a href="#leader-crash" class="headerlink" title="leader crash"></a>leader crash</h2><p><a href="https://www.cnblogs.com/mindwind/p/5231986.html">不同情况的图解</a></p>
-<h1 id="为了避免问题的设计"><a href="#为了避免问题的设计" class="headerlink" title="为了避免问题的设计"></a>为了避免问题的设计</h1><ul>
-<li>避免平票：randomized election timeouts ；</li>
-<li>保证majority票：节点的数目都是奇数个；</li>
-<li>保证高可用：不是强一致性，而是最终一致性，leader 会不断尝试给 follower 发 log entries，直到所有节点的 log entries 都相同；</li>
-</ul>
-<h1 id="容错数量"><a href="#容错数量" class="headerlink" title="容错数量"></a>容错数量</h1><p>raft 算法只支持容错故障节点，假设集群总节点数为n，故障节点为 f ，根据小数服从多数的原则，集群里正常节点只需要比 f 个节点再多一个节点，即 f+1 个节点，正确节点的数量就会比故障节点数量多，那么集群就能达成共识。因此 raft 算法支持的最大容错节点数量是（n-1）/2。</p>
-<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.cnblogs.com/xybaby/p/10124083.html">一文搞懂Raft算法</a><br><a href="http://thesecretlivesofdata.com/raft">Raft动画</a></p>
 ]]></content>
       <categories>
         <category>区块链</category>
@@ -664,6 +590,62 @@
       </categories>
   </entry>
   <entry>
+    <title>Rust模式</title>
+    <url>/2020/10/10/Rust%E6%A8%A1%E5%BC%8F/</url>
+    <content><![CDATA[<h1 id="模式"><a href="#模式" class="headerlink" title="模式"></a>模式</h1><p>模式由如下内容组成：<br><a id="more"></a><br>（1）字面值<br>（2）解构的数组、枚举、结构体或者元组<br>（3）变量<br>（4）通配符<br>（5）占位符</p>
+<p>可能用到模式的位置：</p>
+<ul>
+<li>match</li>
+<li>if let</li>
+<li>while let</li>
+<li>for</li>
+<li>let </li>
+<li>函数参数</li>
+</ul>
+<h1 id="反驳"><a href="#反驳" class="headerlink" title="反驳"></a>反驳</h1><p>模式有两种：refutable（可反驳的）和 irrefutable（不可反驳的）。能匹配任何传递的可能值的模式被称为是不可反驳的。对值进行匹配可能会失败的模式被称为可反驳的。</p>
+<p>不可反驳的：函数、let语句、for循环。原因：因为通过不匹配的值程序无法进行有意义的工作。</p>
+<p>if let和while let表达式被限制为只能接受可反驳的模式，因为它们的定义就是为了处理有可能失败的条件。</p>
+<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="匹配"><a href="#匹配" class="headerlink" title="匹配"></a>匹配</h2><ul>
+<li><p>匹配字面值</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="number">1</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;one&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;anything&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>匹配命名变量</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> y = <span class="number">10</span>;  <span class="comment">//1处</span></span><br><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="literal">Some</span>(<span class="number">50</span>) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Got 50&quot;</span>),</span><br><span class="line">    <span class="literal">Some</span>(y) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Matched, y = &#123;:?&#125;&quot;</span>, y), <span class="comment">//此处的y和上面1处的y不一样，此处是引入的变量y覆盖之前的y</span></span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Default case, x = &#123;:?&#125;&quot;</span>, x),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>多个模式</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="number">1</span> | <span class="number">2</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;one or two&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;anything&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>范围</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="string">&#x27;a&#x27;</span>..=<span class="string">&#x27;j&#x27;</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;early ASCII letter&quot;</span>),</span><br><span class="line">    <span class="string">&#x27;k&#x27;</span>..=<span class="string">&#x27;z&#x27;</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;late ASCII letter&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;something else&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h2 id="解构"><a href="#解构" class="headerlink" title="解构"></a>解构</h2><ul>
+<li><p>结构体</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> p = Point &#123; x: <span class="number">0</span>, y: <span class="number">7</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> Point &#123; x: a, y: b &#125; = p;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(<span class="number">0</span>, a);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(<span class="number">7</span>, b);</span><br><span class="line">   <span class="comment">//let Point &#123; x, y &#125; = p;   //创建了同名的变量，可以简写</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>枚举</p>
+</li>
+<li><p>元组</p>
+</li>
+</ul>
+<h2 id="忽略"><a href="#忽略" class="headerlink" title="忽略"></a>忽略</h2><ul>
+<li>使用<code>_</code>忽略整个值或部分值；</li>
+<li>用<code>..</code>忽略剩余值，必须是无歧义的（一般只用一个）。</li>
+</ul>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><ul>
+<li><p>匹配守卫：匹配守卫是一个指定于match分支模式之后的额外的if条件，它必须满足才能选择此分支。</p>
+</li>
+<li><p>绑定：<code>@</code>运算符允许我们在创建一个存放值的变量，并且测试这个变量的值是否匹配模式。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> msg &#123;</span><br><span class="line">    Message::Hello &#123; id: id_variable @ <span class="number">3</span>..=<span class="number">7</span> &#125; =&gt; &#123;  <span class="comment">//创建id_variable 存放id的值，同时测试值是否在3到7的范围</span></span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Found an id in range: &#123;&#125;&quot;</span>, id_variable)</span><br><span class="line">    &#125;,</span><br><span class="line">  _ =&gt; &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Rust</category>
+        <category>Rust基础</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Rust包管理</title>
     <url>/2020/10/10/Rust%E5%8C%85%E7%AE%A1%E7%90%86/</url>
     <content><![CDATA[<h1 id="包管理（Cargo）"><a href="#包管理（Cargo）" class="headerlink" title="包管理（Cargo）"></a>包管理（Cargo）</h1><h2 id="cargo-命令创建包"><a href="#cargo-命令创建包" class="headerlink" title="cargo 命令创建包"></a>cargo 命令创建包</h2><p><code>cargo new xxx --lib</code> 创建一个名为xxx的包；<br><a id="more"></a><br><code>cargo new xxx</code> 或者 <code>cargo new xxx --bin</code> 创建一个名为xxx的可被编译为可执行文件的包。</p>
@@ -728,357 +710,8 @@
       </categories>
   </entry>
   <entry>
-    <title>Rust模式</title>
-    <url>/2020/10/10/Rust%E6%A8%A1%E5%BC%8F/</url>
-    <content><![CDATA[<h1 id="模式"><a href="#模式" class="headerlink" title="模式"></a>模式</h1><p>模式由如下内容组成：<br><a id="more"></a><br>（1）字面值<br>（2）解构的数组、枚举、结构体或者元组<br>（3）变量<br>（4）通配符<br>（5）占位符</p>
-<p>可能用到模式的位置：</p>
-<ul>
-<li>match</li>
-<li>if let</li>
-<li>while let</li>
-<li>for</li>
-<li>let </li>
-<li>函数参数</li>
-</ul>
-<h1 id="反驳"><a href="#反驳" class="headerlink" title="反驳"></a>反驳</h1><p>模式有两种：refutable（可反驳的）和 irrefutable（不可反驳的）。能匹配任何传递的可能值的模式被称为是不可反驳的。对值进行匹配可能会失败的模式被称为可反驳的。</p>
-<p>不可反驳的：函数、let语句、for循环。原因：因为通过不匹配的值程序无法进行有意义的工作。</p>
-<p>if let和while let表达式被限制为只能接受可反驳的模式，因为它们的定义就是为了处理有可能失败的条件。</p>
-<h1 id="语法"><a href="#语法" class="headerlink" title="语法"></a>语法</h1><h2 id="匹配"><a href="#匹配" class="headerlink" title="匹配"></a>匹配</h2><ul>
-<li><p>匹配字面值</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="number">1</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;one&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;anything&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>匹配命名变量</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> y = <span class="number">10</span>;  <span class="comment">//1处</span></span><br><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="literal">Some</span>(<span class="number">50</span>) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Got 50&quot;</span>),</span><br><span class="line">    <span class="literal">Some</span>(y) =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Matched, y = &#123;:?&#125;&quot;</span>, y), <span class="comment">//此处的y和上面1处的y不一样，此处是引入的变量y覆盖之前的y</span></span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;Default case, x = &#123;:?&#125;&quot;</span>, x),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>多个模式</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="number">1</span> | <span class="number">2</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;one or two&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;anything&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>范围</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">    <span class="string">&#x27;a&#x27;</span>..=<span class="string">&#x27;j&#x27;</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;early ASCII letter&quot;</span>),</span><br><span class="line">    <span class="string">&#x27;k&#x27;</span>..=<span class="string">&#x27;z&#x27;</span> =&gt; <span class="built_in">println!</span>(<span class="string">&quot;late ASCII letter&quot;</span>),</span><br><span class="line">    _ =&gt; <span class="built_in">println!</span>(<span class="string">&quot;something else&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h2 id="解构"><a href="#解构" class="headerlink" title="解构"></a>解构</h2><ul>
-<li><p>结构体</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> p = Point &#123; x: <span class="number">0</span>, y: <span class="number">7</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> Point &#123; x: a, y: b &#125; = p;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(<span class="number">0</span>, a);</span><br><span class="line">    <span class="built_in">assert_eq!</span>(<span class="number">7</span>, b);</span><br><span class="line">   <span class="comment">//let Point &#123; x, y &#125; = p;   //创建了同名的变量，可以简写</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>枚举</p>
-</li>
-<li><p>元组</p>
-</li>
-</ul>
-<h2 id="忽略"><a href="#忽略" class="headerlink" title="忽略"></a>忽略</h2><ul>
-<li>使用<code>_</code>忽略整个值或部分值；</li>
-<li>用<code>..</code>忽略剩余值，必须是无歧义的（一般只用一个）。</li>
-</ul>
-<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><ul>
-<li><p>匹配守卫：匹配守卫是一个指定于match分支模式之后的额外的if条件，它必须满足才能选择此分支。</p>
-</li>
-<li><p>绑定：<code>@</code>运算符允许我们在创建一个存放值的变量，并且测试这个变量的值是否匹配模式。</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> msg &#123;</span><br><span class="line">    Message::Hello &#123; id: id_variable @ <span class="number">3</span>..=<span class="number">7</span> &#125; =&gt; &#123;  <span class="comment">//创建id_variable 存放id的值，同时测试值是否在3到7的范围</span></span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Found an id in range: &#123;&#125;&quot;</span>, id_variable)</span><br><span class="line">    &#125;,</span><br><span class="line">  _ =&gt; &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>Rust</category>
-        <category>Rust基础</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Spring_MongDB</title>
-    <url>/2020/11/23/Spring_MongDB/</url>
-    <content><![CDATA[<h1 id="1-基本类型"><a href="#1-基本类型" class="headerlink" title="1.基本类型"></a>1.基本类型</h1><h2 id="a-set"><a href="#a-set" class="headerlink" title="a. set"></a>a. set</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Query query = <span class="keyword">new</span> Query(Criteria.where(<span class="string">&quot;_id&quot;</span>).is(<span class="string">&quot;123&quot;</span>));</span><br><span class="line">Update update = <span class="keyword">new</span> Update().set(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;munan&quot;</span>);</span><br><span class="line">mongoTemplate.updateFirst(query, update, COLLECTION_NAME);</span><br></pre></td></tr></table></figure>
-<a id="more"></a>
-<p><code>set</code>：修改指定属性为指定数据；<br><code>updateFirst</code>：修改根据query查找到的第一个实体对象。</p>
-<h2 id="b-数字相关"><a href="#b-数字相关" class="headerlink" title="b. 数字相关"></a>b. 数字相关</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 数字增加或者减少</span></span><br><span class="line">Update newCount = <span class="keyword">new</span> Update().inc(<span class="string">&quot;count&quot;</span>, <span class="number">1L</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 比较修改</span></span><br><span class="line">Update max = <span class="keyword">new</span> Update().max(<span class="string">&quot;num&quot;</span>, <span class="number">10</span>);	<span class="comment">// 更新为num和10中较大的数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 乘除</span></span><br><span class="line">Update multi = <span class="keyword">new</span> Update().multiply(<span class="string">&quot;num&quot;</span>, <span class="number">2</span>);</span><br></pre></td></tr></table></figure>
-<h2 id="c-日期"><a href="#c-日期" class="headerlink" title="c. 日期"></a>c. 日期</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update date = <span class="keyword">new</span> Update().currentData(<span class="string">&quot;date&quot;</span>);</span><br></pre></td></tr></table></figure>
-<h1 id="2-field"><a href="#2-field" class="headerlink" title="2. field"></a>2. field</h1><h2 id="a-rename"><a href="#a-rename" class="headerlink" title="a. rename"></a>a. rename</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().rename(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;new_name&quot;</span>);</span><br></pre></td></tr></table></figure>
-<p>如果<code>name</code>属性不存在，则不会发生更新。</p>
-<h2 id="b-增加"><a href="#b-增加" class="headerlink" title="b. 增加"></a>b. 增加</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().set(<span class="string">&quot;new_field&quot;</span>, <span class="string">&quot;new_field&quot;</span>);</span><br></pre></td></tr></table></figure>
-<p>新增一个字段，使用set可以完成。</p>
-<p>当对一个不存在的文档进行更新field时候，可以用<code>setOnInsert</code>，若文档已经存在，则不会更新。</p>
-<h1 id="3-Array-List-Set"><a href="#3-Array-List-Set" class="headerlink" title="3. Array/List/Set"></a>3. Array/List/Set</h1><p>在mongodb中都转换为数组。</p>
-<h2 id="a-添加"><a href="#a-添加" class="headerlink" title="a. 添加"></a>a. 添加</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().addToset(<span class="string">&quot;new_element&quot;</span>, <span class="string">&quot;123&quot;</span>);</span><br><span class="line"></span><br><span class="line">update = <span class="keyword">new</span> Update().push(<span class="string">&quot;new_element&quot;</span>, <span class="string">&quot;123&quot;</span>);</span><br></pre></td></tr></table></figure>
-<p><code>addToSet</code>：不可以对已经存在的字段进行插入，即将数组当作Set类型处理；在后面加上each()，能够批量添加；</p>
-<p><code>push</code>：允许重复。</p>
-<h2 id="b-删除"><a href="#b-删除" class="headerlink" title="b. 删除"></a>b. 删除</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().pull(<span class="string">&quot;del&quot;</span>, <span class="string">&quot;123&quot;</span>);</span><br></pre></td></tr></table></figure>
-<h2 id="c-修改"><a href="#c-修改" class="headerlink" title="c. 修改"></a>c. 修改</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().set(<span class="string">&quot;array.1&quot;</span>, <span class="number">10L</span>);</span><br></pre></td></tr></table></figure>
-<p>对数组array的index为1的元素修改为<code>long</code> 10。</p>
-<h1 id="Note"><a href="#Note" class="headerlink" title="Note:"></a>Note:</h1><h2 id="a-使用同一个Update"><a href="#a-使用同一个Update" class="headerlink" title="a. 使用同一个Update"></a>a. 使用同一个Update</h2><p>需要确保该Update内没有冲突的更新实体对象，即同一个update不能对实体的同一个属性进行多次修改。</p>
-<h2 id="b-使用同一个Criteria"><a href="#b-使用同一个Criteria" class="headerlink" title="b.  使用同一个Criteria"></a>b.  使用同一个Criteria</h2><p>对同一个Criteria附加chain的操作时，要注意and()等会改变原先Criteria，即在操作中是深拷贝参数的。在拼接Criteria时尽量使用new Criteria().xxx()。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>Spring</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>clion远程调试rust</title>
-    <url>/2020/11/23/clion%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95rust/</url>
-    <content><![CDATA[<h1 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h1><p>在CLion下远程调试Rust代码。<br><a id="more"></a></p>
-<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
-<li>本地Mac OS，远程Ubuntu。</li>
-<li>IDE：CLion2019.3.4</li>
-</ul>
-<h1 id="机器设置"><a href="#机器设置" class="headerlink" title="机器设置"></a>机器设置</h1><h2 id="远程端"><a href="#远程端" class="headerlink" title="远程端"></a>远程端</h2><p>需要打开端口ssh的TCP 22，gdbserver的TCP 2345。</p>
-<p>需要安装rust与gdb。</p>
-<h2 id="本地端"><a href="#本地端" class="headerlink" title="本地端"></a>本地端</h2><p>安装好Clion，rust插件与rust。</p>
-<h3 id="CLion配置"><a href="#CLion配置" class="headerlink" title="CLion配置"></a>CLion配置</h3><ol>
-<li>Tools -&gt; Deployment -&gt; Configuration</li>
-</ol>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105330.png" alt="image-20200907102258454"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105403.png" alt="image-20200907102510024"></p>
-<ol>
-<li>在Mapppings中添加映射。<ol>
-<li>添加代码文件夹的映射；</li>
-<li>添加本地target_remote 到 远程target的映射，为了让Linux的target文件与本地Mac OS的target文件区分开。所以，还需要在Excluded Paths中，把本地的target文件夹排除掉。</li>
-</ol>
-</li>
-</ol>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105417.png" alt="image-20200907103320500"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105426.png" alt="image-20200907103404223"></p>
-<ol>
-<li>上传代码文件，在项目的根目录点击右键，然后上传</li>
-</ol>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105437.png" alt="image-20200907103748150"></p>
-<h2 id="在远程端编译"><a href="#在远程端编译" class="headerlink" title="在远程端编译"></a>在远程端编译</h2><ul>
-<li><code>cargo build</code>生成target文件夹。</li>
-<li>开启gdbserver，例如：<code>gdbserver 0.0.0.0:2345 ./target/debug/cita-executor</code>。</li>
-<li>本地同步远程端，把target文件夹下载到本地的target_remote文件夹。<ul>
-<li><strong>Tools→Deployment→Browse Remote Host</strong>，找到target文件夹，右键选择Dowanload from here。</li>
-</ul>
-</li>
-</ul>
-<h2 id="调试设置"><a href="#调试设置" class="headerlink" title="调试设置"></a>调试设置</h2><p>添加GDB Remote Debug，就可以本地测试啦。</p>
-]]></content>
-      <categories>
-        <category>编程</category>
-        <category>编程</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>garbage_collection</title>
-    <url>/2020/11/23/garbage_collection/</url>
-    <content><![CDATA[<h1 id="垃圾回收条件"><a href="#垃圾回收条件" class="headerlink" title="垃圾回收条件"></a>垃圾回收条件</h1><h2 id="新生代"><a href="#新生代" class="headerlink" title="新生代"></a>新生代</h2><p>Minor GC/Young GC的触发条件：新生代内存区满，而又有新进入的新生代对象。此时会将没有被引用的垃圾新生代对象都回收掉。<br><a id="more"></a></p>
-<h2 id="老年代"><a href="#老年代" class="headerlink" title="老年代"></a>老年代</h2><p>当一个新生代对象在多次躲过垃圾回收，则会被转移到老年代。如果老年代也满了，也会触发垃圾回收。</p>
-<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>垃圾回收针对的是堆中的新生代、老年代，方法区（永久代），不会针对虚拟机栈中的栈帧。方法一旦执行完毕，栈帧出栈，局部变量直接就被清理掉了。</p>
-<h1 id="JVM内存相关核心参数"><a href="#JVM内存相关核心参数" class="headerlink" title="JVM内存相关核心参数"></a>JVM内存相关核心参数</h1><p><strong>-Xms</strong>：Java堆内存的大小</p>
-<p><strong>-Xmx</strong>：Java堆内存的最大大小</p>
-<p><strong>-Xmn</strong>：Java堆内存中的新生代大小，扣除新生代剩下的就是老年代的内存大小了</p>
-<p><strong>-XX:PermSize</strong>：永久代大小</p>
-<p><strong>-XX:MaxPermSize</strong>：永久代最大大小</p>
-<p><strong>-Xss</strong>：每个线程的栈内存大小</p>
-<blockquote>
-<p>永久代在1.8中已经移除，替换为元空间，使用本地内存，突破了<strong>-XX:MaxPermSize</strong>的限制。</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105731.jpg" alt="jvm_memory"></p>
-<p>应用框架设置JVM参数：Spring Boot其实就是启动的时候可以加上JVM参数，Tomcat就是在bin目录下的catalina.sh中可以加入JVM参数。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>JVM</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>go for循环的一个问题</title>
-    <url>/2020/11/23/go%20for%E5%BE%AA%E7%8E%AF%E7%9A%84%E4%B8%80%E4%B8%AA%E9%97%AE%E9%A2%98/</url>
-    <content><![CDATA[<p>在写go的for循环时，遇到了一个神奇的问题，记录一下。<br><a id="more"></a></p>
-<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>有如下代码：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	m := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>] <span class="keyword">string</span>)</span><br><span class="line">	r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]*<span class="keyword">string</span>)</span><br><span class="line">	m[<span class="number">1</span>] = <span class="string">&quot;1&quot;</span></span><br><span class="line">	m[<span class="number">2</span>] = <span class="string">&quot;2&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> k, entry := <span class="keyword">range</span> m &#123;</span><br><span class="line">		r[k] = &amp;entry</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> _, entry := <span class="keyword">range</span> r&#123;</span><br><span class="line">		<span class="built_in">println</span>(*entry)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></p>
-<p>打印结果会是什么呢？多跑几次试试。</p>
-<p>打印结果：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">1</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
-<p>或者</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">2</span><br><span class="line">2</span><br></pre></td></tr></table></figure>
-<p>如果是rust或者C++，java的代码，例如rust：</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> m: HashMap&lt;<span class="built_in">u8</span>, <span class="built_in">String</span>&gt; = HashMap::new();</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> r: HashMap&lt;<span class="built_in">u8</span>, <span class="built_in">Box</span>&lt;<span class="built_in">String</span>&gt;&gt; = HashMap::new();</span><br><span class="line">    m.insert(<span class="number">1</span>, <span class="built_in">String</span>::from(<span class="string">&quot;1&quot;</span>));</span><br><span class="line">    m.insert(<span class="number">2</span>, <span class="built_in">String</span>::from(<span class="string">&quot;2&quot;</span>));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (key, value) <span class="keyword">in</span> m &#123;</span><br><span class="line">        r.insert(key, <span class="built_in">Box</span>::from(value));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (_, v) <span class="keyword">in</span> r&#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, *v);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>打印的结果应该是：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">1 2</span><br><span class="line">// 或者 2 1</span><br></pre></td></tr></table></figure>
-<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>对于所有的 range 循环，Go 语言都会在编译期将原切片或者数组赋值给一个新的变量，在赋值的过程中就发生了拷贝，所以我们遍历的切片已经不是原始的切片变量了。</p>
-<p>而遇到这种同时遍历索引和元素的 range 循环时，Go 语言会额外创建一个新的变量存储切片中的元素，<strong>循环中使用的这个变量 entry 会在每一次迭代被重新赋值而覆盖，在赋值时也发生了拷贝</strong>。</p>
-<p>因为在循环中获取返回变量的地址都完全相同，所以会发生神奇的现象。所以如果我们想要访问元素所在的地址，不应该直接获取 range 返回的变量地址，而应该使用 <code>&amp;m[key]</code> 这种形式。</p>
-]]></content>
-      <categories>
-        <category>go</category>
-        <category>Go</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>go基础语法</title>
-    <url>/2020/08/03/go%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95/</url>
-    <content><![CDATA[<h1 id="语言结构"><a href="#语言结构" class="headerlink" title="语言结构"></a>语言结构</h1><ul>
-<li>包声明<a id="more"></a></li>
-<li>引入包</li>
-<li>函数</li>
-<li>变量</li>
-<li>语句 &amp; 表达式</li>
-<li>注释</li>
-</ul>
-<p><strong>注意</strong>：<code>&#123;</code>不能单独放在一行。go编译器会按行为语句加分隔符，如果<code>&#123;</code>单独一行，上一行末尾会被分隔。</p>
-<h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>变量：<code>var v_name v_type</code><br>根据值自行判定类型： <code>var v_name  = value</code><br>省略var，但是左侧必须有待新声明的变量：<code>v_name := value</code> 。只能使用在函数体内。<br>在相同代码块中，不可以重复声明同名变量，只能重新赋值。</p>
-<h2 id="多个变量"><a href="#多个变量" class="headerlink" title="多个变量"></a>多个变量</h2><p>同时定义多个变量：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a,b = b,a</span><br></pre></td></tr></table></figure><br>可以用组的方式：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span>(</span><br><span class="line">    x,y <span class="keyword">int</span></span><br><span class="line">    a,s=<span class="number">100</span>,<span class="string">&quot;abc&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
-<h2 id="常量"><a href="#常量" class="headerlink" title="常量"></a>常量</h2><ul>
-<li>不曾使用的常量不会编译错误</li>
-<li>右值不能超过常量类型取值范围</li>
-<li>右值也可以是某些编译器能够计算出结果的表达式</li>
-<li>在常量组中如果不指定类型和初始化值，则与上一行非空常量右值相同</li>
-<li>在预处理阶段展开，不分配内存，不能内存寻址来取值</li>
-</ul>
-<h2 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h2><p>除常量、别名类型以及未命名类型外，Go强制要求使用显式类型转换。<br>如果转换的目标是指针、单向通道或没有返回值的函数类型，那么必须使用括号，以避免造成语法分解错误。</p>
-<h3 id="自定义类型"><a href="#自定义类型" class="headerlink" title="自定义类型"></a>自定义类型</h3><p>即便指定了基础类型，也只表明它们有相同底层数据结构，两者间不存在任何关系，属完全不同的两种类型。除操作符外，自定义类型不会继承基础类型的其他信息（包括方法）。不能视作别名，不能隐式转换，不能直接用于比较表达式。</p>
-<h3 id="未命名类型"><a href="#未命名类型" class="headerlink" title="未命名类型"></a>未命名类型</h3><p>与有明确标识符的bool、int、string等类型相比，数组、切片、字典、通道等类型与具体元素类型或长度等属性有关，故称作未命名类型（unnamed type）。当然，可用type为其提供具体名称，将其改变为命名类型（named type）。<br>具有相同声明的未命名类型被视作同一类型。</p>
-<ul>
-<li>具有相同基类型的指针。</li>
-<li>具有相同元素类型和长度的数组（array）。</li>
-<li>具有相同元素类型的切片（slice）。</li>
-<li>具有相同键值类型的字典（map）。</li>
-<li>具有相同数据类型及操作方向的通道（channel）。</li>
-<li>具有相同字段序列（字段名、字段类型、标签，以及字段顺序）的结构体（struct）。</li>
-<li>具有相同签名（参数和返回值列表，不包括参数名）的函数（func）。</li>
-<li>具有相同方法集（方法名、方法签名，不包括顺序）的接口（interface）。<br>容易被忽视的是struct tag，它也属于类型组成部分，而不仅仅是元数据描述。<br>同样，函数的参数顺序也属签名组成部分。</li>
-</ul>
-<p>未命名类型转换规则：</p>
-<ul>
-<li>所属类型相同。</li>
-<li>基础类型相同，且其中一个是未命名类型。</li>
-<li>数据类型相同，将双向通道赋值给单向通道，且其中一个为未命名类型。</li>
-<li>将默认值nil赋值给切片、字典、通道、指针、函数或接口。</li>
-<li>对象实现了目标接口。</li>
-</ul>
-<h1 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h1><h2 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h2><h3 id="位运算"><a href="#位运算" class="headerlink" title="位运算"></a>位运算</h3><p>位清除（AND NOT）和位亦或（XOR）是不同的。它将右操作数对应二进制位都为1的重置为0（有些类似位图），以达到一次清除多个标记位的目的。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">x := <span class="number">0</span>b0101&amp;^<span class="number">0</span>b0011</span><br><span class="line"><span class="comment">// x=0100</span></span><br></pre></td></tr></table></figure></p>
-<h3 id="、—"><a href="#、—" class="headerlink" title="++、—"></a>++、—</h3><p>自增、自减不再是运算符。只能作为独立语句，不能用于表达式，不能前置。</p>
-<h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>指针类型支持相等运算符，但不能做加减法运算和类型转换。<br>指针没有专门指向成员的“-&gt;”运算符，统一使用“.”选择表达式。</p>
-<h2 id="流控制"><a href="#流控制" class="headerlink" title="流控制"></a>流控制</h2><h3 id="switch"><a href="#switch" class="headerlink" title="switch"></a>switch</h3><p>相邻的空case不构成多条件匹配。无须显式执行break语句，case执行完毕后自动中断。如须贯通后续case（源码顺序），须执行fallthrough，但不再匹配后续条件表达式。注意，fallthrough必须放在case块结尾，可使用break语句阻止。</p>
-<h1 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h1><p>使用<code>iota</code>关键字实现枚举。如果中断<code>iota</code>自增，需要显示恢复。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span>(</span><br><span class="line">    _,_ = <span class="literal">iota</span>*<span class="number">10</span>    <span class="comment">//0*10</span></span><br><span class="line">    a               <span class="comment">//1*10</span></span><br><span class="line">    b               <span class="comment">//2*10</span></span><br><span class="line">    c = <span class="number">100</span></span><br><span class="line">    d               <span class="comment">//100</span></span><br><span class="line">    e = <span class="literal">iota</span>        <span class="comment">//5*10</span></span><br></pre></td></tr></table></figure></p>
-<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">function_name</span><span class="params">( [parameter list] )</span> [<span class="title">return_types</span>]</span> &#123;</span><br><span class="line">   函数体    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="变参"><a href="#变参" class="headerlink" title="变参"></a>变参</h2><p>变参本质上就是一个切片。只能接收一到多个同类型参数，且必须放在列表尾部。</p>
-<h2 id="命名返回值"><a href="#命名返回值" class="headerlink" title="命名返回值"></a>命名返回值</h2><p>命名返回值和参数一样，可当作函数局部变量使用，最后由return隐式返回。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">div</span><span class="params">(x,y <span class="keyword">int</span>)</span> <span class="params">(z <span class="keyword">int</span>,err error)</span></span> &#123; </span><br><span class="line">   <span class="keyword">if</span> y==<span class="number">0</span>&#123; </span><br><span class="line">       err=errors.New(<span class="string">&quot;division by zero&quot;</span>) </span><br><span class="line">       <span class="keyword">return</span></span><br><span class="line">   &#125;</span><br><span class="line">   z=x/y</span><br><span class="line">   <span class="keyword">return</span>         <span class="comment">// 相当于&quot;return z,err&quot; </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>这些特殊的“局部变量”会被不同层级的同名变量遮蔽。好在编译器能检查到此类状况，只要改为显式return返回即可。<br>除遮蔽外，我们还必须对全部返回值命名，否则编译器会搞不清状况。如果返回值类型能明确表明其含义，就尽量不要对其命名。</p>
-<h2 id="闭包"><a href="#闭包" class="headerlink" title="闭包"></a>闭包</h2><p>闭包是匿名函数和引用的环境变量指针的组合体。<br>正因为闭包通过指针引用环境变量，那么可能会导致其生命周期延长，甚至被分配到堆内存。另外，还有所谓“延迟求值”的特性。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getSequence</span><span class="params">()</span> <span class="title">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">   i:=<span class="number">0</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">      i+=<span class="number">1</span></span><br><span class="line">     <span class="keyword">return</span> i  </span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="comment">/* nextNumber 为一个函数，i 为 0 */</span></span><br><span class="line">   nextNumber := getSequence()  </span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 调用 nextNumber 函数，i 变量自增 1 并返回 */</span></span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   </span><br><span class="line">   <span class="comment">/* 创建新的函数 nextNumber1，并查看结果 */</span></span><br><span class="line">   nextNumber1 := getSequence()  </span><br><span class="line">   fmt.Println(nextNumber1())</span><br><span class="line">   fmt.Println(nextNumber1())&#125;</span><br></pre></td></tr></table></figure><br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">执行结果：</span><br><span class="line">1 </span><br><span class="line">2 </span><br><span class="line">3 </span><br><span class="line">1 </span><br><span class="line">2</span><br></pre></td></tr></table></figure></p>
-<h2 id="延迟调用defer"><a href="#延迟调用defer" class="headerlink" title="延迟调用defer"></a>延迟调用defer</h2><p>注意，延迟调用注册的是调用，必须提供执行所需参数（哪怕为空）。参数值在注册时被复制并缓存起来。如对状态敏感，可改用指针或闭包。<br>延迟调用可修改当前函数命名返回值，但其自身返回值被抛弃。<br>多个延迟注册按FILO次序执行。<br>相比直接用CALL汇编指令调用函数，延迟调用则须花费更大代价。这其中包括注册、调用等操作，还有额外的缓存开销。</p>
-<h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><h2 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h2><p>以切片语法（起始和结束索引号）返回子串时，其内部依旧指向原字节数组。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   s:= <span class="string">&quot;abcdefg&quot;</span> </span><br><span class="line">   s1:=s[:<span class="number">3</span>]          <span class="comment">// 从头开始，仅指定结束索引位置</span></span><br><span class="line">   s2:=s[<span class="number">1</span>:<span class="number">4</span>]         <span class="comment">// 指定开始和结束位置，返回[start,end) </span></span><br><span class="line">   s3:=s[<span class="number">2</span>:]          <span class="comment">// 指定开始位置，返回后面全部内容</span></span><br><span class="line">   <span class="built_in">println</span>(s1,s2,s3) </span><br><span class="line">    <span class="comment">//  reflect.StringHeader和string头结构相同</span></span><br><span class="line">    <span class="comment">//  unsafe.Pointer用于指针类型转换</span></span><br><span class="line">   fmt.Printf(<span class="string">&quot;%#v\n&quot;</span>, (*reflect.StringHeader)(unsafe.Pointer(&amp;s))) </span><br><span class="line">   fmt.Printf(<span class="string">&quot;%#v\n&quot;</span>, (*reflect.StringHeader)(unsafe.Pointer(&amp;s1))) </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>输出<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">abc bcd cdefg</span><br><span class="line">  </span><br><span class="line">&amp;StringHeader&#123;Data:0xfb838,Len:7&#125; </span><br><span class="line">&amp;StringHeader&#123;Data:0xfb838,Len:3&#125;</span><br></pre></td></tr></table></figure><br>使用for遍历字符串时，分byte和rune两种方式。rune:返回（数组索引号，Unicode字符）。</p>
-<h3 id="转换"><a href="#转换" class="headerlink" title="转换"></a>转换</h3><p>要修改字符串，须将其转换为可变类型（[]rune或[]byte），待完成后再转换回来。但不管如何转换，都须重新分配内存，并复制数据。</p>
-<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><p>初始化<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   <span class="keyword">var</span> a[<span class="number">4</span>]<span class="keyword">int</span>    <span class="comment">// 元素自动初始化为零</span></span><br><span class="line">   b:= [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">2</span>,<span class="number">5</span>&#125;    <span class="comment">// 未提供初始值的元素自动初始化为0</span></span><br><span class="line">   c:= [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">5</span>,<span class="number">3</span>:<span class="number">10</span>&#125;     <span class="comment">// 可指定索引位置初始化</span></span><br><span class="line">   d:= [...]<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;        <span class="comment">// 编译器按初始化值数量确定数组长度</span></span><br><span class="line">   e:= [...]<span class="keyword">int</span>&#123;<span class="number">10</span>,<span class="number">3</span>:<span class="number">100</span>&#125;      <span class="comment">// 支持索引初始化，但注意数组长度与此有关</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>对于结构等复合类型，可省略元素初始化类型标签。<br>在定义多维数组时，仅第一维度允许使用“…”。<br>内置函数len和cap都返回第一维度长度。</p>
-<h2 id="切片"><a href="#切片" class="headerlink" title="切片"></a>切片</h2><p>定义：<code>var identifier []type</code> 或者 <code>var slice1 []type = make([]type, len)</code><br>初始化：<code>s :=[] int &#123;1,2,3 &#125;</code>  或者 <code>s := arr[startIndex:endIndex]</code><br>属性cap表示切片所引用数组片段的真实长度，len用于限定可读的写元素数量。另外，数组必须addressable，否则会引发错误。比如数组是map的value值，仅仅是一个值，没有地址。<br>新建切片对象依旧指向原底层数组，也就是说修改对所有关联切片可见。</p>
-<h3 id="append"><a href="#append" class="headerlink" title="append"></a>append</h3><p>向切片尾部（slice[len]）添加数据，返回新的切片对象。不会修改原slice属性，但是数据被追加到原底层数组。如超出cap限制，则为新切片对象重新分配数组。</p>
-<h3 id="copy"><a href="#copy" class="headerlink" title="copy"></a>copy</h3><p>在两个切片对象间复制数据，允许指向同一底层数组，允许目标区间重叠。最终所复制长度以较短的切片长度（len）为准。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   s:= []<span class="keyword">int</span>&#123;<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>&#125; </span><br><span class="line">   s1:=s[<span class="number">5</span>:<span class="number">8</span>] </span><br><span class="line">   n:=<span class="built_in">copy</span>(s[<span class="number">4</span>:],s1)      <span class="comment">// 在同一底层数组的不同区间复制</span></span><br><span class="line">   s2:=<span class="built_in">make</span>([]<span class="keyword">int</span>,<span class="number">6</span>)      <span class="comment">// 在不同数组间复制</span></span><br><span class="line">   n=<span class="built_in">copy</span>(s2,s) </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>如果切片长时间引用大数组中很小的片段，那么建议新建独立切片，复制出所需数据，以便原数组内存可被及时回收。</p>
-<h2 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h2><p>map： <code>var v_name map[key_type]data_type</code> 或者 <code>v_name = make(map[key_type]data_type)</code>或者<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">m:=<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">struct</span>&#123;        <span class="comment">// 值为匿名结构类型</span></span><br><span class="line">       x <span class="keyword">int</span></span><br><span class="line">&#125;&#123; </span><br><span class="line">   <span class="number">1</span>:  &#123;x:<span class="number">100</span>&#125;,          </span><br><span class="line">   <span class="number">2</span>:  &#123;x:<span class="number">200</span>&#125;, </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure><br>运行时会对字典并发操作做出检测。如果某个任务正在对字典进行写操作，那么其他任务就不能对该字典执行并发操作（读、写、删除），否则会导致进程崩溃。</p>
-<h2 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h2><h3 id="匿名字段"><a href="#匿名字段" class="headerlink" title="匿名字段"></a>匿名字段</h3><p>所谓匿名字段（anonymous field），是指没有名字，仅有类型的字段，也被称作嵌入字段或嵌入类型。<br>从编译器角度看，这只是隐式地以类型名作为字段名字。可直接引用匿名字段的成员，但初始化时须当作独立字段。<br>如嵌入其他包中的类型，则隐式字段名字不包括包名。<br>不仅仅是结构体，除接口指针和多级指针以外的任何命名类型都可作为匿名字段。<br>因未命名类型没有名字标识，自然无法作为匿名字段。<br>不能将基础类型和其指针类型同时嵌入，因为两者隐式名字相同。</p>
-<h3 id="字段标签"><a href="#字段标签" class="headerlink" title="字段标签"></a>字段标签</h3><p>字段标签（tag）并不是注释，而是用来对字段进行描述的元数据。尽管它不属于数据成员，但却是类型的组成部分。<br>在运行期，可用反射获取标签信息。它常被用作格式校验，数据库关系映射等。</p>
-<h1 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(type_name <span class="keyword">type</span>)</span> <span class="title">function_name</span><span class="params">(variable_name variable_data_type)</span> [<span class="title">return_type</span>]</span>&#123;</span><br><span class="line">   <span class="comment">/* 函数体*/</span>&#125;</span><br><span class="line"><span class="comment">/* 定义结构体 */</span></span><br><span class="line"><span class="keyword">type</span> Circle <span class="keyword">struct</span> &#123;</span><br><span class="line">  radius <span class="keyword">float64</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">var</span> c1 Circle</span><br><span class="line">  c1.radius = <span class="number">10.00</span></span><br><span class="line">  fmt.Println(<span class="string">&quot;圆的面积 = &quot;</span>, c1.getArea())</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//该 method 属于 Circle 类型对象中的方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c Circle)</span> <span class="title">getArea</span><span class="params">()</span> <span class="title">float64</span></span> &#123;</span><br><span class="line">  <span class="comment">//c.radius 即为 Circle 类型对象中的属性</span></span><br><span class="line">  <span class="keyword">return</span> <span class="number">3.14</span> * c.radius * c.radius</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>方法同样不支持重载（overload）。如方法内部并不引用实例，可省略参数名，仅保留类型。<br>方法可看作特殊的函数，那么receiver的类型自然可以是基础类型或指针类型。这会关系到调用时对象实例是否被复制。<br>可使用实例值或指针调用方法，编译器会根据方法receiver类型自动在基础类型和指针类型间转换。<br>不能用多级指针调用方法。<br>指针类型的receiver必须是合法指针（包括nil），或能获取实例地址。</p>
-<h2 id="如何选择方法的receiver类型？"><a href="#如何选择方法的receiver类型？" class="headerlink" title="如何选择方法的receiver类型？"></a>如何选择方法的receiver类型？</h2><ul>
-<li>要修改实例状态，用<code>*T</code>。</li>
-<li>无须修改状态的小对象或固定值，建议用T。</li>
-<li>大对象建议用<code>*T</code>，以减少复制成本。</li>
-<li>引用类型、字符串、函数等指针包装对象，直接用T。</li>
-<li>若包含Mutex等同步字段，用<code>*T</code>，避免因复制造成锁操作无效。</li>
-<li>其他无法确定的情况，都用<code>*T</code>。<h1 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">type error interface &#123;</span><br><span class="line">    Error() string</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-使用<code>error.New(“xxx”)</code>生成错误信息。</li>
-</ul>
-<h1 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h1><p><code>goroutine</code>：go 函数名( 参数列表 )<br>通道：<br><code>ch &lt;- v</code>    // 把 v 发送到通道 ch<br><code>v := &lt;-ch</code>  // 从 ch 接收数据<br>           // 并把值赋给 v<br>声明通道： <code>ch := make(chan int)</code></p>
-<h1 id="context上下文"><a href="#context上下文" class="headerlink" title="context上下文"></a>context上下文</h1><p>context 包在与 API 和慢处理交互时可以派上用场，特别是在生产级的 Web 服务中。在这些场景中，您可能想要通知所有的 goroutine 停止运行并返回。<br><a href="https://studygolang.com/articles/13866?fr=sidebar">https://studygolang.com/articles/13866?fr=sidebar</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-        <category>Go</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>keystore</title>
-    <url>/2020/11/23/keystore/</url>
-    <content><![CDATA[<h1 id="Keystore简介"><a href="#Keystore简介" class="headerlink" title="Keystore简介"></a>Keystore简介</h1><p>以太坊的每个外部账户都是由一对密钥定义的。<br><a id="more"></a><br>keystore 文件（存储在<code>~/.ethereum/keystore</code>Linux或<code>C:\Users\&lt;User&gt;\Appdata\Roaming\Ethereum\keystore</code>Windows上）是用于签署交易的以太网私钥的加密版本。私钥通常用你创建帐户时设置的密码进行加密。如果你丢失了这个文件，你就丢失了私钥。当然，忘了密码也意味着你进不去这个账户了。如果丢了文件又忘了密码，那么恭喜你，心大的你只能看看账户里的余额，喝酒消愁了。</p>
-<p>这个文件是<strong>安全性</strong>（攻击者需要密钥库文件<em>和</em> 密码来窃取您的资金）和<strong>可用性</strong>之间的完美折衷（您只需要密钥库文件<em>和</em> 密码来使用您的钱）。为了让您发送一些以太网，大多数以太坊客户端会要求您输入密码（与您创建帐户时使用的密码）相同，以便解密您的以太坊私钥。解密后，客户端程序可以使用私钥来签署您的交易，并让您移动您的资金。</p>
-<h1 id="Keystore文件内容"><a href="#Keystore文件内容" class="headerlink" title="Keystore文件内容"></a>Keystore文件内容</h1><p>文件来源<a href="https://github.com/hashcat/hashcat/issues/1228">此处</a>：</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ cat~ &#x2F; .ethereum &#x2F; keystore &#x2F; UTC  -  &lt;created_date_time&gt;  -  008aeeda4d805471df9b2a5b0f38a0c3bcba786b </span><br><span class="line">&#123; </span><br><span class="line">    “crypto”：&#123; </span><br><span class="line">        “cipher”：“aes-128-ctr”，</span><br><span class="line">        “cipherparams”：&#123; </span><br><span class="line">            “iv”：“83dbcc02d8ccb40e466191a123791e0e” </span><br><span class="line">        &#125;，</span><br><span class="line">        “ciphertext”：“d172bf743a674da9cdad04534d56926ef8358534d458fffccd4e6ad2fbde479c”，</span><br><span class="line">        “kdf”：“scrypt”，</span><br><span class="line">        “kdfparams”：&#123; </span><br><span class="line">            “dklen”：32，</span><br><span class="line">            “n”：262144，</span><br><span class="line">            “r”：1，</span><br><span class="line">            “p”：8，</span><br><span class="line">            “salt”：“ab0c7876052600dd703518d6fc3fe8984592145b591fc8fb5c6d43190334ba19“ </span><br><span class="line">        &#125;，</span><br><span class="line">        “mac”：“2103ac29920d71da29f15d75b4a16dbe95cfd7ff8faea1056c33131d846e3097” </span><br><span class="line">    &#125;，</span><br><span class="line">    “id”：“d57df606-1b86-447a-a60e-18a539f9d92e”，</span><br><span class="line">    “version”：3 </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>一个粗略的JSON文件，包含许多参数。</p>
-<h1 id="分析文件内容"><a href="#分析文件内容" class="headerlink" title="分析文件内容"></a>分析文件内容</h1><ul>
-<li><p>第一行字符串（008aeeda4d805471df9b2a5b0f38a0c3bcba786b ）是<strong>address</strong> 。</p>
-</li>
-<li><p><strong>crypto</strong>下的参数解析：</p>
-<ul>
-<li><strong>cipher</strong>：对称<a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES算法</a>的名称；</li>
-<li><strong>cipherparams</strong>：上面“密码”算法所需的参数；</li>
-<li><strong>ciphertext</strong>：使用上面的“密码”算法加密的以太网私钥；</li>
-<li><strong>kdf</strong>：一个<a href="https://en.wikipedia.org/wiki/Key_derivation_function">密钥派生函数，</a>用于让您使用密码加密密钥库文件；</li>
-<li><strong>kdfparams</strong>：上述“kdf”算法所需的参数；</li>
-<li><strong>mac</strong>：用于验证密码的<a href="https://en.wikipedia.org/wiki/Message_authentication_code">代码</a> ；在密码输错时可以给出一个反馈。</li>
-</ul>
-</li>
-<li><strong>version</strong>: Keystore文件的版本，目前为第3版，也称为V3 KeyStore。</li>
-<li><strong>id</strong> : uuid；例子中，V=4,T=a，表示uuid v4版本（基于随机数）；</li>
-</ul>
-<p>让我们看看它们如何协同工作，在密码短语下保护keystore文件。</p>
-<h2 id="1-加密私钥"><a href="#1-加密私钥" class="headerlink" title="1.加密私钥"></a>1.加密私钥</h2><p>如前所述，以太坊帐户是用于对交易进行加密签名的私钥 - 公钥对。为了确保私钥不像普通文件一样存储在文件中（即可以访问该文件的任何人可读），使用强对称算法（<strong>密码</strong>）对其进行加密至关重要。</p>
-<p>这些对称算法使用密钥来加密某些数据。结果数据是加密的，可以使用相同的方法和相同的密钥进行解密 - 因此名称为“对称”。对于本文，我们将此对称密钥称为<strong>解密密钥，</strong>因为它将用于解密我们的以太坊私钥。</p>
-<p>这就是<strong>cipher</strong>，<strong>cipherparams</strong>和<strong>ciphertext</strong>对应的：</p>
-<ul>
-<li><strong>cipher</strong>是用于加密以太坊私钥的对称算法。默认为<code>aes-128-ctr</code>,128代表位。又名“128位密钥”或“256位密钥”。数字越高，越安全。</li>
-<li><strong>cipherparams</strong>是<em>aes-128-ctr</em>算法所需的参数。这里，唯一的参数是<em>iv</em>。<ul>
-<li><strong>iv</strong>：aes-128-ctr加密算法需要的初始化向量，大小必须符合密码的要求。如果没有提供，则通过crypto.getRandomBytes生成随机数。这里是128bit。</li>
-</ul>
-</li>
-<li><strong>ciphertext</strong>是<em>aes-128-ctr</em>函数的加密输出也是之后的输入。</li>
-</ul>
-<p>具体的加密流程如下：</p>
-<ol>
-<li>生成一个随机数作为盐 | 给定一个盐值，对密码进行加密（kdf）生成派生秘钥（即<strong>解密密钥</strong>）；</li>
-<li>然后从派生秘钥中截取16位字符作为派生密码；</li>
-<li>再生成一个16位的随机数作为向量iv；</li>
-<li>然后拿着生成的派生密码，向量，私钥进行加密得到密文ciphertext；</li>
-<li>最后拿着生成的密文，和派生秘钥做hash处理作为校验码mac；</li>
-<li>将相关参数和密文保存到JSON文件keystore中。</li>
-</ol>
-<p>所以，您需要先得到<strong>解密密钥</strong>。实际上，记住你设置的密码即可，下小节讲解。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110012.png" alt="2"></p>
-<h2 id="2-用密码保护它"><a href="#2-用密码保护它" class="headerlink" title="2.用密码保护它"></a>2.用密码保护它</h2><p>为了确保轻松解锁您的帐户，您无需记住非常长且非用户友好的<strong>解密密钥</strong>。相反，以太坊开发人员选择了基于密码短语的保护 - 也就是说，您只需要输入密码来得到<strong>解密密钥</strong>。</p>
-<p>为了能够实现这一点，以太坊使用<a href="https://en.wikipedia.org/wiki/Key_derivation_function">密钥派生函数</a>，在给定密码和参数列表的情况下计算<strong>解密密钥</strong>。</p>
-<p><strong>kdf</strong>和<strong>kdfparams</strong>：</p>
-<ul>
-<li><p><strong>kdf</strong>是用于从密码短语计算（或“衍生”）<strong>解密密钥</strong>的密钥派生函数。这里，<strong>kdf</strong>的值是<em>scrypt</em> <strong>。</strong></p>
-</li>
-<li><p><strong>kdfparams</strong>是<a href="/2020/11/23/KDF%E4%B9%8BScrypt/" title="*scrypt*">*scrypt*</a>函数所需的参数。这里，<em>dklen</em>，<em>n</em>，<em>r</em>，<em>p</em>和<em>salt</em>是<strong>kdf</strong>函数的参数。</p>
-<ul>
-<li><code>dklen：32</code>，- 派生密钥长度（以字节为单位）。对于某些密码设置，这必须匹配那些块大小。小于等于(2^32 - 1) * 32的正整数。</li>
-<li><code>n：262144</code>，- 迭代计数。geth的默认值为262144。 n 和 r 决定了占用的内存区域大小和哈希迭代次数（占用的内存大小为 128⋅n⋅r bytes，迭代次数为 2⋅n⋅r），可以修改的参数是 n。把 n 值定在 65536，这样可以兼容大部分低端配置的手机。必须大于1，是2的幂且小于2^(128 * r / 8)。</li>
-<li><code>r：8</code>，- 底层散列的块大小，默认为8。决定了连续读大小（sequential read size），通常不应该修改。</li>
-<li><code>p：1</code> - 并行化因素。默认为1。小于等于((2^32-1) <em> 32) / (128 </em> r)的正整数。</li>
-<li><code>salt</code> - kdf的随机盐。大小必须符合KDF（密钥派生函数）的要求。如果没有提供，则通过crypto.getRandomBytes生成随机数。</li>
-</ul>
-<blockquote>
-<p>减少/覆盖scrypt设置为1024 <em> 8 </em> 1能更快破解？<br>不可以。更改  N  将改变迭代计数，这将改变散列。即使您的字典中包含明文，它也不会破解散列。</p>
-<p>另外，来计算一下默认参数下，并行计算需要多少内存：</p>
-<p>1：（128 * 8）* 262144 = 1024 * 262144 = 268,435,456字节= 256MB<br>2：64（AMD卡）* 64（[RX Vega 64具有64个CU]<br>  (<a href="https://www.techpowerup.com/gpudb/2871/radeon-rx-vega-64）=">https://www.techpowerup.com/gpudb/2871/radeon-rx-vega-64）=</a> 4,096个并行计算<br>3：256MB * 4,096 = 1,048,576 MB RAM = <em>Vega 64需要<strong>1,024</strong> GB RAM</em></p>
-</blockquote>
-</li>
-</ul>
-<blockquote>
-<ul>
-<li>所以，如果我忘记了Eth钱包的密码，那么可能需要几年时间才能破解？！？！</li>
-<li>对。<br>//n的值越大，加密级别越高，当然消耗的内存越大。</li>
-</ul>
-</blockquote>
-<p>在这里，使用<strong>kdfparams</strong>参数调整<em>scrypt</em>函数并将其<strong>输入</strong>密码，您将获得我们的<strong>解密密钥</strong>作为密钥派生函数的输出。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110022.png" alt="3"></p>
-<h2 id="3-确保您的密码是正确的"><a href="#3-确保您的密码是正确的" class="headerlink" title="3.确保您的密码是正确的"></a>3.确保您的密码是正确的</h2><p>我们已经描述了从密钥库文件和密码短语中确定我们的以太网私钥所需的一切。但是，如果用于解锁帐户的密码错误，会发生什么？</p>
-<p>从我们到目前为止所看到的，所有操作（派生和解密）都将成功，但最后计算的以太坊私钥将不正确 - 这首先违背了使用密钥文件的要点！</p>
-<p>我们需要保证键入的密码以解锁帐户是正确的，它与最初创建密钥库文件时输入的密码相同（记得<code>geth account new</code>吗？）。</p>
-<p>这是密钥库文件中的<strong>mac</strong>值发挥作用的地方。在执行密钥派生函数之后，处理其结果（<strong>解密密钥</strong>）和<strong>密文</strong>并与<strong>mac</strong>进行比较（其作用类似于批准的印章）。如果结果与<strong>mac</strong>相同，则密码是正确的，并且解密可以开始。</p>
-<p>在与<strong>mac</strong>进行比较之前，将<strong>解密密钥</strong>（仅第二个最左边的16个字节）和<strong>密文</strong>进行连接和散列（SHA3-256）。更多信息<a href="https://github.com/hashcat/hashcat/issues/1228">在这里</a>。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110029.png" alt="4"></p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>首先，您输入了密码，该密码被<strong>kdf</strong>密钥派生函数用来计算出<strong>解密密钥</strong>。然后，将新计算的<strong>解密密钥</strong>与<strong>密文</strong>一起处理，并与<strong>mac</strong>进行比较，以确保密码是正确的。最后，使用<strong>解密密钥</strong>通过<strong>密码</strong>对称解密函数<strong>解密密文</strong>。</p>
-<p>瞧！解密的结果是您的以太网私钥。您可以在这里查看整个过程：</p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110041.png" alt="5"></p>
-<p>从图中可以看出，你的密码作为唯一的输入，你的以太网私钥作为唯一的输出。创建新的以太坊帐户时生成的keystore文件中提供了所需的其他信息。</p>
-<p>出于这个原因，请确保您的密码是强大的（<em>并且您以某种方式记住它们！</em>）以保证窃取您的密钥库文件的攻击者无法轻松得到您的私钥。</p>
-<h1 id="Refer"><a href="#Refer" class="headerlink" title="Refer."></a>Refer.</h1><p>[1]. <a href="https://medium.com/@julien.maffre/what-is-an-ethereum-keystore-file-86c8c5917b97">What is an Ethereum keystore file?</a></p>
-<p>[2]. <a href="https://github.com/hashcat/hashcat/issues/1228">Ethereum KDF - Scrypt</a></p>
-]]></content>
-      <categories>
-        <category>区块链</category>
-        <category>密码学</category>
-      </categories>
-  </entry>
-  <entry>
     <title>socket</title>
-    <url>/2020/05/25/socket/</url>
+    <url>/2020/05/25/Socket/</url>
     <content><![CDATA[<h1 id="Socket-编程"><a href="#Socket-编程" class="headerlink" title="Socket 编程"></a>Socket 编程</h1><a id="more"></a>
 <p>套接字使用TCP提供了两台计算机之间的通信机制。 客户端程序创建一个套接字，并尝试连接服务器的套接字。</p>
 <p>当连接建立时，服务器会创建一个 Socket 对象。客户端和服务器现在可以通过对 Socket 对象的写入和读取来进行通信。</p>
@@ -1288,6 +921,324 @@
       </categories>
   </entry>
   <entry>
+    <title>Spring_MongDB</title>
+    <url>/2020/11/23/Spring_MongDB/</url>
+    <content><![CDATA[<h1 id="1-基本类型"><a href="#1-基本类型" class="headerlink" title="1.基本类型"></a>1.基本类型</h1><h2 id="a-set"><a href="#a-set" class="headerlink" title="a. set"></a>a. set</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Query query = <span class="keyword">new</span> Query(Criteria.where(<span class="string">&quot;_id&quot;</span>).is(<span class="string">&quot;123&quot;</span>));</span><br><span class="line">Update update = <span class="keyword">new</span> Update().set(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;munan&quot;</span>);</span><br><span class="line">mongoTemplate.updateFirst(query, update, COLLECTION_NAME);</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<p><code>set</code>：修改指定属性为指定数据；<br><code>updateFirst</code>：修改根据query查找到的第一个实体对象。</p>
+<h2 id="b-数字相关"><a href="#b-数字相关" class="headerlink" title="b. 数字相关"></a>b. 数字相关</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 数字增加或者减少</span></span><br><span class="line">Update newCount = <span class="keyword">new</span> Update().inc(<span class="string">&quot;count&quot;</span>, <span class="number">1L</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 比较修改</span></span><br><span class="line">Update max = <span class="keyword">new</span> Update().max(<span class="string">&quot;num&quot;</span>, <span class="number">10</span>);	<span class="comment">// 更新为num和10中较大的数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 乘除</span></span><br><span class="line">Update multi = <span class="keyword">new</span> Update().multiply(<span class="string">&quot;num&quot;</span>, <span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="c-日期"><a href="#c-日期" class="headerlink" title="c. 日期"></a>c. 日期</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update date = <span class="keyword">new</span> Update().currentData(<span class="string">&quot;date&quot;</span>);</span><br></pre></td></tr></table></figure>
+<h1 id="2-field"><a href="#2-field" class="headerlink" title="2. field"></a>2. field</h1><h2 id="a-rename"><a href="#a-rename" class="headerlink" title="a. rename"></a>a. rename</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().rename(<span class="string">&quot;name&quot;</span>, <span class="string">&quot;new_name&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>如果<code>name</code>属性不存在，则不会发生更新。</p>
+<h2 id="b-增加"><a href="#b-增加" class="headerlink" title="b. 增加"></a>b. 增加</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().set(<span class="string">&quot;new_field&quot;</span>, <span class="string">&quot;new_field&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>新增一个字段，使用set可以完成。</p>
+<p>当对一个不存在的文档进行更新field时候，可以用<code>setOnInsert</code>，若文档已经存在，则不会更新。</p>
+<h1 id="3-Array-List-Set"><a href="#3-Array-List-Set" class="headerlink" title="3. Array/List/Set"></a>3. Array/List/Set</h1><p>在mongodb中都转换为数组。</p>
+<h2 id="a-添加"><a href="#a-添加" class="headerlink" title="a. 添加"></a>a. 添加</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().addToset(<span class="string">&quot;new_element&quot;</span>, <span class="string">&quot;123&quot;</span>);</span><br><span class="line"></span><br><span class="line">update = <span class="keyword">new</span> Update().push(<span class="string">&quot;new_element&quot;</span>, <span class="string">&quot;123&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p><code>addToSet</code>：不可以对已经存在的字段进行插入，即将数组当作Set类型处理；在后面加上each()，能够批量添加；</p>
+<p><code>push</code>：允许重复。</p>
+<h2 id="b-删除"><a href="#b-删除" class="headerlink" title="b. 删除"></a>b. 删除</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().pull(<span class="string">&quot;del&quot;</span>, <span class="string">&quot;123&quot;</span>);</span><br></pre></td></tr></table></figure>
+<h2 id="c-修改"><a href="#c-修改" class="headerlink" title="c. 修改"></a>c. 修改</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Update update = <span class="keyword">new</span> Update().set(<span class="string">&quot;array.1&quot;</span>, <span class="number">10L</span>);</span><br></pre></td></tr></table></figure>
+<p>对数组array的index为1的元素修改为<code>long</code> 10。</p>
+<h1 id="Note"><a href="#Note" class="headerlink" title="Note:"></a>Note:</h1><h2 id="a-使用同一个Update"><a href="#a-使用同一个Update" class="headerlink" title="a. 使用同一个Update"></a>a. 使用同一个Update</h2><p>需要确保该Update内没有冲突的更新实体对象，即同一个update不能对实体的同一个属性进行多次修改。</p>
+<h2 id="b-使用同一个Criteria"><a href="#b-使用同一个Criteria" class="headerlink" title="b.  使用同一个Criteria"></a>b.  使用同一个Criteria</h2><p>对同一个Criteria附加chain的操作时，要注意and()等会改变原先Criteria，即在操作中是深拷贝参数的。在拼接Criteria时尽量使用new Criteria().xxx()。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>Spring</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>garbage_collection</title>
+    <url>/2020/11/23/garbage_collection/</url>
+    <content><![CDATA[<h1 id="垃圾回收条件"><a href="#垃圾回收条件" class="headerlink" title="垃圾回收条件"></a>垃圾回收条件</h1><h2 id="新生代"><a href="#新生代" class="headerlink" title="新生代"></a>新生代</h2><p>Minor GC/Young GC的触发条件：新生代内存区满，而又有新进入的新生代对象。此时会将没有被引用的垃圾新生代对象都回收掉。<br><a id="more"></a></p>
+<h2 id="老年代"><a href="#老年代" class="headerlink" title="老年代"></a>老年代</h2><p>当一个新生代对象在多次躲过垃圾回收，则会被转移到老年代。如果老年代也满了，也会触发垃圾回收。</p>
+<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>垃圾回收针对的是堆中的新生代、老年代，方法区（永久代），不会针对虚拟机栈中的栈帧。方法一旦执行完毕，栈帧出栈，局部变量直接就被清理掉了。</p>
+<h1 id="JVM内存相关核心参数"><a href="#JVM内存相关核心参数" class="headerlink" title="JVM内存相关核心参数"></a>JVM内存相关核心参数</h1><p><strong>-Xms</strong>：Java堆内存的大小</p>
+<p><strong>-Xmx</strong>：Java堆内存的最大大小</p>
+<p><strong>-Xmn</strong>：Java堆内存中的新生代大小，扣除新生代剩下的就是老年代的内存大小了</p>
+<p><strong>-XX:PermSize</strong>：永久代大小</p>
+<p><strong>-XX:MaxPermSize</strong>：永久代最大大小</p>
+<p><strong>-Xss</strong>：每个线程的栈内存大小</p>
+<blockquote>
+<p>永久代在1.8中已经移除，替换为元空间，使用本地内存，突破了<strong>-XX:MaxPermSize</strong>的限制。</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105731.jpg" alt="jvm_memory"></p>
+<p>应用框架设置JVM参数：Spring Boot其实就是启动的时候可以加上JVM参数，Tomcat就是在bin目录下的catalina.sh中可以加入JVM参数。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>JVM</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>go for循环的一个问题</title>
+    <url>/2020/11/23/go%20for%E5%BE%AA%E7%8E%AF%E7%9A%84%E4%B8%80%E4%B8%AA%E9%97%AE%E9%A2%98/</url>
+    <content><![CDATA[<p>在写go的for循环时，遇到了一个神奇的问题，记录一下。<br><a id="more"></a></p>
+<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>有如下代码：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	m := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>] <span class="keyword">string</span>)</span><br><span class="line">	r := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">int</span>]*<span class="keyword">string</span>)</span><br><span class="line">	m[<span class="number">1</span>] = <span class="string">&quot;1&quot;</span></span><br><span class="line">	m[<span class="number">2</span>] = <span class="string">&quot;2&quot;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> k, entry := <span class="keyword">range</span> m &#123;</span><br><span class="line">		r[k] = &amp;entry</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> _, entry := <span class="keyword">range</span> r&#123;</span><br><span class="line">		<span class="built_in">println</span>(*entry)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure></p>
+<p>打印结果会是什么呢？多跑几次试试。</p>
+<p>打印结果：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">1</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+<p>或者</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">2</span><br><span class="line">2</span><br></pre></td></tr></table></figure>
+<p>如果是rust或者C++，java的代码，例如rust：</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> m: HashMap&lt;<span class="built_in">u8</span>, <span class="built_in">String</span>&gt; = HashMap::new();</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> r: HashMap&lt;<span class="built_in">u8</span>, <span class="built_in">Box</span>&lt;<span class="built_in">String</span>&gt;&gt; = HashMap::new();</span><br><span class="line">    m.insert(<span class="number">1</span>, <span class="built_in">String</span>::from(<span class="string">&quot;1&quot;</span>));</span><br><span class="line">    m.insert(<span class="number">2</span>, <span class="built_in">String</span>::from(<span class="string">&quot;2&quot;</span>));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (key, value) <span class="keyword">in</span> m &#123;</span><br><span class="line">        r.insert(key, <span class="built_in">Box</span>::from(value));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (_, v) <span class="keyword">in</span> r&#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, *v);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>打印的结果应该是：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">1 2</span><br><span class="line">// 或者 2 1</span><br></pre></td></tr></table></figure>
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>对于所有的 range 循环，Go 语言都会在编译期将原切片或者数组赋值给一个新的变量，在赋值的过程中就发生了拷贝，所以我们遍历的切片已经不是原始的切片变量了。</p>
+<p>而遇到这种同时遍历索引和元素的 range 循环时，Go 语言会额外创建一个新的变量存储切片中的元素，<strong>循环中使用的这个变量 entry 会在每一次迭代被重新赋值而覆盖，在赋值时也发生了拷贝</strong>。</p>
+<p>因为在循环中获取返回变量的地址都完全相同，所以会发生神奇的现象。所以如果我们想要访问元素所在的地址，不应该直接获取 range 返回的变量地址，而应该使用 <code>&amp;m[key]</code> 这种形式。</p>
+]]></content>
+      <categories>
+        <category>go</category>
+        <category>Go</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>clion远程调试rust</title>
+    <url>/2020/11/23/clion%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95rust/</url>
+    <content><![CDATA[<h1 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h1><p>在CLion下远程调试Rust代码。<br><a id="more"></a></p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
+<li>本地Mac OS，远程Ubuntu。</li>
+<li>IDE：CLion2019.3.4</li>
+</ul>
+<h1 id="机器设置"><a href="#机器设置" class="headerlink" title="机器设置"></a>机器设置</h1><h2 id="远程端"><a href="#远程端" class="headerlink" title="远程端"></a>远程端</h2><p>需要打开端口ssh的TCP 22，gdbserver的TCP 2345。</p>
+<p>需要安装rust与gdb。</p>
+<h2 id="本地端"><a href="#本地端" class="headerlink" title="本地端"></a>本地端</h2><p>安装好Clion，rust插件与rust。</p>
+<h3 id="CLion配置"><a href="#CLion配置" class="headerlink" title="CLion配置"></a>CLion配置</h3><ol>
+<li>Tools -&gt; Deployment -&gt; Configuration</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105330.png" alt="image-20200907102258454"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105403.png" alt="image-20200907102510024"></p>
+<ol>
+<li>在Mapppings中添加映射。<ol>
+<li>添加代码文件夹的映射；</li>
+<li>添加本地target_remote 到 远程target的映射，为了让Linux的target文件与本地Mac OS的target文件区分开。所以，还需要在Excluded Paths中，把本地的target文件夹排除掉。</li>
+</ol>
+</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105417.png" alt="image-20200907103320500"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105426.png" alt="image-20200907103404223"></p>
+<ol>
+<li>上传代码文件，在项目的根目录点击右键，然后上传</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105437.png" alt="image-20200907103748150"></p>
+<h2 id="在远程端编译"><a href="#在远程端编译" class="headerlink" title="在远程端编译"></a>在远程端编译</h2><ul>
+<li><code>cargo build</code>生成target文件夹。</li>
+<li>开启gdbserver，例如：<code>gdbserver 0.0.0.0:2345 ./target/debug/cita-executor</code>。</li>
+<li>本地同步远程端，把target文件夹下载到本地的target_remote文件夹。<ul>
+<li><strong>Tools→Deployment→Browse Remote Host</strong>，找到target文件夹，右键选择Dowanload from here。</li>
+</ul>
+</li>
+</ul>
+<h2 id="调试设置"><a href="#调试设置" class="headerlink" title="调试设置"></a>调试设置</h2><p>添加GDB Remote Debug，就可以本地测试啦。</p>
+]]></content>
+      <categories>
+        <category>编程</category>
+        <category>编程</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>go基础语法</title>
+    <url>/2020/08/03/go%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95/</url>
+    <content><![CDATA[<h1 id="语言结构"><a href="#语言结构" class="headerlink" title="语言结构"></a>语言结构</h1><ul>
+<li>包声明<a id="more"></a></li>
+<li>引入包</li>
+<li>函数</li>
+<li>变量</li>
+<li>语句 &amp; 表达式</li>
+<li>注释</li>
+</ul>
+<p><strong>注意</strong>：<code>&#123;</code>不能单独放在一行。go编译器会按行为语句加分隔符，如果<code>&#123;</code>单独一行，上一行末尾会被分隔。</p>
+<h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>变量：<code>var v_name v_type</code><br>根据值自行判定类型： <code>var v_name  = value</code><br>省略var，但是左侧必须有待新声明的变量：<code>v_name := value</code> 。只能使用在函数体内。<br>在相同代码块中，不可以重复声明同名变量，只能重新赋值。</p>
+<h2 id="多个变量"><a href="#多个变量" class="headerlink" title="多个变量"></a>多个变量</h2><p>同时定义多个变量：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a,b = b,a</span><br></pre></td></tr></table></figure><br>可以用组的方式：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span>(</span><br><span class="line">    x,y <span class="keyword">int</span></span><br><span class="line">    a,s=<span class="number">100</span>,<span class="string">&quot;abc&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<h2 id="常量"><a href="#常量" class="headerlink" title="常量"></a>常量</h2><ul>
+<li>不曾使用的常量不会编译错误</li>
+<li>右值不能超过常量类型取值范围</li>
+<li>右值也可以是某些编译器能够计算出结果的表达式</li>
+<li>在常量组中如果不指定类型和初始化值，则与上一行非空常量右值相同</li>
+<li>在预处理阶段展开，不分配内存，不能内存寻址来取值</li>
+</ul>
+<h2 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h2><p>除常量、别名类型以及未命名类型外，Go强制要求使用显式类型转换。<br>如果转换的目标是指针、单向通道或没有返回值的函数类型，那么必须使用括号，以避免造成语法分解错误。</p>
+<h3 id="自定义类型"><a href="#自定义类型" class="headerlink" title="自定义类型"></a>自定义类型</h3><p>即便指定了基础类型，也只表明它们有相同底层数据结构，两者间不存在任何关系，属完全不同的两种类型。除操作符外，自定义类型不会继承基础类型的其他信息（包括方法）。不能视作别名，不能隐式转换，不能直接用于比较表达式。</p>
+<h3 id="未命名类型"><a href="#未命名类型" class="headerlink" title="未命名类型"></a>未命名类型</h3><p>与有明确标识符的bool、int、string等类型相比，数组、切片、字典、通道等类型与具体元素类型或长度等属性有关，故称作未命名类型（unnamed type）。当然，可用type为其提供具体名称，将其改变为命名类型（named type）。<br>具有相同声明的未命名类型被视作同一类型。</p>
+<ul>
+<li>具有相同基类型的指针。</li>
+<li>具有相同元素类型和长度的数组（array）。</li>
+<li>具有相同元素类型的切片（slice）。</li>
+<li>具有相同键值类型的字典（map）。</li>
+<li>具有相同数据类型及操作方向的通道（channel）。</li>
+<li>具有相同字段序列（字段名、字段类型、标签，以及字段顺序）的结构体（struct）。</li>
+<li>具有相同签名（参数和返回值列表，不包括参数名）的函数（func）。</li>
+<li>具有相同方法集（方法名、方法签名，不包括顺序）的接口（interface）。<br>容易被忽视的是struct tag，它也属于类型组成部分，而不仅仅是元数据描述。<br>同样，函数的参数顺序也属签名组成部分。</li>
+</ul>
+<p>未命名类型转换规则：</p>
+<ul>
+<li>所属类型相同。</li>
+<li>基础类型相同，且其中一个是未命名类型。</li>
+<li>数据类型相同，将双向通道赋值给单向通道，且其中一个为未命名类型。</li>
+<li>将默认值nil赋值给切片、字典、通道、指针、函数或接口。</li>
+<li>对象实现了目标接口。</li>
+</ul>
+<h1 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h1><h2 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h2><h3 id="位运算"><a href="#位运算" class="headerlink" title="位运算"></a>位运算</h3><p>位清除（AND NOT）和位亦或（XOR）是不同的。它将右操作数对应二进制位都为1的重置为0（有些类似位图），以达到一次清除多个标记位的目的。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">x := <span class="number">0</span>b0101&amp;^<span class="number">0</span>b0011</span><br><span class="line"><span class="comment">// x=0100</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="、—"><a href="#、—" class="headerlink" title="++、—"></a>++、—</h3><p>自增、自减不再是运算符。只能作为独立语句，不能用于表达式，不能前置。</p>
+<h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>指针类型支持相等运算符，但不能做加减法运算和类型转换。<br>指针没有专门指向成员的“-&gt;”运算符，统一使用“.”选择表达式。</p>
+<h2 id="流控制"><a href="#流控制" class="headerlink" title="流控制"></a>流控制</h2><h3 id="switch"><a href="#switch" class="headerlink" title="switch"></a>switch</h3><p>相邻的空case不构成多条件匹配。无须显式执行break语句，case执行完毕后自动中断。如须贯通后续case（源码顺序），须执行fallthrough，但不再匹配后续条件表达式。注意，fallthrough必须放在case块结尾，可使用break语句阻止。</p>
+<h1 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h1><p>使用<code>iota</code>关键字实现枚举。如果中断<code>iota</code>自增，需要显示恢复。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span>(</span><br><span class="line">    _,_ = <span class="literal">iota</span>*<span class="number">10</span>    <span class="comment">//0*10</span></span><br><span class="line">    a               <span class="comment">//1*10</span></span><br><span class="line">    b               <span class="comment">//2*10</span></span><br><span class="line">    c = <span class="number">100</span></span><br><span class="line">    d               <span class="comment">//100</span></span><br><span class="line">    e = <span class="literal">iota</span>        <span class="comment">//5*10</span></span><br></pre></td></tr></table></figure></p>
+<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">function_name</span><span class="params">( [parameter list] )</span> [<span class="title">return_types</span>]</span> &#123;</span><br><span class="line">   函数体    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="变参"><a href="#变参" class="headerlink" title="变参"></a>变参</h2><p>变参本质上就是一个切片。只能接收一到多个同类型参数，且必须放在列表尾部。</p>
+<h2 id="命名返回值"><a href="#命名返回值" class="headerlink" title="命名返回值"></a>命名返回值</h2><p>命名返回值和参数一样，可当作函数局部变量使用，最后由return隐式返回。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">div</span><span class="params">(x,y <span class="keyword">int</span>)</span> <span class="params">(z <span class="keyword">int</span>,err error)</span></span> &#123; </span><br><span class="line">   <span class="keyword">if</span> y==<span class="number">0</span>&#123; </span><br><span class="line">       err=errors.New(<span class="string">&quot;division by zero&quot;</span>) </span><br><span class="line">       <span class="keyword">return</span></span><br><span class="line">   &#125;</span><br><span class="line">   z=x/y</span><br><span class="line">   <span class="keyword">return</span>         <span class="comment">// 相当于&quot;return z,err&quot; </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>这些特殊的“局部变量”会被不同层级的同名变量遮蔽。好在编译器能检查到此类状况，只要改为显式return返回即可。<br>除遮蔽外，我们还必须对全部返回值命名，否则编译器会搞不清状况。如果返回值类型能明确表明其含义，就尽量不要对其命名。</p>
+<h2 id="闭包"><a href="#闭包" class="headerlink" title="闭包"></a>闭包</h2><p>闭包是匿名函数和引用的环境变量指针的组合体。<br>正因为闭包通过指针引用环境变量，那么可能会导致其生命周期延长，甚至被分配到堆内存。另外，还有所谓“延迟求值”的特性。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getSequence</span><span class="params">()</span> <span class="title">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">   i:=<span class="number">0</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">      i+=<span class="number">1</span></span><br><span class="line">     <span class="keyword">return</span> i  </span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="comment">/* nextNumber 为一个函数，i 为 0 */</span></span><br><span class="line">   nextNumber := getSequence()  </span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 调用 nextNumber 函数，i 变量自增 1 并返回 */</span></span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   </span><br><span class="line">   <span class="comment">/* 创建新的函数 nextNumber1，并查看结果 */</span></span><br><span class="line">   nextNumber1 := getSequence()  </span><br><span class="line">   fmt.Println(nextNumber1())</span><br><span class="line">   fmt.Println(nextNumber1())&#125;</span><br></pre></td></tr></table></figure><br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">执行结果：</span><br><span class="line">1 </span><br><span class="line">2 </span><br><span class="line">3 </span><br><span class="line">1 </span><br><span class="line">2</span><br></pre></td></tr></table></figure></p>
+<h2 id="延迟调用defer"><a href="#延迟调用defer" class="headerlink" title="延迟调用defer"></a>延迟调用defer</h2><p>注意，延迟调用注册的是调用，必须提供执行所需参数（哪怕为空）。参数值在注册时被复制并缓存起来。如对状态敏感，可改用指针或闭包。<br>延迟调用可修改当前函数命名返回值，但其自身返回值被抛弃。<br>多个延迟注册按FILO次序执行。<br>相比直接用CALL汇编指令调用函数，延迟调用则须花费更大代价。这其中包括注册、调用等操作，还有额外的缓存开销。</p>
+<h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><h2 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h2><p>以切片语法（起始和结束索引号）返回子串时，其内部依旧指向原字节数组。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   s:= <span class="string">&quot;abcdefg&quot;</span> </span><br><span class="line">   s1:=s[:<span class="number">3</span>]          <span class="comment">// 从头开始，仅指定结束索引位置</span></span><br><span class="line">   s2:=s[<span class="number">1</span>:<span class="number">4</span>]         <span class="comment">// 指定开始和结束位置，返回[start,end) </span></span><br><span class="line">   s3:=s[<span class="number">2</span>:]          <span class="comment">// 指定开始位置，返回后面全部内容</span></span><br><span class="line">   <span class="built_in">println</span>(s1,s2,s3) </span><br><span class="line">    <span class="comment">//  reflect.StringHeader和string头结构相同</span></span><br><span class="line">    <span class="comment">//  unsafe.Pointer用于指针类型转换</span></span><br><span class="line">   fmt.Printf(<span class="string">&quot;%#v\n&quot;</span>, (*reflect.StringHeader)(unsafe.Pointer(&amp;s))) </span><br><span class="line">   fmt.Printf(<span class="string">&quot;%#v\n&quot;</span>, (*reflect.StringHeader)(unsafe.Pointer(&amp;s1))) </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>输出<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">abc bcd cdefg</span><br><span class="line">  </span><br><span class="line">&amp;StringHeader&#123;Data:0xfb838,Len:7&#125; </span><br><span class="line">&amp;StringHeader&#123;Data:0xfb838,Len:3&#125;</span><br></pre></td></tr></table></figure><br>使用for遍历字符串时，分byte和rune两种方式。rune:返回（数组索引号，Unicode字符）。</p>
+<h3 id="转换"><a href="#转换" class="headerlink" title="转换"></a>转换</h3><p>要修改字符串，须将其转换为可变类型（[]rune或[]byte），待完成后再转换回来。但不管如何转换，都须重新分配内存，并复制数据。</p>
+<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><p>初始化<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   <span class="keyword">var</span> a[<span class="number">4</span>]<span class="keyword">int</span>    <span class="comment">// 元素自动初始化为零</span></span><br><span class="line">   b:= [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">2</span>,<span class="number">5</span>&#125;    <span class="comment">// 未提供初始值的元素自动初始化为0</span></span><br><span class="line">   c:= [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">5</span>,<span class="number">3</span>:<span class="number">10</span>&#125;     <span class="comment">// 可指定索引位置初始化</span></span><br><span class="line">   d:= [...]<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;        <span class="comment">// 编译器按初始化值数量确定数组长度</span></span><br><span class="line">   e:= [...]<span class="keyword">int</span>&#123;<span class="number">10</span>,<span class="number">3</span>:<span class="number">100</span>&#125;      <span class="comment">// 支持索引初始化，但注意数组长度与此有关</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>对于结构等复合类型，可省略元素初始化类型标签。<br>在定义多维数组时，仅第一维度允许使用“…”。<br>内置函数len和cap都返回第一维度长度。</p>
+<h2 id="切片"><a href="#切片" class="headerlink" title="切片"></a>切片</h2><p>定义：<code>var identifier []type</code> 或者 <code>var slice1 []type = make([]type, len)</code><br>初始化：<code>s :=[] int &#123;1,2,3 &#125;</code>  或者 <code>s := arr[startIndex:endIndex]</code><br>属性cap表示切片所引用数组片段的真实长度，len用于限定可读的写元素数量。另外，数组必须addressable，否则会引发错误。比如数组是map的value值，仅仅是一个值，没有地址。<br>新建切片对象依旧指向原底层数组，也就是说修改对所有关联切片可见。</p>
+<h3 id="append"><a href="#append" class="headerlink" title="append"></a>append</h3><p>向切片尾部（slice[len]）添加数据，返回新的切片对象。不会修改原slice属性，但是数据被追加到原底层数组。如超出cap限制，则为新切片对象重新分配数组。</p>
+<h3 id="copy"><a href="#copy" class="headerlink" title="copy"></a>copy</h3><p>在两个切片对象间复制数据，允许指向同一底层数组，允许目标区间重叠。最终所复制长度以较短的切片长度（len）为准。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   s:= []<span class="keyword">int</span>&#123;<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>&#125; </span><br><span class="line">   s1:=s[<span class="number">5</span>:<span class="number">8</span>] </span><br><span class="line">   n:=<span class="built_in">copy</span>(s[<span class="number">4</span>:],s1)      <span class="comment">// 在同一底层数组的不同区间复制</span></span><br><span class="line">   s2:=<span class="built_in">make</span>([]<span class="keyword">int</span>,<span class="number">6</span>)      <span class="comment">// 在不同数组间复制</span></span><br><span class="line">   n=<span class="built_in">copy</span>(s2,s) </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>如果切片长时间引用大数组中很小的片段，那么建议新建独立切片，复制出所需数据，以便原数组内存可被及时回收。</p>
+<h2 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h2><p>map： <code>var v_name map[key_type]data_type</code> 或者 <code>v_name = make(map[key_type]data_type)</code>或者<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">m:=<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">struct</span>&#123;        <span class="comment">// 值为匿名结构类型</span></span><br><span class="line">       x <span class="keyword">int</span></span><br><span class="line">&#125;&#123; </span><br><span class="line">   <span class="number">1</span>:  &#123;x:<span class="number">100</span>&#125;,          </span><br><span class="line">   <span class="number">2</span>:  &#123;x:<span class="number">200</span>&#125;, </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure><br>运行时会对字典并发操作做出检测。如果某个任务正在对字典进行写操作，那么其他任务就不能对该字典执行并发操作（读、写、删除），否则会导致进程崩溃。</p>
+<h2 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h2><h3 id="匿名字段"><a href="#匿名字段" class="headerlink" title="匿名字段"></a>匿名字段</h3><p>所谓匿名字段（anonymous field），是指没有名字，仅有类型的字段，也被称作嵌入字段或嵌入类型。<br>从编译器角度看，这只是隐式地以类型名作为字段名字。可直接引用匿名字段的成员，但初始化时须当作独立字段。<br>如嵌入其他包中的类型，则隐式字段名字不包括包名。<br>不仅仅是结构体，除接口指针和多级指针以外的任何命名类型都可作为匿名字段。<br>因未命名类型没有名字标识，自然无法作为匿名字段。<br>不能将基础类型和其指针类型同时嵌入，因为两者隐式名字相同。</p>
+<h3 id="字段标签"><a href="#字段标签" class="headerlink" title="字段标签"></a>字段标签</h3><p>字段标签（tag）并不是注释，而是用来对字段进行描述的元数据。尽管它不属于数据成员，但却是类型的组成部分。<br>在运行期，可用反射获取标签信息。它常被用作格式校验，数据库关系映射等。</p>
+<h1 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(type_name <span class="keyword">type</span>)</span> <span class="title">function_name</span><span class="params">(variable_name variable_data_type)</span> [<span class="title">return_type</span>]</span>&#123;</span><br><span class="line">   <span class="comment">/* 函数体*/</span>&#125;</span><br><span class="line"><span class="comment">/* 定义结构体 */</span></span><br><span class="line"><span class="keyword">type</span> Circle <span class="keyword">struct</span> &#123;</span><br><span class="line">  radius <span class="keyword">float64</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">var</span> c1 Circle</span><br><span class="line">  c1.radius = <span class="number">10.00</span></span><br><span class="line">  fmt.Println(<span class="string">&quot;圆的面积 = &quot;</span>, c1.getArea())</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//该 method 属于 Circle 类型对象中的方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c Circle)</span> <span class="title">getArea</span><span class="params">()</span> <span class="title">float64</span></span> &#123;</span><br><span class="line">  <span class="comment">//c.radius 即为 Circle 类型对象中的属性</span></span><br><span class="line">  <span class="keyword">return</span> <span class="number">3.14</span> * c.radius * c.radius</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>方法同样不支持重载（overload）。如方法内部并不引用实例，可省略参数名，仅保留类型。<br>方法可看作特殊的函数，那么receiver的类型自然可以是基础类型或指针类型。这会关系到调用时对象实例是否被复制。<br>可使用实例值或指针调用方法，编译器会根据方法receiver类型自动在基础类型和指针类型间转换。<br>不能用多级指针调用方法。<br>指针类型的receiver必须是合法指针（包括nil），或能获取实例地址。</p>
+<h2 id="如何选择方法的receiver类型？"><a href="#如何选择方法的receiver类型？" class="headerlink" title="如何选择方法的receiver类型？"></a>如何选择方法的receiver类型？</h2><ul>
+<li>要修改实例状态，用<code>*T</code>。</li>
+<li>无须修改状态的小对象或固定值，建议用T。</li>
+<li>大对象建议用<code>*T</code>，以减少复制成本。</li>
+<li>引用类型、字符串、函数等指针包装对象，直接用T。</li>
+<li>若包含Mutex等同步字段，用<code>*T</code>，避免因复制造成锁操作无效。</li>
+<li>其他无法确定的情况，都用<code>*T</code>。<h1 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">type error interface &#123;</span><br><span class="line">    Error() string</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+使用<code>error.New(“xxx”)</code>生成错误信息。</li>
+</ul>
+<h1 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h1><p><code>goroutine</code>：go 函数名( 参数列表 )<br>通道：<br><code>ch &lt;- v</code>    // 把 v 发送到通道 ch<br><code>v := &lt;-ch</code>  // 从 ch 接收数据<br>           // 并把值赋给 v<br>声明通道： <code>ch := make(chan int)</code></p>
+<h1 id="context上下文"><a href="#context上下文" class="headerlink" title="context上下文"></a>context上下文</h1><p>context 包在与 API 和慢处理交互时可以派上用场，特别是在生产级的 Web 服务中。在这些场景中，您可能想要通知所有的 goroutine 停止运行并返回。<br><a href="https://studygolang.com/articles/13866?fr=sidebar">https://studygolang.com/articles/13866?fr=sidebar</a></p>
+]]></content>
+      <categories>
+        <category>go</category>
+        <category>Go</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>JavaMYSQL</title>
+    <url>/2020/11/23/javaMySQL/</url>
+    <content><![CDATA[<h1 id="MySQL-连接"><a href="#MySQL-连接" class="headerlink" title="MySQL 连接"></a>MySQL 连接</h1><p>使用 JDBC 连接 MySQL 数据库。<br><a id="more"></a><br>Java 连接 MySQL 需要驱动包，然后在对应的项目中导入该库文件。</p>
+<p><strong>MySQL 8.0 以上版本的数据库连接有所不同：</strong></p>
+<ul>
+<li>1、MySQL 8.0 以上版本驱动包版本 <a href="https://static.runoob.com/download/mysql-connector-java-8.0.16.jar">mysql-connector-java-8.0.16.jar</a>。</li>
+<li>2、<strong>com.mysql.jdbc.Driver</strong> 更换为 <strong>com.mysql.cj.jdbc.Driver</strong>。</li>
+<li>MySQL 8.0 以上版本不需要建立 SSL 连接的，需要显示关闭。</li>
+<li>最后还需要设置 CST。</li>
+</ul>
+<p>加载驱动与连接数据库方式如下：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class.forName(<span class="string">&quot;com.mysql.cj.jdbc.Driver&quot;</span>);</span><br><span class="line">conn = DriverManager.getConnection(<span class="string">&quot;jdbc:mysql://localhost:3306/test_demo?useSSL=false&amp;serverTimezone=UTC&quot;</span>,<span class="string">&quot;root&quot;</span>,<span class="string">&quot;password&quot;</span>);</span><br></pre></td></tr></table></figure>
+<h1 id="创建测试数据"><a href="#创建测试数据" class="headerlink" title="创建测试数据"></a>创建测试数据</h1><p>接下来我们在 MySQL 中创建 RUNOOB 数据库，并创建 websites 数据表，表结构如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">CREATE TABLE &#96;websites&#96; (</span><br><span class="line">  &#96;id&#96; int(11) NOT NULL AUTO_INCREMENT,</span><br><span class="line">  &#96;name&#96; char(20) NOT NULL DEFAULT &#39;&#39; COMMENT &#39;站点名称&#39;,</span><br><span class="line">  &#96;url&#96; varchar(255) NOT NULL DEFAULT &#39;&#39;,</span><br><span class="line">  &#96;alexa&#96; int(11) NOT NULL DEFAULT &#39;0&#39; COMMENT &#39;Alexa 排名&#39;,</span><br><span class="line">  &#96;country&#96; char(10) NOT NULL DEFAULT &#39;&#39; COMMENT &#39;国家&#39;,</span><br><span class="line">  PRIMARY KEY (&#96;id&#96;)</span><br><span class="line">) ENGINE&#x3D;InnoDB AUTO_INCREMENT&#x3D;10 DEFAULT CHARSET&#x3D;utf8;</span><br></pre></td></tr></table></figure>
+<p>插入一些数据：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">INSERT INTO &#96;websites&#96; VALUES (&#39;1&#39;, &#39;Google&#39;, &#39;https:&#x2F;&#x2F;www.google.cm&#x2F;&#39;, &#39;1&#39;, &#39;USA&#39;), (&#39;2&#39;, &#39;淘宝&#39;, &#39;https:&#x2F;&#x2F;www.taobao.com&#x2F;&#39;, &#39;13&#39;, &#39;CN&#39;), (&#39;3&#39;, &#39;菜鸟教程&#39;, &#39;http:&#x2F;&#x2F;www.runoob.com&#39;, &#39;5892&#39;, &#39;&#39;), (&#39;4&#39;, &#39;微博&#39;, &#39;http:&#x2F;&#x2F;weibo.com&#x2F;&#39;, &#39;20&#39;, &#39;CN&#39;), (&#39;5&#39;, &#39;Facebook&#39;, &#39;https:&#x2F;&#x2F;www.facebook.com&#x2F;&#39;, &#39;3&#39;, &#39;USA&#39;);</span><br></pre></td></tr></table></figure>
+<h1 id="连接数据库"><a href="#连接数据库" class="headerlink" title="连接数据库"></a>连接数据库</h1><p>以下实例使用了 JDBC 连接 MySQL 数据库，注意一些数据如用户名，密码需要根据你的开发环境来配置：</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> com.runoob.test;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">import</span> java.sql.*;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MySQLDemo</span> </span>&#123;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// MySQL 8.0 以下版本 - JDBC 驱动名及数据库 URL</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String JDBC_DRIVER = <span class="string">&quot;com.mysql.jdbc.Driver&quot;</span>;  </span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String DB_URL = <span class="string">&quot;jdbc:mysql://localhost:3306/RUNOOB&quot;</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// MySQL 8.0 以上版本 - JDBC 驱动名及数据库 URL</span></span><br><span class="line">    <span class="comment">//static final String JDBC_DRIVER = &quot;com.mysql.cj.jdbc.Driver&quot;;  </span></span><br><span class="line">    <span class="comment">//static final String DB_URL = &quot;jdbc:mysql://localhost:3306/RUNOOB?useSSL=false&amp;serverTimezone=UTC&quot;;</span></span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">    <span class="comment">// 数据库的用户名与密码，需要根据自己的设置</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String USER = <span class="string">&quot;root&quot;</span>;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String PASS = <span class="string">&quot;123456&quot;</span>;</span><br><span class="line"> </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Connection conn = <span class="keyword">null</span>;</span><br><span class="line">        Statement stmt = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            <span class="comment">// 注册 JDBC 驱动</span></span><br><span class="line">            Class.forName(JDBC_DRIVER);</span><br><span class="line">        </span><br><span class="line">            <span class="comment">// 打开链接</span></span><br><span class="line">            System.out.println(<span class="string">&quot;连接数据库...&quot;</span>);</span><br><span class="line">            conn = DriverManager.getConnection(DB_URL,USER,PASS);</span><br><span class="line">        </span><br><span class="line">            <span class="comment">// 执行查询</span></span><br><span class="line">            System.out.println(<span class="string">&quot; 实例化Statement对象...&quot;</span>);</span><br><span class="line">            stmt = conn.createStatement();</span><br><span class="line">            String sql;</span><br><span class="line">            sql = <span class="string">&quot;SELECT id, name, url FROM websites&quot;</span>;</span><br><span class="line">            ResultSet rs = stmt.executeQuery(sql);</span><br><span class="line">        </span><br><span class="line">            <span class="comment">// 展开结果集数据库</span></span><br><span class="line">            <span class="keyword">while</span>(rs.next())&#123;</span><br><span class="line">                <span class="comment">// 通过字段检索</span></span><br><span class="line">                <span class="keyword">int</span> id  = rs.getInt(<span class="string">&quot;id&quot;</span>);</span><br><span class="line">                String name = rs.getString(<span class="string">&quot;name&quot;</span>);</span><br><span class="line">                String url = rs.getString(<span class="string">&quot;url&quot;</span>);</span><br><span class="line">    </span><br><span class="line">                <span class="comment">// 输出数据</span></span><br><span class="line">                System.out.print(<span class="string">&quot;ID: &quot;</span> + id);</span><br><span class="line">                System.out.print(<span class="string">&quot;, 站点名称: &quot;</span> + name);</span><br><span class="line">                System.out.print(<span class="string">&quot;, 站点 URL: &quot;</span> + url);</span><br><span class="line">                System.out.print(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 完成后关闭</span></span><br><span class="line">            rs.close();</span><br><span class="line">            stmt.close();</span><br><span class="line">            conn.close();</span><br><span class="line">        &#125;<span class="keyword">catch</span>(SQLException se)&#123;</span><br><span class="line">            <span class="comment">// 处理 JDBC 错误</span></span><br><span class="line">            se.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">            <span class="comment">// 处理 Class.forName 错误</span></span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">finally</span>&#123;</span><br><span class="line">            <span class="comment">// 关闭资源</span></span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                <span class="keyword">if</span>(stmt!=<span class="keyword">null</span>) stmt.close();</span><br><span class="line">            &#125;<span class="keyword">catch</span>(SQLException se2)&#123;</span><br><span class="line">            &#125;<span class="comment">// 什么都不做</span></span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                <span class="keyword">if</span>(conn!=<span class="keyword">null</span>) conn.close();</span><br><span class="line">            &#125;<span class="keyword">catch</span>(SQLException se)&#123;</span><br><span class="line">                se.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(<span class="string">&quot;Goodbye!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>数据库</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>keystore</title>
+    <url>/2020/11/23/keystore/</url>
+    <content><![CDATA[<h1 id="Keystore简介"><a href="#Keystore简介" class="headerlink" title="Keystore简介"></a>Keystore简介</h1><p>以太坊的每个外部账户都是由一对密钥定义的。<br><a id="more"></a><br>keystore 文件（存储在<code>~/.ethereum/keystore</code>Linux或<code>C:\Users\&lt;User&gt;\Appdata\Roaming\Ethereum\keystore</code>Windows上）是用于签署交易的以太网私钥的加密版本。私钥通常用你创建帐户时设置的密码进行加密。如果你丢失了这个文件，你就丢失了私钥。当然，忘了密码也意味着你进不去这个账户了。如果丢了文件又忘了密码，那么恭喜你，心大的你只能看看账户里的余额，喝酒消愁了。</p>
+<p>这个文件是<strong>安全性</strong>（攻击者需要密钥库文件<em>和</em> 密码来窃取您的资金）和<strong>可用性</strong>之间的完美折衷（您只需要密钥库文件<em>和</em> 密码来使用您的钱）。为了让您发送一些以太网，大多数以太坊客户端会要求您输入密码（与您创建帐户时使用的密码）相同，以便解密您的以太坊私钥。解密后，客户端程序可以使用私钥来签署您的交易，并让您移动您的资金。</p>
+<h1 id="Keystore文件内容"><a href="#Keystore文件内容" class="headerlink" title="Keystore文件内容"></a>Keystore文件内容</h1><p>文件来源<a href="https://github.com/hashcat/hashcat/issues/1228">此处</a>：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ cat~ &#x2F; .ethereum &#x2F; keystore &#x2F; UTC  -  &lt;created_date_time&gt;  -  008aeeda4d805471df9b2a5b0f38a0c3bcba786b </span><br><span class="line">&#123; </span><br><span class="line">    “crypto”：&#123; </span><br><span class="line">        “cipher”：“aes-128-ctr”，</span><br><span class="line">        “cipherparams”：&#123; </span><br><span class="line">            “iv”：“83dbcc02d8ccb40e466191a123791e0e” </span><br><span class="line">        &#125;，</span><br><span class="line">        “ciphertext”：“d172bf743a674da9cdad04534d56926ef8358534d458fffccd4e6ad2fbde479c”，</span><br><span class="line">        “kdf”：“scrypt”，</span><br><span class="line">        “kdfparams”：&#123; </span><br><span class="line">            “dklen”：32，</span><br><span class="line">            “n”：262144，</span><br><span class="line">            “r”：1，</span><br><span class="line">            “p”：8，</span><br><span class="line">            “salt”：“ab0c7876052600dd703518d6fc3fe8984592145b591fc8fb5c6d43190334ba19“ </span><br><span class="line">        &#125;，</span><br><span class="line">        “mac”：“2103ac29920d71da29f15d75b4a16dbe95cfd7ff8faea1056c33131d846e3097” </span><br><span class="line">    &#125;，</span><br><span class="line">    “id”：“d57df606-1b86-447a-a60e-18a539f9d92e”，</span><br><span class="line">    “version”：3 </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一个粗略的JSON文件，包含许多参数。</p>
+<h1 id="分析文件内容"><a href="#分析文件内容" class="headerlink" title="分析文件内容"></a>分析文件内容</h1><ul>
+<li><p>第一行字符串（008aeeda4d805471df9b2a5b0f38a0c3bcba786b ）是<strong>address</strong> 。</p>
+</li>
+<li><p><strong>crypto</strong>下的参数解析：</p>
+<ul>
+<li><strong>cipher</strong>：对称<a href="https://en.wikipedia.org/wiki/Advanced_Encryption_Standard">AES算法</a>的名称；</li>
+<li><strong>cipherparams</strong>：上面“密码”算法所需的参数；</li>
+<li><strong>ciphertext</strong>：使用上面的“密码”算法加密的以太网私钥；</li>
+<li><strong>kdf</strong>：一个<a href="https://en.wikipedia.org/wiki/Key_derivation_function">密钥派生函数，</a>用于让您使用密码加密密钥库文件；</li>
+<li><strong>kdfparams</strong>：上述“kdf”算法所需的参数；</li>
+<li><strong>mac</strong>：用于验证密码的<a href="https://en.wikipedia.org/wiki/Message_authentication_code">代码</a> ；在密码输错时可以给出一个反馈。</li>
+</ul>
+</li>
+<li><strong>version</strong>: Keystore文件的版本，目前为第3版，也称为V3 KeyStore。</li>
+<li><strong>id</strong> : uuid；例子中，V=4,T=a，表示uuid v4版本（基于随机数）；</li>
+</ul>
+<p>让我们看看它们如何协同工作，在密码短语下保护keystore文件。</p>
+<h2 id="1-加密私钥"><a href="#1-加密私钥" class="headerlink" title="1.加密私钥"></a>1.加密私钥</h2><p>如前所述，以太坊帐户是用于对交易进行加密签名的私钥 - 公钥对。为了确保私钥不像普通文件一样存储在文件中（即可以访问该文件的任何人可读），使用强对称算法（<strong>密码</strong>）对其进行加密至关重要。</p>
+<p>这些对称算法使用密钥来加密某些数据。结果数据是加密的，可以使用相同的方法和相同的密钥进行解密 - 因此名称为“对称”。对于本文，我们将此对称密钥称为<strong>解密密钥，</strong>因为它将用于解密我们的以太坊私钥。</p>
+<p>这就是<strong>cipher</strong>，<strong>cipherparams</strong>和<strong>ciphertext</strong>对应的：</p>
+<ul>
+<li><strong>cipher</strong>是用于加密以太坊私钥的对称算法。默认为<code>aes-128-ctr</code>,128代表位。又名“128位密钥”或“256位密钥”。数字越高，越安全。</li>
+<li><strong>cipherparams</strong>是<em>aes-128-ctr</em>算法所需的参数。这里，唯一的参数是<em>iv</em>。<ul>
+<li><strong>iv</strong>：aes-128-ctr加密算法需要的初始化向量，大小必须符合密码的要求。如果没有提供，则通过crypto.getRandomBytes生成随机数。这里是128bit。</li>
+</ul>
+</li>
+<li><strong>ciphertext</strong>是<em>aes-128-ctr</em>函数的加密输出也是之后的输入。</li>
+</ul>
+<p>具体的加密流程如下：</p>
+<ol>
+<li>生成一个随机数作为盐 | 给定一个盐值，对密码进行加密（kdf）生成派生秘钥（即<strong>解密密钥</strong>）；</li>
+<li>然后从派生秘钥中截取16位字符作为派生密码；</li>
+<li>再生成一个16位的随机数作为向量iv；</li>
+<li>然后拿着生成的派生密码，向量，私钥进行加密得到密文ciphertext；</li>
+<li>最后拿着生成的密文，和派生秘钥做hash处理作为校验码mac；</li>
+<li>将相关参数和密文保存到JSON文件keystore中。</li>
+</ol>
+<p>所以，您需要先得到<strong>解密密钥</strong>。实际上，记住你设置的密码即可，下小节讲解。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110012.png" alt="2"></p>
+<h2 id="2-用密码保护它"><a href="#2-用密码保护它" class="headerlink" title="2.用密码保护它"></a>2.用密码保护它</h2><p>为了确保轻松解锁您的帐户，您无需记住非常长且非用户友好的<strong>解密密钥</strong>。相反，以太坊开发人员选择了基于密码短语的保护 - 也就是说，您只需要输入密码来得到<strong>解密密钥</strong>。</p>
+<p>为了能够实现这一点，以太坊使用<a href="https://en.wikipedia.org/wiki/Key_derivation_function">密钥派生函数</a>，在给定密码和参数列表的情况下计算<strong>解密密钥</strong>。</p>
+<p><strong>kdf</strong>和<strong>kdfparams</strong>：</p>
+<ul>
+<li><p><strong>kdf</strong>是用于从密码短语计算（或“衍生”）<strong>解密密钥</strong>的密钥派生函数。这里，<strong>kdf</strong>的值是<em>scrypt</em> <strong>。</strong></p>
+</li>
+<li><p><strong>kdfparams</strong>是<a href="/2020/11/23/KDF%E4%B9%8BScrypt/" title="*scrypt*">*scrypt*</a>函数所需的参数。这里，<em>dklen</em>，<em>n</em>，<em>r</em>，<em>p</em>和<em>salt</em>是<strong>kdf</strong>函数的参数。</p>
+<ul>
+<li><code>dklen：32</code>，- 派生密钥长度（以字节为单位）。对于某些密码设置，这必须匹配那些块大小。小于等于(2^32 - 1) * 32的正整数。</li>
+<li><code>n：262144</code>，- 迭代计数。geth的默认值为262144。 n 和 r 决定了占用的内存区域大小和哈希迭代次数（占用的内存大小为 128⋅n⋅r bytes，迭代次数为 2⋅n⋅r），可以修改的参数是 n。把 n 值定在 65536，这样可以兼容大部分低端配置的手机。必须大于1，是2的幂且小于2^(128 * r / 8)。</li>
+<li><code>r：8</code>，- 底层散列的块大小，默认为8。决定了连续读大小（sequential read size），通常不应该修改。</li>
+<li><code>p：1</code> - 并行化因素。默认为1。小于等于((2^32-1) <em> 32) / (128 </em> r)的正整数。</li>
+<li><code>salt</code> - kdf的随机盐。大小必须符合KDF（密钥派生函数）的要求。如果没有提供，则通过crypto.getRandomBytes生成随机数。</li>
+</ul>
+<blockquote>
+<p>减少/覆盖scrypt设置为1024 <em> 8 </em> 1能更快破解？<br>不可以。更改  N  将改变迭代计数，这将改变散列。即使您的字典中包含明文，它也不会破解散列。</p>
+<p>另外，来计算一下默认参数下，并行计算需要多少内存：</p>
+<p>1：（128 * 8）* 262144 = 1024 * 262144 = 268,435,456字节= 256MB<br>2：64（AMD卡）* 64（[RX Vega 64具有64个CU]<br>  (<a href="https://www.techpowerup.com/gpudb/2871/radeon-rx-vega-64）=">https://www.techpowerup.com/gpudb/2871/radeon-rx-vega-64）=</a> 4,096个并行计算<br>3：256MB * 4,096 = 1,048,576 MB RAM = <em>Vega 64需要<strong>1,024</strong> GB RAM</em></p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<ul>
+<li>所以，如果我忘记了Eth钱包的密码，那么可能需要几年时间才能破解？！？！</li>
+<li>对。<br>//n的值越大，加密级别越高，当然消耗的内存越大。</li>
+</ul>
+</blockquote>
+<p>在这里，使用<strong>kdfparams</strong>参数调整<em>scrypt</em>函数并将其<strong>输入</strong>密码，您将获得我们的<strong>解密密钥</strong>作为密钥派生函数的输出。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110022.png" alt="3"></p>
+<h2 id="3-确保您的密码是正确的"><a href="#3-确保您的密码是正确的" class="headerlink" title="3.确保您的密码是正确的"></a>3.确保您的密码是正确的</h2><p>我们已经描述了从密钥库文件和密码短语中确定我们的以太网私钥所需的一切。但是，如果用于解锁帐户的密码错误，会发生什么？</p>
+<p>从我们到目前为止所看到的，所有操作（派生和解密）都将成功，但最后计算的以太坊私钥将不正确 - 这首先违背了使用密钥文件的要点！</p>
+<p>我们需要保证键入的密码以解锁帐户是正确的，它与最初创建密钥库文件时输入的密码相同（记得<code>geth account new</code>吗？）。</p>
+<p>这是密钥库文件中的<strong>mac</strong>值发挥作用的地方。在执行密钥派生函数之后，处理其结果（<strong>解密密钥</strong>）和<strong>密文</strong>并与<strong>mac</strong>进行比较（其作用类似于批准的印章）。如果结果与<strong>mac</strong>相同，则密码是正确的，并且解密可以开始。</p>
+<p>在与<strong>mac</strong>进行比较之前，将<strong>解密密钥</strong>（仅第二个最左边的16个字节）和<strong>密文</strong>进行连接和散列（SHA3-256）。更多信息<a href="https://github.com/hashcat/hashcat/issues/1228">在这里</a>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110029.png" alt="4"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>首先，您输入了密码，该密码被<strong>kdf</strong>密钥派生函数用来计算出<strong>解密密钥</strong>。然后，将新计算的<strong>解密密钥</strong>与<strong>密文</strong>一起处理，并与<strong>mac</strong>进行比较，以确保密码是正确的。最后，使用<strong>解密密钥</strong>通过<strong>密码</strong>对称解密函数<strong>解密密文</strong>。</p>
+<p>瞧！解密的结果是您的以太网私钥。您可以在这里查看整个过程：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110041.png" alt="5"></p>
+<p>从图中可以看出，你的密码作为唯一的输入，你的以太网私钥作为唯一的输出。创建新的以太坊帐户时生成的keystore文件中提供了所需的其他信息。</p>
+<p>出于这个原因，请确保您的密码是强大的（<em>并且您以某种方式记住它们！</em>）以保证窃取您的密钥库文件的攻击者无法轻松得到您的私钥。</p>
+<h1 id="Refer"><a href="#Refer" class="headerlink" title="Refer."></a>Refer.</h1><p>[1]. <a href="https://medium.com/@julien.maffre/what-is-an-ethereum-keystore-file-86c8c5917b97">What is an Ethereum keystore file?</a></p>
+<p>[2]. <a href="https://github.com/hashcat/hashcat/issues/1228">Ethereum KDF - Scrypt</a></p>
+]]></content>
+      <categories>
+        <category>区块链</category>
+        <category>密码学</category>
+      </categories>
+  </entry>
+  <entry>
     <title>static</title>
     <url>/2020/11/23/static/</url>
     <content><![CDATA[<h1 id="修饰用法"><a href="#修饰用法" class="headerlink" title="修饰用法"></a>修饰用法</h1><h2 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h2><p>一般用来修饰成员变量或函数，可以在没有创建对象的情况下来进行调用。<br><a id="more"></a></p>
@@ -1328,64 +1279,6 @@
       <categories>
         <category>Java</category>
         <category>路线与基础</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>交易</title>
-    <url>/2020/10/19/%E4%BA%A4%E6%98%93/</url>
-    <content><![CDATA[<h1 id="交易"><a href="#交易" class="headerlink" title="交易"></a>交易</h1><p>在Substrate的上下文里，extrinsic指的是来自链外的信息，并且会被纳入到区块中。 Extrinsic分为三类：inherents, 签名交易和无签名交易。<br><a id="more"></a></p>
-<h2 id="extrinsic"><a href="#extrinsic" class="headerlink" title="extrinsic"></a>extrinsic</h2><p>Extrinsics 被打包到一起进入当前区块中并会被执行，每个extrinsic都在runtime进行了定义。 而extrinsic根哈希值则是由这组待执行交易通过加密算法计算得出的信息摘要。 Extrinsic根哈希值主要有两个用途。 首先，它可以在区块头构建和分发完成之后，防止任何人对该区块头中所含extrinsic内容进行篡改。 其次，它提供了一种方法，在只有区块头信息的条件下，可以帮助轻客户端快速地验证某一区块中存在某笔交易。</p>
-<h2 id="inherents"><a href="#inherents" class="headerlink" title="inherents"></a>inherents</h2><p>Inherent指的是那些仅能由区块创建者插入到区块当中的无签名信息，他们不会在网络上传播或存储在交易队列中。</p>
-<h3 id="注册InherentDataProvider"><a href="#注册InherentDataProvider" class="headerlink" title="注册InherentDataProvider"></a>注册InherentDataProvider</h3><p>能在出块时自动调用<code>provide_inherent_data</code>去创建InherentData。<br><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">.inherent_data_providers</span><br><span class="line">        .register_provider(sp_timestamp::InherentDataProvider)</span><br><span class="line">        .unwrap();</span><br></pre></td></tr></table></figure></p>
-<h3 id="ProvideInherent实现"><a href="#ProvideInherent实现" class="headerlink" title="ProvideInherent实现"></a>ProvideInherent实现</h3><p><code>impl_outer_inherent</code>被<code>construct_runtime</code>调用，会为实现了<code>ProvideInherent</code>的Module实现<code>InherentDataExt</code>(<code>create_extrinsics</code>：内部调用Module的<code>create_inherent</code>)。<br>Runtime的api中会抛出一个inherent_extrinsics的api，内部实现为<code>data.create_extrinsics</code>。<br>在创建区块时，<code>block_builder.create_inherents(inherent_data)</code>调用<code>api.inherent_extrinsics_with_context</code>，创建了inherent交易。</p>
-<h2 id="签名交易"><a href="#签名交易" class="headerlink" title="签名交易"></a>签名交易</h2><p>与以太坊中类似。</p>
-<h2 id="不具签名交易"><a href="#不具签名交易" class="headerlink" title="不具签名交易"></a>不具签名交易</h2><p>Substrate 中一个不具签名交易的例子，就是由验证节点定时发送的 I’m Online心跳交易。 这种交易虽然包含了一个会话密钥签名，但会话密钥并不能控制资金，因此也无法支付交易费用。 交易池通过检查在某个session内验证人是不是已经提交了一个心跳来防止垃圾信息，如果已经存在会拒绝新的心跳交易。</p>
-<h2 id="Signed-Extension"><a href="#Signed-Extension" class="headerlink" title="Signed Extension"></a>Signed Extension</h2><p>SignedExtension 是一个trait ，通过它可以使用额外的数据或逻辑来扩展交易。 在交易执行之前，任何时候需要获取某笔特定交易信息时，都可以使用签名扩展来实现。 因此，”签名扩展”在交易队列中被大量使用。</p>
-<p>Runtime会使用“签名扩展”提供的一些数据，比如用来计算可调用函数Call的交易费用。 签名扩展还包含一个名为AdditionalSigned的字段，这个字段可存放任意可编码数据，因而能够在打包或者发送交易之前，被用来执行自定义逻辑。 而为了避免将可能失败的交易打包进区块中，交易队列还会定期调用SignedExtension的函数来验证即将进入区块的交易。</p>
-<p>尽管带“签名”字眼，SignedExtension也可以用于验证无签名交易。 我们可通过实现_unsigned的一系列方法，来封装信息核验、防垃圾信息和重放保护等逻辑，供交易池使用。</p>
-<h1 id="交易池"><a href="#交易池" class="headerlink" title="交易池"></a>交易池</h1><p><code>requires</code> 和<code>provides</code> 构建了交易依赖关系。<br>交易池不知道交易的费用、签名和账户，只负责交易有效性。其他细节由runtime中的validate_transaction完成。</p>
-<h1 id="交易权重"><a href="#交易权重" class="headerlink" title="交易权重"></a>交易权重</h1><p>交易权重用来限制存储I/O和计算。<br>每个块可选权重消耗，防止区块被填充太多的交易，以至于延长出块时间。需要统计区块长度与区块总权重。块占用字节，其中一部分给块本身，一部分给操作类，比例为AvailableBlockRatio<br>参考硬件：Intel Core i7-7700K CPU with 64GB of RAM and an NVMe SSD。<br>一个权重单位=参考硬件上一个皮秒的执行时间。<br>如果想要延缓执行时间，需要同倍数缩小权重。<br>将交易打包进区块时需要检查权重。<br>由System pallet负责计算权重，Transaction Payment分析权重并扣除费用。</p>
-<h2 id="影响因素"><a href="#影响因素" class="headerlink" title="影响因素"></a>影响因素</h2><p>数据库访问（I/O）<br>计算时间</p>
-<h1 id="交易执行流程"><a href="#交易执行流程" class="headerlink" title="交易执行流程"></a>交易执行流程</h1><h2 id="rpc调用"><a href="#rpc调用" class="headerlink" title="rpc调用"></a>rpc调用</h2><ul>
-<li>submit_extrinsic：解码交易，提交到交易池</li>
-<li>submit_one：提交单个交易</li>
-<li>pool.submit_one：异步调用，提交单个交易</li>
-<li>pool.submit_at：可以将多个未验证的交易验证后，导入交易池</li>
-<li>pool.verify：并发验证交易</li>
-<li>pool.verify_one：验证单个交易</li>
-<li>validated_pool.check_is_known：快速检查，是否已经导入或者被禁止，是的话标记为无效</li>
-<li>validated_pool.api().validate_transaction：开启验证交易的子任务</li>
-<li>validate_transaction_blocking：验证交易</li>
-<li>runtime_api.validate_transaction：executive的验证逻辑</li>
-<li>unchecked_extrinsic.check:验证签名,extra，返回checkedExtrinsic。uncheckedExtrinsic实现trait：Extrinsic,Checkable。Extra实现trait：SignedExtension。</li>
-<li>checkedExtrinsic.validate：验证weight,payment,nonce等</li>
-<li>validated_pool.submit：把预验证的交易提交到交易池</li>
-</ul>
-<p>通过网络传播块，（TODO：是否可以在达成共识前预执行）<br>import_queue：封装在共识中，当共识完成后，会通过import_block/import_queue来执行区块。</p>
-<ul>
-<li>execute_block：执行区块</li>
-<li>initialize_block：初始化块</li>
-<li>initial_checks：初始化块的检查</li>
-<li>execute_extrinsics_with_book_keeping：执行块<ul>
-<li>apply_extrinsic_no_note<ul>
-<li>apply_extrinsic_with_len：执行交易</li>
-<li>unchecked_extrinsic.check</li>
-<li>checkedExtrinsic.apply：执行验证过的交易<ul>
-<li>pre_dispatch：再次validate</li>
-<li>dispatch：执行Call</li>
-<li>post_dispatch：调整weight，payment</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>final_checks：最终检查，检查交易摘要，状态根</li>
-</ul>
-]]></content>
-      <categories>
-        <category>Polkadot</category>
-        <category>substrate</category>
       </categories>
   </entry>
   <entry>
@@ -1479,6 +1372,64 @@
       </categories>
   </entry>
   <entry>
+    <title>交易</title>
+    <url>/2020/10/19/%E4%BA%A4%E6%98%93/</url>
+    <content><![CDATA[<h1 id="交易"><a href="#交易" class="headerlink" title="交易"></a>交易</h1><p>在Substrate的上下文里，extrinsic指的是来自链外的信息，并且会被纳入到区块中。 Extrinsic分为三类：inherents, 签名交易和无签名交易。<br><a id="more"></a></p>
+<h2 id="extrinsic"><a href="#extrinsic" class="headerlink" title="extrinsic"></a>extrinsic</h2><p>Extrinsics 被打包到一起进入当前区块中并会被执行，每个extrinsic都在runtime进行了定义。 而extrinsic根哈希值则是由这组待执行交易通过加密算法计算得出的信息摘要。 Extrinsic根哈希值主要有两个用途。 首先，它可以在区块头构建和分发完成之后，防止任何人对该区块头中所含extrinsic内容进行篡改。 其次，它提供了一种方法，在只有区块头信息的条件下，可以帮助轻客户端快速地验证某一区块中存在某笔交易。</p>
+<h2 id="inherents"><a href="#inherents" class="headerlink" title="inherents"></a>inherents</h2><p>Inherent指的是那些仅能由区块创建者插入到区块当中的无签名信息，他们不会在网络上传播或存储在交易队列中。</p>
+<h3 id="注册InherentDataProvider"><a href="#注册InherentDataProvider" class="headerlink" title="注册InherentDataProvider"></a>注册InherentDataProvider</h3><p>能在出块时自动调用<code>provide_inherent_data</code>去创建InherentData。<br><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">.inherent_data_providers</span><br><span class="line">        .register_provider(sp_timestamp::InherentDataProvider)</span><br><span class="line">        .unwrap();</span><br></pre></td></tr></table></figure></p>
+<h3 id="ProvideInherent实现"><a href="#ProvideInherent实现" class="headerlink" title="ProvideInherent实现"></a>ProvideInherent实现</h3><p><code>impl_outer_inherent</code>被<code>construct_runtime</code>调用，会为实现了<code>ProvideInherent</code>的Module实现<code>InherentDataExt</code>(<code>create_extrinsics</code>：内部调用Module的<code>create_inherent</code>)。<br>Runtime的api中会抛出一个inherent_extrinsics的api，内部实现为<code>data.create_extrinsics</code>。<br>在创建区块时，<code>block_builder.create_inherents(inherent_data)</code>调用<code>api.inherent_extrinsics_with_context</code>，创建了inherent交易。</p>
+<h2 id="签名交易"><a href="#签名交易" class="headerlink" title="签名交易"></a>签名交易</h2><p>与以太坊中类似。</p>
+<h2 id="不具签名交易"><a href="#不具签名交易" class="headerlink" title="不具签名交易"></a>不具签名交易</h2><p>Substrate 中一个不具签名交易的例子，就是由验证节点定时发送的 I’m Online心跳交易。 这种交易虽然包含了一个会话密钥签名，但会话密钥并不能控制资金，因此也无法支付交易费用。 交易池通过检查在某个session内验证人是不是已经提交了一个心跳来防止垃圾信息，如果已经存在会拒绝新的心跳交易。</p>
+<h2 id="Signed-Extension"><a href="#Signed-Extension" class="headerlink" title="Signed Extension"></a>Signed Extension</h2><p>SignedExtension 是一个trait ，通过它可以使用额外的数据或逻辑来扩展交易。 在交易执行之前，任何时候需要获取某笔特定交易信息时，都可以使用签名扩展来实现。 因此，”签名扩展”在交易队列中被大量使用。</p>
+<p>Runtime会使用“签名扩展”提供的一些数据，比如用来计算可调用函数Call的交易费用。 签名扩展还包含一个名为AdditionalSigned的字段，这个字段可存放任意可编码数据，因而能够在打包或者发送交易之前，被用来执行自定义逻辑。 而为了避免将可能失败的交易打包进区块中，交易队列还会定期调用SignedExtension的函数来验证即将进入区块的交易。</p>
+<p>尽管带“签名”字眼，SignedExtension也可以用于验证无签名交易。 我们可通过实现_unsigned的一系列方法，来封装信息核验、防垃圾信息和重放保护等逻辑，供交易池使用。</p>
+<h1 id="交易池"><a href="#交易池" class="headerlink" title="交易池"></a>交易池</h1><p><code>requires</code> 和<code>provides</code> 构建了交易依赖关系。<br>交易池不知道交易的费用、签名和账户，只负责交易有效性。其他细节由runtime中的validate_transaction完成。</p>
+<h1 id="交易权重"><a href="#交易权重" class="headerlink" title="交易权重"></a>交易权重</h1><p>交易权重用来限制存储I/O和计算。<br>每个块可选权重消耗，防止区块被填充太多的交易，以至于延长出块时间。需要统计区块长度与区块总权重。块占用字节，其中一部分给块本身，一部分给操作类，比例为AvailableBlockRatio<br>参考硬件：Intel Core i7-7700K CPU with 64GB of RAM and an NVMe SSD。<br>一个权重单位=参考硬件上一个皮秒的执行时间。<br>如果想要延缓执行时间，需要同倍数缩小权重。<br>将交易打包进区块时需要检查权重。<br>由System pallet负责计算权重，Transaction Payment分析权重并扣除费用。</p>
+<h2 id="影响因素"><a href="#影响因素" class="headerlink" title="影响因素"></a>影响因素</h2><p>数据库访问（I/O）<br>计算时间</p>
+<h1 id="交易执行流程"><a href="#交易执行流程" class="headerlink" title="交易执行流程"></a>交易执行流程</h1><h2 id="rpc调用"><a href="#rpc调用" class="headerlink" title="rpc调用"></a>rpc调用</h2><ul>
+<li>submit_extrinsic：解码交易，提交到交易池</li>
+<li>submit_one：提交单个交易</li>
+<li>pool.submit_one：异步调用，提交单个交易</li>
+<li>pool.submit_at：可以将多个未验证的交易验证后，导入交易池</li>
+<li>pool.verify：并发验证交易</li>
+<li>pool.verify_one：验证单个交易</li>
+<li>validated_pool.check_is_known：快速检查，是否已经导入或者被禁止，是的话标记为无效</li>
+<li>validated_pool.api().validate_transaction：开启验证交易的子任务</li>
+<li>validate_transaction_blocking：验证交易</li>
+<li>runtime_api.validate_transaction：executive的验证逻辑</li>
+<li>unchecked_extrinsic.check:验证签名,extra，返回checkedExtrinsic。uncheckedExtrinsic实现trait：Extrinsic,Checkable。Extra实现trait：SignedExtension。</li>
+<li>checkedExtrinsic.validate：验证weight,payment,nonce等</li>
+<li>validated_pool.submit：把预验证的交易提交到交易池</li>
+</ul>
+<p>通过网络传播块，（TODO：是否可以在达成共识前预执行）<br>import_queue：封装在共识中，当共识完成后，会通过import_block/import_queue来执行区块。</p>
+<ul>
+<li>execute_block：执行区块</li>
+<li>initialize_block：初始化块</li>
+<li>initial_checks：初始化块的检查</li>
+<li>execute_extrinsics_with_book_keeping：执行块<ul>
+<li>apply_extrinsic_no_note<ul>
+<li>apply_extrinsic_with_len：执行交易</li>
+<li>unchecked_extrinsic.check</li>
+<li>checkedExtrinsic.apply：执行验证过的交易<ul>
+<li>pre_dispatch：再次validate</li>
+<li>dispatch：执行Call</li>
+<li>post_dispatch：调整weight，payment</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>final_checks：最终检查，检查交易摘要，状态根</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Polkadot</category>
+        <category>substrate</category>
+      </categories>
+  </entry>
+  <entry>
     <title>协程模型</title>
     <url>/2020/10/14/%E5%8D%8F%E7%A8%8B%E6%A8%A1%E5%9E%8B/</url>
     <content><![CDATA[<h1 id="历史背景"><a href="#历史背景" class="headerlink" title="历史背景"></a>历史背景</h1><h2 id="多线程编程"><a href="#多线程编程" class="headerlink" title="多线程编程"></a>多线程编程</h2><p>早起基于操作系统提供的线程的概念来实现并发编程，一个连接一个线程。在连接数目渐渐增多的时候，可扩展性很差，因为操作系统本身并不擅长处理大量的线程：任何一个线程的创建都需要设计到栈空间的分配、线程私有资源的创建和维护；同时大量的线程在操作系统层面被调度的时候，也很难保证调度策略的公平和有效。这也是C10K问题的由来。<br><a id="more"></a></p>
@@ -1509,6 +1460,55 @@
       <categories>
         <category>Rust</category>
         <category>异步</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Raft</title>
+    <url>/2020/08/28/raft/</url>
+    <content><![CDATA[<p>Raft与Paxos在私链、分布式数据库中使用。<br><a id="more"></a></p>
+<h1 id="leader选举"><a href="#leader选举" class="headerlink" title="leader选举"></a>leader选举</h1><h2 id="状态转移"><a href="#状态转移" class="headerlink" title="状态转移"></a>状态转移</h2><p>启动时都是follower状态。<br><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110432.png" alt="5D9C4562-02AD-48F1-9273-3DC7D66DBCB8"></p>
+<h3 id="timeout"><a href="#timeout" class="headerlink" title="timeout"></a>timeout</h3><h4 id="election"><a href="#election" class="headerlink" title="election"></a>election</h4><p>时间在150ms到300ms之间随机选取，如果到期没有发现leader的心跳出现，就把自己的状态转换为candidate，给自己投一票，并且请求其他结点开始投票。如果接受到请求的结点在这个任期内没有投过票，就给候选人投票，并且把自己的election timeout重置。<br>一旦候选人得到大部分票选，就成为leader。</p>
+<h4 id="heartbeat"><a href="#heartbeat" class="headerlink" title="heartbeat"></a>heartbeat</h4><p>leader以心跳周期给followers发送Append entry，直到出现新的term的leader，回到follower状态。<br>如果follower在election timeout内没有收到心跳，以候选人开启新的term，选出新的leader。</p>
+<h2 id="任期"><a href="#任期" class="headerlink" title="任期"></a>任期</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110440.png" alt="3D62AE1A-FA35-42DD-967B-9D63D11A3AD6"><br>term（任期）以选举（election）开始，然后就是一段或长或短的稳定工作期（normal Operation）。从上图可以看到，任期是递增的，这就充当了逻辑时钟的作用；另外，term 3 展示了一种情况，就是说没有选举出 leader 就结束了，然后会发起新的选举，这是平票 split vote 的情况。</p>
+<h3 id="split-vote"><a href="#split-vote" class="headerlink" title="split vote"></a>split vote</h3><p>同时有多个候选人，得到了相同票数，无法选出leader。等待超时，重新发起投票。</p>
+<h1 id="log-replication"><a href="#log-replication" class="headerlink" title="log replication"></a>log replication</h1><h2 id="复制状态机"><a href="#复制状态机" class="headerlink" title="复制状态机"></a>复制状态机</h2><p>相同的初识状态 + 相同的输入 = 相同的结束状态。<br>在 raft 中，leader 将客户端请求（command）封装到一个个 log entry，将这些 log entries 复制（replicate）到所有 follower 节点，然后大家按相同顺序应用（apply）log entry 中的 command，则状态肯定是一致的。</p>
+<h2 id="请求完整流程"><a href="#请求完整流程" class="headerlink" title="请求完整流程"></a>请求完整流程</h2><p>当系统（leader）收到一个来自客户端的写请求，到返回给客户端，整个过程从 leader 的视角来看会经历以下步骤：</p>
+<ul>
+<li>leader append log entry</li>
+<li>leader issue AppendEntries RPC in parallel</li>
+<li>leader wait for majority response</li>
+<li>leader apply entry to state machine</li>
+<li>leader reply to client</li>
+<li>leader notify follower apply log</li>
+</ul>
+<h1 id="安全"><a href="#安全" class="headerlink" title="安全"></a>安全</h1><h2 id="选举安全"><a href="#选举安全" class="headerlink" title="选举安全"></a>选举安全</h2><p>在 raft 中，两点保证了这个属性：</p>
+<ul>
+<li>一个节点某一任期内最多只能投一票；</li>
+<li>只有获得 majority 投票的节点才会成为 leader。<br>任一任期内最多一个 leader 被选出。</li>
+</ul>
+<h2 id="log-匹配"><a href="#log-匹配" class="headerlink" title="log 匹配"></a>log 匹配</h2><p>如果两个节点上的某个 log entry 的 log index 相同且 term 相同，那么在该 index 之前的所有 log entry 应该都是相同的。<br>首先，leader 在某一 term 的任一位置只会创建一个 log entry，且 log entry 是 append-only。其次，consistency check。leader 在 AppendEntries 中包含最新 log entry 之前的一个 log 的 term 和 index，如果 follower 在对应的 term index 找不到日志，那么就会告知 leader 不一致。<br>当出现了 leader 与 follower 不一致的情况，leader 强制 follower 复制自己的 log。</p>
+<ul>
+<li>leader 初始化 nextIndex[x] 为 leader 最后一个 log index + 1</li>
+<li>AppendEntries 里 prevLogTerm prevLogIndex 来自 logs[nextIndex[x] - 1]</li>
+<li>如果 follower 判断 prevLogIndex 位置的 log term 不等于 prevLogTerm，那么返回 False，否则返回 True</li>
+<li>leader 收到 follower 的回复，如果返回值是 False，则 nextIndex[x] -= 1, 跳转到 第2步. </li>
+<li>否则，同步 nextIndex[x] 后的所有 log entries</li>
+</ul>
+<h2 id="leader完整性"><a href="#leader完整性" class="headerlink" title="leader完整性"></a>leader完整性</h2><p>leader 完整性：如果一个 log entry 在某个任期被提交（committed），那么这条日志一定会出现在所有更高 term 的 leader 的日志里面。<br>raft 与其他协议（Viewstamped Replication、mongodb）不同，raft 始终保证 leader 包含最新的已提交的日志，因此 leader 不会从 follower catchup 日志，这也大大简化了系统的复杂度。</p>
+<h1 id="边界条件"><a href="#边界条件" class="headerlink" title="边界条件"></a>边界条件</h1><h2 id="旧leader"><a href="#旧leader" class="headerlink" title="旧leader"></a>旧leader</h2><p>raft 保证 Election safety，即一个任期内最多只有一个 leader，但在网络分割（network partition）的情况下，可能会出现两个 leader，但两个 leader 所处的任期是不同的。<br>leader 如果收不到 majority 节点的消息，那么无法进行commit。如果网络恢复了，发现有更高term的leader，会转换到follower，并且把没有commit的entry回滚，同步到新的leader。</p>
+<h2 id="状态机安全"><a href="#状态机安全" class="headerlink" title="状态机安全"></a>状态机安全</h2><p>如果节点将某一位置的 log entry 应用到了状态机，那么其他节点在同一位置不能应用不同的日志。简单点来说，所有节点在同一位置（index in log entries）应该应用同样的日志。<br>某个 leader 选举成功之后，不会直接提交前任 leader 时期的日志，而是通过提交当前任期的日志的时候 “顺手” 把之前的日志也提交了，具体怎么实现了，在 log matching 部分有详细介绍。那么问题来了，如果 leader 被选举后没有收到客户端的请求呢，论文中有提到，在任期开始的时候发立即尝试复制、提交一条空的 log。</p>
+<h2 id="leader-crash"><a href="#leader-crash" class="headerlink" title="leader crash"></a>leader crash</h2><p><a href="https://www.cnblogs.com/mindwind/p/5231986.html">不同情况的图解</a></p>
+<h1 id="为了避免问题的设计"><a href="#为了避免问题的设计" class="headerlink" title="为了避免问题的设计"></a>为了避免问题的设计</h1><ul>
+<li>避免平票：randomized election timeouts ；</li>
+<li>保证majority票：节点的数目都是奇数个；</li>
+<li>保证高可用：不是强一致性，而是最终一致性，leader 会不断尝试给 follower 发 log entries，直到所有节点的 log entries 都相同；</li>
+</ul>
+<h1 id="容错数量"><a href="#容错数量" class="headerlink" title="容错数量"></a>容错数量</h1><p>raft 算法只支持容错故障节点，假设集群总节点数为n，故障节点为 f ，根据小数服从多数的原则，集群里正常节点只需要比 f 个节点再多一个节点，即 f+1 个节点，正确节点的数量就会比故障节点数量多，那么集群就能达成共识。因此 raft 算法支持的最大容错节点数量是（n-1）/2。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://www.cnblogs.com/xybaby/p/10124083.html">一文搞懂Raft算法</a><br><a href="http://thesecretlivesofdata.com/raft">Raft动画</a></p>
+]]></content>
+      <categories>
+        <category>区块链</category>
+        <category>共识协议</category>
       </categories>
   </entry>
   <entry>
@@ -3525,7 +3525,7 @@
   </entry>
   <entry>
     <title>ThreadPool</title>
-    <url>/2020/11/23/ThreadPool/</url>
+    <url>/2020/11/23/threadPool/</url>
     <content><![CDATA[<h1 id="线程池-ThreadPoolExecutor"><a href="#线程池-ThreadPoolExecutor" class="headerlink" title="线程池 ( ThreadPoolExecutor)"></a>线程池 ( ThreadPoolExecutor)</h1><ul>
 <li>线程池是为了避免线程频繁的创建和销毁带来的性能消耗，而建立的一种池化技术，它是把已创建的线程放入“池”中，当有任务来临时就可以重用已有的线程，无需等待创建的过程，这样就可以有效提高程序的响应速度。<a id="more"></a>
 </li>
