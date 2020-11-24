@@ -2,310 +2,247 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://munan.tech/2020/11/18/Rust-coroutine/</loc>
+    <loc>http://munan.tech/2020/10/12/%E5%90%88%E7%BA%A6%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90/</loc>
+    
+    <lastmod>2020-11-24</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/keystore/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/ThreadPool/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/static/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/Spring_MongDB/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/KDF%E4%B9%8BScrypt/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/11/Rust%E4%B9%8B%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%85%A5%E9%97%A8/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/10/Rust%E4%B9%8BPhantomData/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/10/Rust%E6%A8%A1%E5%BC%8F/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/10/Rust%E4%B9%8B%E5%AE%8F%E5%85%A5%E9%97%A8/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/10/Rust%E8%AF%AD%E8%A8%80%E7%B2%BE%E8%A6%81/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/10/Rust%E5%BC%82%E6%AD%A5%E5%85%A5%E9%97%A8/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/10/Rust%E5%8C%85%E7%AE%A1%E7%90%86/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/28/Raft/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/12/PBFT/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/08/Paxos/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/06/16/PAT/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/Java%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/05/25/java%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/%E5%A4%9A%E7%BA%BF%E7%A8%8B/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/JavaMYSQL/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/05/25/java8/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/06/03/%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/go%20for%E5%BE%AA%E7%8E%AF%E7%9A%84%E4%B8%80%E4%B8%AA%E9%97%AE%E9%A2%98/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/garbage_collection/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/18/%E6%95%B0%E5%AD%97%E7%AD%BE%E5%90%8D/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/%E8%B7%A8%E5%9F%9F/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/clion%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95rust/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/09/01/%E6%AF%94%E7%89%B9%E5%B8%81%E4%B8%8E%E4%BB%A5%E5%A4%AA%E5%9D%8A/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/11/23/%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%BD%91%E7%BB%9C%E8%AE%BE%E7%BD%AE/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/19/%E4%BA%A4%E6%98%93/</loc>
+    
+    <lastmod>2020-11-23</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/10/14/%E5%8D%8F%E7%A8%8B%E6%A8%A1%E5%9E%8B/</loc>
     
     <lastmod>2020-11-18</lastmod>
     
   </url>
   
   <url>
-    <loc>http://munan.tech/2020/08/18/Rust-asynchronous/</loc>
-    
-    <lastmod>2020-11-18</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/19/wallet-introduction/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/06/16/threadPool/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/10/15/substrate_contract/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/19/scrypt/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/04/Rust_cargo/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/15/raft/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/15/PBFT/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/21/Paxos/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/23/offchainWorker/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/27/ObjectOriented/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/30/multithread/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/19/keystore/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/25/JavaBasics/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/05/19/internal-storage/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/10/16/grandpa_model/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/05/20/garbage-collection/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/07/09/ERC1400/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/21/digital-signature/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/07/clion-remote-rust/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/01/baseChain/</loc>
-    
-    <lastmod>2020-10-29</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/06/Rust-Macro/</loc>
+    <loc>http://munan.tech/2020/09/23/%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86/</loc>
     
     <lastmod>2020-10-11</lastmod>
     
   </url>
   
   <url>
-    <loc>http://munan.tech/2019/09/04/Rust-essentials/</loc>
+    <loc>http://munan.tech/2020/10/10/Rust%E4%B9%8BUnsafe/</loc>
     
     <lastmod>2020-10-10</lastmod>
     
   </url>
   
   <url>
-    <loc>http://munan.tech/2020/03/31/DocComment/</loc>
+    <loc>http://munan.tech/2020/10/10/Rust%E4%B9%8Btrait/</loc>
     
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/30/ByzantineFinalityGadgets/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/05/17/PAT/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/16/Rust-PhantomData/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/12/Rust-thread/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/12/Rust-pattern/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/05/Rust-trait/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/08/12/Rust-unsafe/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/30/Socket/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/04/19/Substrate-1/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/08/22/Spring-Mongodb/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/06/18/crosDomain/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/05/21/edgeware/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/09/01/goForCircle/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/31/java8/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/31/javaMySQL/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2020/03/27/static/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/04/20/what-is-Substrate/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/10/write-runtime/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/2019/09/04/%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%BD%91%E7%BB%9C%E8%AE%BE%E7%BD%AE/</loc>
-    
-    <lastmod>2020-10-06</lastmod>
+    <lastmod>2020-10-10</lastmod>
     
   </url>
   
@@ -323,10 +260,38 @@
     
   </url>
   
+  <url>
+    <loc>http://munan.tech/2020/09/17/%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8/</loc>
+    
+    <lastmod>2020-09-17</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/08/03/go%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95/</loc>
+    
+    <lastmod>2020-08-07</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/05/25/%E6%96%87%E6%A1%A3%E6%B3%A8%E9%87%8A/</loc>
+    
+    <lastmod>2020-05-25</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/2020/05/25/socket/</loc>
+    
+    <lastmod>2020-05-25</lastmod>
+    
+  </url>
+  
 
   <url>
     <loc>http://munan.tech/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -336,126 +301,147 @@
   
   <url>
     <loc>http://munan.tech/categories/Java/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/BlockChain/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/Java/base/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/Other/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/BlockChain/Substrate/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/BlockChain/Distributed-Consensus/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://munan.tech/categories/Rust/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/BlockChain/Substrate/base/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/Java/Database/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/Cryptography/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/BlockChain/Substrate/Application/</loc>
-    <lastmod>2020-11-18</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://munan.tech/categories/BlockChain/Substrate/contract/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
     <loc>http://munan.tech/categories/Java/JVM/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/Rust/base/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <loc>http://munan.tech/categories/Rust/Rust%E5%9F%BA%E7%A1%80/</loc>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/Java/Concurrent/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <loc>http://munan.tech/categories/Rust/%E5%BC%82%E6%AD%A5/</loc>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/Java/Database/Mongodb/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <loc>http://munan.tech/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/</loc>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/Java/Database/MySQL/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <loc>http://munan.tech/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E5%AF%86%E7%A0%81%E5%AD%A6/</loc>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://munan.tech/categories/Rust/asynchronous/</loc>
-    <lastmod>2020-11-18</lastmod>
+    <loc>http://munan.tech/categories/Java/%E6%95%B0%E6%8D%AE%E5%BA%93/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Java/%E8%B7%AF%E7%BA%BF%E4%B8%8E%E5%9F%BA%E7%A1%80/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E5%85%B1%E8%AF%86%E5%8D%8F%E8%AE%AE/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Java/Spring/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/%E7%BC%96%E7%A8%8B/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/go/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/%E7%BC%96%E7%A8%8B/%E7%BC%96%E7%A8%8B/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Polkadot/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/go/Go/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/bitcoin/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Polkadot/substrate/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/%E8%80%83%E7%A0%94/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/%E8%80%83%E7%A0%94/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/</loc>
+    <lastmod>2020-11-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://munan.tech/categories/Java/%E5%B9%B6%E5%8F%91/</loc>
+    <lastmod>2020-11-24</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>

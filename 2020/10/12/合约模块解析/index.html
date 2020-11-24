@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="分析基于 substrate 的 2020年11月23日 756212f36 版本。本文将介绍合约模块的合约调用 call 的基本逻辑，并且会介绍关于合约收费的设计。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="合约模块解析">
+<meta property="og:url" content="http://munan.tech/2020/10/12/%E5%90%88%E7%BA%A6%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="分析基于 substrate 的 2020年11月23日 756212f36 版本。本文将介绍合约模块的合约调用 call 的基本逻辑，并且会介绍关于合约收费的设计。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1147">
+<meta property="article:published_time" content="2020-10-12T13:50:04.000Z">
+<meta property="article:modified_time" content="2020-11-24T07:49:40.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1147">
+
+<link rel="canonical" href="http://munan.tech/2020/10/12/%E5%90%88%E7%BA%A6%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true
+  };
+</script>
+
+  <title>合约模块解析 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jenner's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/2020/10/12/%E5%90%88%E7%BA%A6%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          合约模块解析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-12 21:50:04" itemprop="dateCreated datePublished" datetime="2020-10-12T21:50:04+08:00">2020-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-24 15:49:40" itemprop="dateModified" datetime="2020-11-24T15:49:40+08:00">2020-11-24</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Polkadot/" itemprop="url" rel="index"><span itemprop="name">Polkadot</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Polkadot/substrate/" itemprop="url" rel="index"><span itemprop="name">substrate</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/10/12/%E5%90%88%E7%BA%A6%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/10/12/%E5%90%88%E7%BA%A6%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>分析基于 substrate 的 2020年11月23日 756212f36 版本。本文将介绍合约模块的合约调用 <code>call</code> 的基本逻辑，并且会介绍关于合约收费的设计。<br><a id="more"></a></p>
+<h1 id="call-：调用合约"><a href="#call-：调用合约" class="headerlink" title="call ：调用合约"></a><code>call</code> ：调用合约</h1><p><code>call</code>也是Module<T>中的函数，在调用一开始就被收取了fee，其中包含了合约的gas费用。</T></p>
+<p>首先是调用了账户查找<code>lookup</code>，返回给<code>dest</code>的是<code>AccountId</code>。</p>
+<p>接着主要是调用了<code>ctx.call</code>这个函数，和<code>instantiate</code>一样走得是<code>execute_wasm</code>。<code>ctx.call</code>实际上调用的是 <code>ExecutionContext::call</code>。</p>
+<p><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1147" alt="95db73b28573b2aa542f4acb884ae358.png"></p>
+<p>在<code>ExecutionContext::call</code>中，首先判断了调用深度，接着调用<code>collect_rent</code>收取存储空间的租用费用。代码在 <code>contracts/src/rent.rs</code>。该函数涉及费用计算，因此在<strong>合约收费</strong>中介绍。</p>
+<p>如果<code>value</code>不为0的话，会调用<code>transfer</code>将<code>value</code>传给<code>dest</code>账户（不一定是合约账户 ）。</p>
+<p>然后根据<code>code_hash</code>执行合约。<code>nested.loader.load_main(&amp;contract.code_hash)</code>会得到包含合约的调用接口<code>call</code>的<code>executable</code>：<code>load_main</code>调用了<code>load_code</code>，它会比较 schedule 的版本，之前在 <code>put_code</code>的最后是写入了两个存储，一个是原始代码，一个是原始代码预处理后的 <code>prefab_module</code>。如果当前版本大于已经预处理好的版本， 那么需要重新预处理，否则直接返回已经存储的 <code>prefab_module</code>。<code>load_init</code> 最终返回 <code>WasmExecutable</code> 结构体。 </p>
+<p>然后与合约部署时一样，将返回的 <code>executable</code>放到 <code>WasmVm</code> 执行 <code>execute</code>。通过<code>call</code>执行合约代码内的相应函数。</p>
+<p>根据执行的结果，调用<code>commit_transaction()</code> 或者 <code>rollback_transaction()</code>。注意，如果是gas耗尽导致的<code>Revert</code>，只会回滚当前合约的状态，而更高层次的合约状态无法回滚。</p>
+<p>最后就是返回剩余手续费。</p>
+<h1 id="合约收费"><a href="#合约收费" class="headerlink" title="合约收费"></a>合约收费</h1><h2 id="存储收费"><a href="#存储收费" class="headerlink" title="存储收费"></a>存储收费</h2><p>涉及到存储收费的主要是在<code>contracts/src/rent.rs</code>中的<code>collect_rent</code>函数。</p>
+<p>如果合约不存在或者为<code>tombstone</code>（可恢复的死亡状态）状态，则直接返回错误。</p>
+<p>在<code>instantiate</code>时，我们传入了<code>endowment</code>这个值，令合约账户中拥有资产。根据合约账户的<code>balance</code>大小，可以根据<code>RentDepositOffset</code>计算得到一个免费的存储空间大小。计算公式为<code>free_storage = balance / RentDepositOffset</code>。</p>
+<p>而如果合约大小超过了这个免费空间，那么需要按<code>RentByteFee</code>收费，该值的单位为每块每字节。所以需要支付的租用费用计算公式为：<br><code>dues = effective_storage_size(超过的空间) * RentByteFee * blocks_passed(距离上一次支付)</code>。</p>
+<p>其中，<code>effective_storage_size = contract.storage_size + StorageSizeOffset（只要创建合约就存在的默认size） + empty_pairs_equivalent（空的kv对，每对按1字节算） - free_storage</code>。</p>
+<p>根据合约可以用来支付rent的资产，决定合约的存活状态。<br><code>rent_budget（可以用来支付租赁费用的资产） =  min(contract.rent_allowance, free_balance - subsistence_threshold)</code>。</p>
+<p><code>subsistence_threshold（实例存活下限） = Currency::minimum_balance() + TombstoneDeposit</code>。如果合约的总资产（包括reserved)都小于实例存活下限，那么会永久删除合约。</p>
+<p>如果足够支付，就直接扣除。如果不足以支付租赁费用，合约会变成<code>tombstone</code>状态。但是分为两种情况: 1.支付后账户都不能存在了，那么不进行扣除租赁费用；2.支付后账户还能存在，还是要扣除租赁费用。这里注意区分合约实例存活下限和合约账户存活下限。</p>
+<p>可见，随着时间的流逝，（如果不对合约账户进行充值）合约的资产会减少到无法维持<code>Alive</code>状态，从而变更为<code>tombstone</code>，甚至被永久删除。这是一个合理的设计，使得<code>runtime</code>中不会存储太多“无效”合约，存储空间得到充分利用。如果需要估算当前合约的资产能在链上实例存活多久，可以调用<code>compute_rent_projection</code>来估算。</p>
+<p>在我们<code>instantiate</code>时，默认设置<code>rent_allowance</code>为<code>balance</code>能支持的最大值。该值会随着每次支付<code>rent</code>而逐渐减少。所以实际上，设置<code>rent_allowance</code>这个值也可以限制合约需要的资产门槛。</p>
+<p>状态为<code>tombstone</code>的合约，在后面可以用状态为<code>Alive</code>的合约<code>retore_to</code>进行替换。注意，当合约状态变更为<code>tombstone</code>时，合约数据已经被删除，所以用该方法对依赖数据的合约进行复活是不可行的。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/2020/10/12/%E5%90%88%E7%BA%A6%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90/" title="合约模块解析">http://munan.tech/2020/10/12/合约模块解析/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/11/Rust%E4%B9%8B%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%85%A5%E9%97%A8/" rel="prev" title="Rust之多线程入门">
+      <i class="fa fa-chevron-left"></i> Rust之多线程入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/14/%E5%8D%8F%E7%A8%8B%E6%A8%A1%E5%9E%8B/" rel="next" title="协程模型">
+      协程模型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#call-%EF%BC%9A%E8%B0%83%E7%94%A8%E5%90%88%E7%BA%A6"><span class="nav-number">1.</span> <span class="nav-text">call ：调用合约</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%88%E7%BA%A6%E6%94%B6%E8%B4%B9"><span class="nav-number">2.</span> <span class="nav-text">合约收费</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E6%94%B6%E8%B4%B9"><span class="nav-number">2.1.</span> <span class="nav-text">存储收费</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+  
+  
+    <canvas class="fireworks" style="position: fixed;left: 0;top: 0;z-index: 1; pointer-events: none;" ></canvas>
+    <script src="//cdn.bootcss.com/animejs/2.2.0/anime.min.js"></script>
+    <script src="/js/cursor/explosion.min.js"></script>
+  
+  
+
+
+</body>
+</html>
