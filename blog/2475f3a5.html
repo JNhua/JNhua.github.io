@@ -319,7 +319,7 @@
 <ul>
 <li><p><strong>kdf</strong>是用于从密码短语计算（或“衍生”）<strong>解密密钥</strong>的密钥派生函数。这里，<strong>kdf</strong>的值是<em>scrypt</em> <strong>。</strong></p>
 </li>
-<li><p><strong>kdfparams</strong>是<a href="/blog/undefined.html" title="*scrypt*">*scrypt*</a>函数所需的参数。这里，<em>dklen</em>，<em>n</em>，<em>r</em>，<em>p</em>和<em>salt</em>是<strong>kdf</strong>函数的参数。</p>
+<li><p><strong>kdfparams</strong>是<a href="/blog/5daaeba7.html" title="*scrypt*">*scrypt*</a>函数所需的参数。这里，<em>dklen</em>，<em>n</em>，<em>r</em>，<em>p</em>和<em>salt</em>是<strong>kdf</strong>函数的参数。</p>
 <ul>
 <li><code>dklen：32</code>，- 派生密钥长度（以字节为单位）。对于某些密码设置，这必须匹配那些块大小。小于等于(2^32 - 1) * 32的正整数。</li>
 <li><code>n：262144</code>，- 迭代计数。geth的默认值为262144。 n 和 r 决定了占用的内存区域大小和哈希迭代次数（占用的内存大小为 128⋅n⋅r bytes，迭代次数为 2⋅n⋅r），可以修改的参数是 n。把 n 值定在 65536，这样可以兼容大部分低端配置的手机。必须大于1，是2的幂且小于2^(128 * r / 8)。</li>
@@ -402,8 +402,8 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/blog/59b2296b.html" rel="prev" title="JavaMYSQL">
-      <i class="fa fa-chevron-left"></i> JavaMYSQL
+    <a href="/blog/4d1a6fbb.html" rel="prev" title="go for循环的一个问题">
+      <i class="fa fa-chevron-left"></i> go for循环的一个问题
     </a></div>
       <div class="post-nav-item">
     <a href="/blog/5729df21.html" rel="next" title="多线程">
@@ -485,14 +485,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-count">35</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-count">20</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
