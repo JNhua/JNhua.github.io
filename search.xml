@@ -300,6 +300,24 @@
       </categories>
   </entry>
   <entry>
+    <title>Rust之Unsafe</title>
+    <url>/blog/22fa27d4.html</url>
+    <content><![CDATA[<h1 id="Unsafe"><a href="#Unsafe" class="headerlink" title="Unsafe"></a>Unsafe</h1><a id="more"></a>
+<p>Rust会通过unsafe关键字切换到不安全的Rust。不安全的Rust具有以下超级力量：<br>（1）解引用裸指针<br>（2）调用不安全的函数或者方法<br>（3）访问或修改可变静态变量<br>（4）实现不安全的trait</p>
+<p>注意：unsafe并不会关闭借用检查器或禁用任何其它的Rust安全检查规则，它只提供上述几个不被编译器检查内存安全的功能。unsafe也不意味着块中的代码一定就是不ok的，它只是表示由程序员来确保安全。</p>
+<h1 id="解引用裸指针"><a href="#解引用裸指针" class="headerlink" title="解引用裸指针"></a>解引用裸指针</h1><p>裸指针是可变和不可变的，分别写作<code>*const T</code>和<code>*mut T</code>。此处的星号不是解引用运算符，而是类型名称的一部分。<br>裸指针：<br>（1）允许忽略借用规则，可以同时拥有不可变和可变的指针，或多个指向相同位置的可变指针<br>（2）不保证指向有效的内存<br>（3）允许为空<br>（4）不能实现任何自动清理功能</p>
+<p>可以在安全代码中创建裸指针，只是不能在不安全块之外解引用裸指针。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> num = <span class="number">5</span>;</span><br><span class="line">    <span class="comment">//创建不可变和可变的裸指针可以在安全的代码中，只是不能在不安全代码块之外解引用裸指针</span></span><br><span class="line">    <span class="keyword">let</span> r1 = &amp;num <span class="keyword">as</span> *<span class="keyword">const</span> <span class="built_in">i32</span>;</span><br><span class="line">    <span class="keyword">let</span> r2 = &amp;<span class="keyword">mut</span> num <span class="keyword">as</span> *<span class="keyword">mut</span> <span class="built_in">i32</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;r1 is: &#123;&#125;&quot;</span>, *r1);</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;r2 is: &#123;&#125;&quot;</span>, *r2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> add = <span class="number">0x12345usize</span>;</span><br><span class="line">    <span class="keyword">let</span> _r = add <span class="keyword">as</span> *<span class="keyword">const</span> <span class="built_in">i32</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="访问可变静态变量"><a href="#访问可变静态变量" class="headerlink" title="访问可变静态变量"></a>访问可变静态变量</h1><p>常量和静态变量的区别：<br>a、静态变量中的值有一个固定的内存地址（使用这个值总会访问相同的地址），常量则允许在任何被用到的时候复制其数据。<br>b、静态变量可以是可变的，虽然这可能是不安全的（所以要用unsafe）。</p>
+<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> COUNTER: <span class="built_in">u32</span> = <span class="number">0</span>;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add_counter</span></span>(inc: <span class="built_in">u32</span>) &#123;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        COUNTER += inc;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    add_counter(<span class="number">3</span>);</span><br><span class="line">    add_counter(<span class="number">3</span>);</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;counter: &#123;&#125;&quot;</span>, COUNTER);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="不安全的trait"><a href="#不安全的trait" class="headerlink" title="不安全的trait"></a>不安全的trait</h1><p>（1）当至少有一个方法中包含编译器不能验证的不变量时，该 trait 是不安全的；<br>（2）在 trait 之前增加 unsafe 关键字将 trait 声明为 unsafe，同时 trait 的实现也必须标记为 unsafe。</p>
+]]></content>
+      <categories>
+        <category>Rust</category>
+        <category>Rust基础</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Rust之PhantomData</title>
     <url>/blog/a3f13347.html</url>
     <content><![CDATA[<p><code>PhantomData&lt;T&gt;</code>是一个零大小类型的标记结构体。<br><a id="more"></a><br>作用：</p>
@@ -389,24 +407,6 @@
 </table>
 </div>
 <p>(*) 如果发生变性的冲突，这个是不变的。</p>
-]]></content>
-      <categories>
-        <category>Rust</category>
-        <category>Rust基础</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>Rust之Unsafe</title>
-    <url>/blog/22fa27d4.html</url>
-    <content><![CDATA[<h1 id="Unsafe"><a href="#Unsafe" class="headerlink" title="Unsafe"></a>Unsafe</h1><a id="more"></a>
-<p>Rust会通过unsafe关键字切换到不安全的Rust。不安全的Rust具有以下超级力量：<br>（1）解引用裸指针<br>（2）调用不安全的函数或者方法<br>（3）访问或修改可变静态变量<br>（4）实现不安全的trait</p>
-<p>注意：unsafe并不会关闭借用检查器或禁用任何其它的Rust安全检查规则，它只提供上述几个不被编译器检查内存安全的功能。unsafe也不意味着块中的代码一定就是不ok的，它只是表示由程序员来确保安全。</p>
-<h1 id="解引用裸指针"><a href="#解引用裸指针" class="headerlink" title="解引用裸指针"></a>解引用裸指针</h1><p>裸指针是可变和不可变的，分别写作<code>*const T</code>和<code>*mut T</code>。此处的星号不是解引用运算符，而是类型名称的一部分。<br>裸指针：<br>（1）允许忽略借用规则，可以同时拥有不可变和可变的指针，或多个指向相同位置的可变指针<br>（2）不保证指向有效的内存<br>（3）允许为空<br>（4）不能实现任何自动清理功能</p>
-<p>可以在安全代码中创建裸指针，只是不能在不安全块之外解引用裸指针。</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> num = <span class="number">5</span>;</span><br><span class="line">    <span class="comment">//创建不可变和可变的裸指针可以在安全的代码中，只是不能在不安全代码块之外解引用裸指针</span></span><br><span class="line">    <span class="keyword">let</span> r1 = &amp;num <span class="keyword">as</span> *<span class="keyword">const</span> <span class="built_in">i32</span>;</span><br><span class="line">    <span class="keyword">let</span> r2 = &amp;<span class="keyword">mut</span> num <span class="keyword">as</span> *<span class="keyword">mut</span> <span class="built_in">i32</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;r1 is: &#123;&#125;&quot;</span>, *r1);</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;r2 is: &#123;&#125;&quot;</span>, *r2);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> add = <span class="number">0x12345usize</span>;</span><br><span class="line">    <span class="keyword">let</span> _r = add <span class="keyword">as</span> *<span class="keyword">const</span> <span class="built_in">i32</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="访问可变静态变量"><a href="#访问可变静态变量" class="headerlink" title="访问可变静态变量"></a>访问可变静态变量</h1><p>常量和静态变量的区别：<br>a、静态变量中的值有一个固定的内存地址（使用这个值总会访问相同的地址），常量则允许在任何被用到的时候复制其数据。<br>b、静态变量可以是可变的，虽然这可能是不安全的（所以要用unsafe）。</p>
-<figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> COUNTER: <span class="built_in">u32</span> = <span class="number">0</span>;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">add_counter</span></span>(inc: <span class="built_in">u32</span>) &#123;</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        COUNTER += inc;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    add_counter(<span class="number">3</span>);</span><br><span class="line">    add_counter(<span class="number">3</span>);</span><br><span class="line">    <span class="keyword">unsafe</span> &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;counter: &#123;&#125;&quot;</span>, COUNTER);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="不安全的trait"><a href="#不安全的trait" class="headerlink" title="不安全的trait"></a>不安全的trait</h1><p>（1）当至少有一个方法中包含编译器不能验证的不变量时，该 trait 是不安全的；<br>（2）在 trait 之前增加 unsafe 关键字将 trait 声明为 unsafe，同时 trait 的实现也必须标记为 unsafe。</p>
 ]]></content>
       <categories>
         <category>Rust</category>
@@ -782,6 +782,29 @@
       </categories>
   </entry>
   <entry>
+    <title>garbage_collection</title>
+    <url>/blog/1e17edb.html</url>
+    <content><![CDATA[<h1 id="垃圾回收条件"><a href="#垃圾回收条件" class="headerlink" title="垃圾回收条件"></a>垃圾回收条件</h1><h2 id="新生代"><a href="#新生代" class="headerlink" title="新生代"></a>新生代</h2><p>Minor GC/Young GC的触发条件：新生代内存区满，而又有新进入的新生代对象。此时会将没有被引用的垃圾新生代对象都回收掉。<br><a id="more"></a></p>
+<h2 id="老年代"><a href="#老年代" class="headerlink" title="老年代"></a>老年代</h2><p>当一个新生代对象在多次躲过垃圾回收，则会被转移到老年代。如果老年代也满了，也会触发垃圾回收。</p>
+<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>垃圾回收针对的是堆中的新生代、老年代，方法区（永久代），不会针对虚拟机栈中的栈帧。方法一旦执行完毕，栈帧出栈，局部变量直接就被清理掉了。</p>
+<h1 id="JVM内存相关核心参数"><a href="#JVM内存相关核心参数" class="headerlink" title="JVM内存相关核心参数"></a>JVM内存相关核心参数</h1><p><strong>-Xms</strong>：Java堆内存的大小</p>
+<p><strong>-Xmx</strong>：Java堆内存的最大大小</p>
+<p><strong>-Xmn</strong>：Java堆内存中的新生代大小，扣除新生代剩下的就是老年代的内存大小了</p>
+<p><strong>-XX:PermSize</strong>：永久代大小</p>
+<p><strong>-XX:MaxPermSize</strong>：永久代最大大小</p>
+<p><strong>-Xss</strong>：每个线程的栈内存大小</p>
+<blockquote>
+<p>永久代在1.8中已经移除，替换为元空间，使用本地内存，突破了<strong>-XX:MaxPermSize</strong>的限制。</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105731.jpg" alt="jvm_memory"></p>
+<p>应用框架设置JVM参数：Spring Boot其实就是启动的时候可以加上JVM参数，Tomcat就是在bin目录下的catalina.sh中可以加入JVM参数。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+        <category>JVM</category>
+      </categories>
+  </entry>
+  <entry>
     <title>go for循环的一个问题</title>
     <url>/blog/4d1a6fbb.html</url>
     <content><![CDATA[<p>在写go的for循环时，遇到了一个神奇的问题，记录一下。<br><a id="more"></a></p>
@@ -882,29 +905,6 @@
       <categories>
         <category>go</category>
         <category>Go</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>garbage_collection</title>
-    <url>/blog/1e17edb.html</url>
-    <content><![CDATA[<h1 id="垃圾回收条件"><a href="#垃圾回收条件" class="headerlink" title="垃圾回收条件"></a>垃圾回收条件</h1><h2 id="新生代"><a href="#新生代" class="headerlink" title="新生代"></a>新生代</h2><p>Minor GC/Young GC的触发条件：新生代内存区满，而又有新进入的新生代对象。此时会将没有被引用的垃圾新生代对象都回收掉。<br><a id="more"></a></p>
-<h2 id="老年代"><a href="#老年代" class="headerlink" title="老年代"></a>老年代</h2><p>当一个新生代对象在多次躲过垃圾回收，则会被转移到老年代。如果老年代也满了，也会触发垃圾回收。</p>
-<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p>垃圾回收针对的是堆中的新生代、老年代，方法区（永久代），不会针对虚拟机栈中的栈帧。方法一旦执行完毕，栈帧出栈，局部变量直接就被清理掉了。</p>
-<h1 id="JVM内存相关核心参数"><a href="#JVM内存相关核心参数" class="headerlink" title="JVM内存相关核心参数"></a>JVM内存相关核心参数</h1><p><strong>-Xms</strong>：Java堆内存的大小</p>
-<p><strong>-Xmx</strong>：Java堆内存的最大大小</p>
-<p><strong>-Xmn</strong>：Java堆内存中的新生代大小，扣除新生代剩下的就是老年代的内存大小了</p>
-<p><strong>-XX:PermSize</strong>：永久代大小</p>
-<p><strong>-XX:MaxPermSize</strong>：永久代最大大小</p>
-<p><strong>-Xss</strong>：每个线程的栈内存大小</p>
-<blockquote>
-<p>永久代在1.8中已经移除，替换为元空间，使用本地内存，突破了<strong>-XX:MaxPermSize</strong>的限制。</p>
-</blockquote>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105731.jpg" alt="jvm_memory"></p>
-<p>应用框架设置JVM参数：Spring Boot其实就是启动的时候可以加上JVM参数，Tomcat就是在bin目录下的catalina.sh中可以加入JVM参数。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>JVM</category>
       </categories>
   </entry>
   <entry>
@@ -1650,45 +1650,6 @@
       </categories>
   </entry>
   <entry>
-    <title>虚拟机网络设置</title>
-    <url>/blog/cdadaa64.html</url>
-    <content><![CDATA[<h1 id="三种连接模式"><a href="#三种连接模式" class="headerlink" title="三种连接模式"></a>三种连接模式</h1><p><a href="https://blog.csdn.net/qq_28203045/article/details/81266910">VMware中，桥接网络、NAT网络模式和仅主机的理解</a><br><a id="more"></a><br>如果需要同时连接局域网和公网，常常使用桥接的方式。</p>
-<h1 id="配置相关"><a href="#配置相关" class="headerlink" title="配置相关"></a>配置相关</h1><h2 id="虚拟机网络编辑器"><a href="#虚拟机网络编辑器" class="headerlink" title="虚拟机网络编辑器"></a><a name="虚拟机网络编辑器">虚拟机网络编辑器</a></h2><p>有三个VMnet：0，1，8 。其中VMnet0在编辑模式下才可以看到。</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:center">名称</th>
-<th style="text-align:center">模式</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">VMnet0</td>
-<td style="text-align:center">桥接</td>
-</tr>
-<tr>
-<td style="text-align:center">VMnet1</td>
-<td style="text-align:center">仅主机</td>
-</tr>
-<tr>
-<td style="text-align:center">VMnet8</td>
-<td style="text-align:center">NAT</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>分别对应三种模式的网络设置。</p>
-<p>除了默认的三个虚拟网络，还可以自己添加。</p>
-<h2 id="物理机网络适配器"><a href="#物理机网络适配器" class="headerlink" title="物理机网络适配器"></a>物理机网络适配器</h2><p>对VMnetx 进行ip地址的配置。</p>
-<h2 id="虚拟机网络适配器"><a href="#虚拟机网络适配器" class="headerlink" title="虚拟机网络适配器"></a>虚拟机网络适配器</h2><p>选择以何种网络模式上网。默认的，每种模式对应与<a href="#虚拟机网络编辑器">虚拟机网络编辑器</a>的虚拟网络设置。</p>
-]]></content>
-      <categories>
-        <category>编程</category>
-        <category>编程</category>
-      </categories>
-  </entry>
-  <entry>
     <title>比特币与以太坊</title>
     <url>/blog/f98f8a09.html</url>
     <content><![CDATA[<h1 id="交易"><a href="#交易" class="headerlink" title="交易"></a>交易</h1><h2 id="记账"><a href="#记账" class="headerlink" title="记账"></a>记账</h2><h3 id="比特币"><a href="#比特币" class="headerlink" title="比特币"></a>比特币</h3><p>未花费的交易输出。翻译成大白话就是我花的钱都是别人给我的钱，而且花的时候必须花完。比如我有一个2 BTC（比特币） 的UTXO，我想给你1 BTC，我就必须把这个 2BTC的UTXO 花掉，然后生成两个UTXO，一个 1BTC 的UTXO给你，一个UTXO（小于1 BTC，差值为交易费）给我自己。想看余额怎么办，就查一下这个地址里有多少UTXO，把里面的BTC加起来就是余额。<br><a id="more"></a></p>
@@ -1766,6 +1727,45 @@
       <categories>
         <category>区块链</category>
         <category>bitcoin</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>虚拟机网络设置</title>
+    <url>/blog/cdadaa64.html</url>
+    <content><![CDATA[<h1 id="三种连接模式"><a href="#三种连接模式" class="headerlink" title="三种连接模式"></a>三种连接模式</h1><p><a href="https://blog.csdn.net/qq_28203045/article/details/81266910">VMware中，桥接网络、NAT网络模式和仅主机的理解</a><br><a id="more"></a><br>如果需要同时连接局域网和公网，常常使用桥接的方式。</p>
+<h1 id="配置相关"><a href="#配置相关" class="headerlink" title="配置相关"></a>配置相关</h1><h2 id="虚拟机网络编辑器"><a href="#虚拟机网络编辑器" class="headerlink" title="虚拟机网络编辑器"></a><a name="虚拟机网络编辑器">虚拟机网络编辑器</a></h2><p>有三个VMnet：0，1，8 。其中VMnet0在编辑模式下才可以看到。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">名称</th>
+<th style="text-align:center">模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">VMnet0</td>
+<td style="text-align:center">桥接</td>
+</tr>
+<tr>
+<td style="text-align:center">VMnet1</td>
+<td style="text-align:center">仅主机</td>
+</tr>
+<tr>
+<td style="text-align:center">VMnet8</td>
+<td style="text-align:center">NAT</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>分别对应三种模式的网络设置。</p>
+<p>除了默认的三个虚拟网络，还可以自己添加。</p>
+<h2 id="物理机网络适配器"><a href="#物理机网络适配器" class="headerlink" title="物理机网络适配器"></a>物理机网络适配器</h2><p>对VMnetx 进行ip地址的配置。</p>
+<h2 id="虚拟机网络适配器"><a href="#虚拟机网络适配器" class="headerlink" title="虚拟机网络适配器"></a>虚拟机网络适配器</h2><p>选择以何种网络模式上网。默认的，每种模式对应与<a href="#虚拟机网络编辑器">虚拟机网络编辑器</a>的虚拟网络设置。</p>
+]]></content>
+      <categories>
+        <category>编程</category>
+        <category>编程</category>
       </categories>
   </entry>
   <entry>
