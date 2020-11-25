@@ -1,0 +1,4 @@
+[submodule "blog/themes/next"]
+	path = blog/themes/next
+	url = git@github.com:JNhua/hexo-theme-next.git
+	branch = my
