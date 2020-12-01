@@ -25,7 +25,7 @@
 <meta property="og:description" content="交易在Substrate的上下文里，extrinsic指的是来自链外的信息，并且会被纳入到区块中。 Extrinsic分为三类：inherents, 签名交易和无签名交易。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-10-19T08:30:52.000Z">
-<meta property="article:modified_time" content="2020-11-23T03:05:48.000Z">
+<meta property="article:modified_time" content="2020-12-01T03:43:12.000Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust,区块链">
 <meta name="twitter:card" content="summary">
@@ -226,7 +226,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-11-23 11:05:48" itemprop="dateModified" datetime="2020-11-23T11:05:48+08:00">2020-11-23</time>
+                <time title="修改时间：2020-12-01 11:43:12" itemprop="dateModified" datetime="2020-12-01T11:43:12+08:00">2020-12-01</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -288,28 +288,80 @@
 <h1 id="交易权重"><a href="#交易权重" class="headerlink" title="交易权重"></a>交易权重</h1><p>交易权重用来限制存储I/O和计算。<br>每个块可选权重消耗，防止区块被填充太多的交易，以至于延长出块时间。需要统计区块长度与区块总权重。块占用字节，其中一部分给块本身，一部分给操作类，比例为AvailableBlockRatio<br>参考硬件：Intel Core i7-7700K CPU with 64GB of RAM and an NVMe SSD。<br>一个权重单位=参考硬件上一个皮秒的执行时间。<br>如果想要延缓执行时间，需要同倍数缩小权重。<br>将交易打包进区块时需要检查权重。<br>由System pallet负责计算权重，Transaction Payment分析权重并扣除费用。</p>
 <h2 id="影响因素"><a href="#影响因素" class="headerlink" title="影响因素"></a>影响因素</h2><p>数据库访问（I/O）<br>计算时间</p>
 <h1 id="交易执行流程"><a href="#交易执行流程" class="headerlink" title="交易执行流程"></a>交易执行流程</h1><h2 id="rpc调用"><a href="#rpc调用" class="headerlink" title="rpc调用"></a>rpc调用</h2><ul>
-<li>submit_extrinsic：解码交易，提交到交易池</li>
-<li>submit_one：提交单个交易</li>
-<li>pool.submit_one：异步调用，提交单个交易</li>
-<li>pool.submit_at：可以将多个未验证的交易验证后，导入交易池</li>
-<li>pool.verify：并发验证交易</li>
-<li>pool.verify_one：验证单个交易</li>
+<li>submit_extrinsic：rpc调用函数名字为author_submitExtrinsic，解码交易，提交到交易池<h2 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h2></li>
+<li>submit_one：提交单个交易<ul>
+<li>pool.submit_one：异步调用，提交单个交易<ul>
+<li>pool.submit_at：可以将多个未验证的交易验证后，导入交易池<ul>
+<li>pool.verify：并发验证交易<ul>
+<li>pool.verify_one：异步验证单个交易<ul>
 <li>validated_pool.check_is_known：快速检查，是否已经导入或者被禁止，是的话标记为无效</li>
-<li>validated_pool.api().validate_transaction：开启验证交易的子任务</li>
-<li>validate_transaction_blocking：验证交易</li>
-<li>runtime_api.validate_transaction：executive的验证逻辑</li>
-<li>unchecked_extrinsic.check:验证签名,extra，返回checkedExtrinsic。uncheckedExtrinsic实现trait：Extrinsic,Checkable。Extra实现trait：SignedExtension。</li>
-<li>checkedExtrinsic.validate：验证weight,payment,nonce等</li>
+<li>validated_pool.api().validate_transaction：开启验证交易的子任务                       <ul>
+<li>UncheckedExtrinsic::check:如果有签名就验证签名,解码出call和extra，返回checkedExtrinsic。如果没有签名，直接返回一个checkedExtrinsic。uncheckedExtrinsic实现trait：Extrinsic,Checkable。Extra实现trait：SignedExtension。在Runtime定义一个tuple，例如<code>type SignedExtra = (xxx, yyy)</code>，用宏为tuple中每一个成员都实现了SignedExtension。</li>
+<li>CheckedExtrinsic::validate：如果已经验证过签名，这里只验证weight,payment,nonce等Extra。如果没有签名，首先调用Extra::validate_unsigned函数，检查交易所在的区块高度是否正确、交易数据长度是否超限。再调用U::validate_unsigned函数。这里的U是support frame。U::validate_unsigned调用了module里的validate_unsigned函数。即对于不包含签名的交易，签名的验证逻辑由模块的实现者完成。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 <li>validated_pool.submit：把预验证的交易提交到交易池</li>
 </ul>
-<p>通过网络传播块，（TODO：是否可以在达成共识前预执行）<br>import_queue：封装在共识中，当共识完成后，会通过import_block/import_queue来执行区块。</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="提交到交易池"><a href="#提交到交易池" class="headerlink" title="提交到交易池"></a>提交到交易池</h2><ul>
+<li>submit_one：提交单个交易<ul>
+<li>import：导入交易到交易池 <ul>
+<li>如果交易已经ready，调用import_to_ready<ul>
+<li>ReadyTransaction::import：把交易放入交易池</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果导入成功，交易hash放入import_notification_sinks通知队列</li>
+</ul>
+</li>
+</ul>
+<h2 id="交易转发"><a href="#交易转发" class="headerlink" title="交易转发"></a>交易转发</h2><h3 id="发送"><a href="#发送" class="headerlink" title="发送"></a>发送</h3><ul>
+<li>propagate_transaction：对每一个交易hash，发送一个PropagateTransaction(hash)消息</li>
+</ul>
+<p>节点本地的网络服务收到这条消息后，会调用protocol里的propagate_transaction方法。</p>
 <ul>
-<li>execute_block：执行区块</li>
-<li>initialize_block：初始化块</li>
-<li>initial_checks：初始化块的检查</li>
-<li>execute_extrinsics_with_book_keeping：执行块<ul>
-<li>apply_extrinsic_no_note<ul>
-<li>apply_extrinsic_with_len：执行交易</li>
+<li>do_propagate_transactions：把交易数据包发送给其它节点<ul>
+<li>轮询context_data.peers，过滤掉peer已经接收过的交易，如果to_send被过滤后不为空，behaviour.write_notification以协议为”/sup/transactions/1”转发交易给peer。</li>
+</ul>
+</li>
+<li>on_broadcasted：向节点发送通知，广播已经发送给哪些节点了。<h3 id="接收"><a href="#接收" class="headerlink" title="接收"></a>接收</h3>外部交易一般通过<code>GenericProtoOut::Notification</code>接收。</li>
+<li>on_transactions:<ul>
+<li>如果交易还没有加入到交易池，那么调用transaction_pool.import<ul>
+<li>BasicPool::submit_one：提交到交易池</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="执行交易"><a href="#执行交易" class="headerlink" title="执行交易"></a>执行交易</h2><h3 id="打包区块"><a href="#打包区块" class="headerlink" title="打包区块"></a>打包区块</h3><p>例如共识算法使用babe，会<code>start_slot_worker</code>，在<code>on_slot</code>中调用<code>proposer.propose</code>。</p>
+<ul>
+<li>propose<ul>
+<li>propose_with:<ul>
+<li>client.new_block_at<ul>
+<li>sc_block_builder::BlockBuilder::new<ul>
+<li>api.initialize_block_with_context：Executive::initialize_block，统计weight，调用各个Module的on_initialize（包括自定义）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>create_inherents：创建inherent</li>
+<li>block_builder.push(inherent)：打包inherent交易</li>
+<li>sc_block_builder::BlockBuilder::push(&amp;mut block_builder, pending_tx_data)：打包pending并且ready的交易，如果发现无效，从交易池移除。<ul>
+<li>apply_extrinsic_with_context：Executinve:apply_extrinsic<ul>
+<li>apply_extrinsic_with_len<ul>
+<li>apply</li>
+</ul>
+</li>
 <li>unchecked_extrinsic.check</li>
 <li>checkedExtrinsic.apply：执行验证过的交易<ul>
 <li>pre_dispatch：再次validate</li>
@@ -319,9 +371,40 @@
 </li>
 </ul>
 </li>
+<li>如果成功，extrinsics.push(xt)，打包进区块，并且TransactionOutcome::Commit，否则Rollback。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="导入区块"><a href="#导入区块" class="headerlink" title="导入区块"></a>导入区块</h3><p>import_queue：封装在共识中，当共识完成后，会通过import_block/import_queue来执行区块。</p>
+<ul>
+<li>execute_block：执行区块<ul>
+<li>initialize_block：初始化块</li>
+<li>initial_checks：初始化块的检查</li>
+<li>execute_extrinsics_with_book_keeping：执行块<ul>
+<li>apply_extrinsic_no_note<ul>
+<li>apply_extrinsic_with_len：执行交易<ul>
+<li>apply</li>
+</ul>
+</li>
+<li>unchecked_extrinsic.check</li>
+<li>checkedExtrinsic.apply<ul>
+<li>pre_dispatch</li>
+<li>dispatch</li>
+<li>post_dispatch</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>on_finalize</li>
 </ul>
 </li>
 <li>final_checks：最终检查，检查交易摘要，状态根</li>
+</ul>
+</li>
 </ul>
 
     </div>
@@ -436,7 +519,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93"><span class="nav-number">1.</span> <span class="nav-text">交易</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#extrinsic"><span class="nav-number">1.1.</span> <span class="nav-text">extrinsic</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#inherents"><span class="nav-number">1.2.</span> <span class="nav-text">inherents</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E5%86%8CInherentDataProvider"><span class="nav-number">1.2.1.</span> <span class="nav-text">注册InherentDataProvider</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ProvideInherent%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.2.</span> <span class="nav-text">ProvideInherent实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D%E4%BA%A4%E6%98%93"><span class="nav-number">1.3.</span> <span class="nav-text">签名交易</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%85%B7%E7%AD%BE%E5%90%8D%E4%BA%A4%E6%98%93"><span class="nav-number">1.4.</span> <span class="nav-text">不具签名交易</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Signed-Extension"><span class="nav-number">1.5.</span> <span class="nav-text">Signed Extension</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%B1%A0"><span class="nav-number">2.</span> <span class="nav-text">交易池</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%9D%83%E9%87%8D"><span class="nav-number">3.</span> <span class="nav-text">交易权重</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0"><span class="nav-number">3.1.</span> <span class="nav-text">影响因素</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">交易执行流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#rpc%E8%B0%83%E7%94%A8"><span class="nav-number">4.1.</span> <span class="nav-text">rpc调用</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93"><span class="nav-number">1.</span> <span class="nav-text">交易</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#extrinsic"><span class="nav-number">1.1.</span> <span class="nav-text">extrinsic</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#inherents"><span class="nav-number">1.2.</span> <span class="nav-text">inherents</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E5%86%8CInherentDataProvider"><span class="nav-number">1.2.1.</span> <span class="nav-text">注册InherentDataProvider</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ProvideInherent%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.2.</span> <span class="nav-text">ProvideInherent实现</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D%E4%BA%A4%E6%98%93"><span class="nav-number">1.3.</span> <span class="nav-text">签名交易</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%85%B7%E7%AD%BE%E5%90%8D%E4%BA%A4%E6%98%93"><span class="nav-number">1.4.</span> <span class="nav-text">不具签名交易</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Signed-Extension"><span class="nav-number">1.5.</span> <span class="nav-text">Signed Extension</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%B1%A0"><span class="nav-number">2.</span> <span class="nav-text">交易池</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%9D%83%E9%87%8D"><span class="nav-number">3.</span> <span class="nav-text">交易权重</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BD%B1%E5%93%8D%E5%9B%A0%E7%B4%A0"><span class="nav-number">3.1.</span> <span class="nav-text">影响因素</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">交易执行流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#rpc%E8%B0%83%E7%94%A8"><span class="nav-number">4.1.</span> <span class="nav-text">rpc调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81"><span class="nav-number">4.2.</span> <span class="nav-text">验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%90%E4%BA%A4%E5%88%B0%E4%BA%A4%E6%98%93%E6%B1%A0"><span class="nav-number">4.3.</span> <span class="nav-text">提交到交易池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E8%BD%AC%E5%8F%91"><span class="nav-number">4.4.</span> <span class="nav-text">交易转发</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E9%80%81"><span class="nav-number">4.4.1.</span> <span class="nav-text">发送</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A5%E6%94%B6"><span class="nav-number">4.4.2.</span> <span class="nav-text">接收</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E4%BA%A4%E6%98%93"><span class="nav-number">4.5.</span> <span class="nav-text">执行交易</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%93%E5%8C%85%E5%8C%BA%E5%9D%97"><span class="nav-number">4.5.1.</span> <span class="nav-text">打包区块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%BC%E5%85%A5%E5%8C%BA%E5%9D%97"><span class="nav-number">4.5.2.</span> <span class="nav-text">导入区块</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -452,14 +535,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-count">39</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-count">21</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
