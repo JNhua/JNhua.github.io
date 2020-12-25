@@ -4097,4 +4097,305 @@ public String call() throws Exception &#123;
         <category>平行链</category>
       </categories>
   </entry>
+  <entry>
+    <title>MPT</title>
+    <url>/blog/51be0f38.html</url>
+    <content><![CDATA[<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Merkle Patricia Tree（又称为 Merkle Patricia Trie）是一种经过改良的、融合了 Merkle tree 和前缀树两种树结构优点的数据结构，是以太坊中用来组织管理账户数据、生成交易集合哈希的重要数据结构。<br><a id="more"></a><br>MPT 树有以下几个作用：</p>
+<ul>
+<li>存储任意长度的 key-value 键值对数据，符合以太坊的 state 模型；</li>
+<li>提供了一种快速计算所维护数据集哈希标识的机制；</li>
+<li>提供了快速状态回滚的机制；</li>
+<li>提供了一种称为默克尔证明的证明方法，进行轻节点的扩展，实现简单支付验证；</li>
+</ul>
+<p>由于 MPT 结合了 Radix trie 和 Merkle 两种树结构的特点与优势 ，因此在介绍 MPT 之前，我们首先简要地介绍下这两种树结构的特点。</p>
+<h1 id="Radix-trie"><a href="#Radix-trie" class="headerlink" title="Radix trie"></a>Radix trie</h1><p>Trie 树，又称前缀树或字典树，是一种有序树，用于保存关联数组。其中的键通常是字符串。与二叉查找树不同，键不是直接保存在节点中，而是由节点在树中的位置决定 。一个节点的所有子孙都有相同的前缀，也就是这个节点对应的字符串，而根节点对应空字符串。<br>一般情况下，不是所有的节点都有对应的值，只有叶子节点和部分内部节点所对应的键才有相关的值。实际上 trie 每个节点是一个确定长度的数组，数组中每个元素的值是一个指向子节点的指针，最后有个标志域，标识这个位置为止是否是一个完整的字符串。<br>常见的用来存英文单词的 trie 每个节点是一个长度为 27 的指针数组，index0-25 代表 a-z 字符，26 为标志域。如图：<br><img src="en-resource://database/3157:1" alt="07a263568193a61ed457ea441a69513f.jpeg"></p>
+<h2 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h2><p>相比于哈希表，使用前缀树来进行查询拥有共同前缀 key 的数据时十分高效，例如在字典中查找前缀为 pre 的单词，对于哈希表来说，需要遍历整个表，时间效率为 O(n)，然而对于前缀树来说，只需要在树中找到前缀为 pre 的节点，且遍历以这个节点为根节点的子树即可。<br>但是对于最差的情况（前缀为空串)，时间效率为 O(n), 仍然需要遍历整棵树，此时效率与哈希表相同。<br>相比于哈希表，在前缀树不会存在哈希冲突的问题。<br>更新数据非常容易，只需访问局部分支。</p>
+<h2 id="劣势"><a href="#劣势" class="headerlink" title="劣势"></a>劣势</h2><p>直接查找效率低下。前缀树的查找效率是 O(m)，m 为所查找节点的 key 长度，而哈希表的查找效率为 O(1)。且一次查找会有 m 次 IO 开销，相比于直接查找，无论是速率、还是对磁盘的压力都比较大。可能会造成空间浪费 当存在一个节点，其 key 值内容很长（如一串很长的字符串），当树中没有与他相同前缀的分支时，为了存储该节点，需要创建许多非叶子节点来构建根节点到该节点间的路径，造成了存储空间的浪费。</p>
+<h1 id="Patricia-trie"><a href="#Patricia-trie" class="headerlink" title="Patricia trie"></a>Patricia trie</h1><p>他是一种更节省空间的 Trie。对于基数树的每个节点，如果该节点是唯一的儿子的话，就和父节点合并。<br><img src="en-resource://database/3158:1" alt="932c5c442939901fa4259789029eb190.jpeg"><br>Patricia tree适合键值分布比较稀疏的数据，压缩效果比较明显。在以太坊中，为防止碰撞，使用了160bit长的账户，非常稀疏，因此适合使用Patricia tree数据结构。</p>
+<h1 id="Merkle-tree"><a href="#Merkle-tree" class="headerlink" title="Merkle tree"></a>Merkle tree</h1><p>Merkle 树是由计算机科学家 Ralph Merkle 在很多年前提出的，并以他本人的名字来命名, 由于在 Bitcoin 网络中用到了这种数据结构来进行数据正确性的验证，在这里简要地介绍一下 merkle 树的特点及原理。<br>在 Bitcoin 网络中，merkle 树被用来归纳一个区块中的所有交易，同时生成整个交易集合的数字指纹。此外，由于 merkle 树的存在，使得在 Bitcoin 这种公链的场景下，扩展一种 “轻节点” 实现简单支付验证变成可能。</p>
+<h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><ul>
+<li>Merkle tree 是一种树，大多数是二叉树，也可以多叉树，无论是几叉树，它都具有树结构的所有特点；</li>
+<li>Merkle tree 叶子节点的 value 是数据项的内容，或者是数据项的哈希值；</li>
+<li>非叶子节点的 value 根据其孩子节点的信息，然后按照 Hash 算法计算而得出的；</li>
+</ul>
+<p><img src="en-resource://database/3159:1" alt="8804db71163a98e46d2966e998a5a868.jpeg"></p>
+<p>将相邻两个节点的哈希值合并成一个字符串，然后计算这个字符串的哈希，得到的就是这两个节点的父节点的哈希值。<br>如果该层的树节点个数是单数，那么对于最后剩下的树节点，这种情况就直接对它进行哈希运算，其父节点的哈希就是其哈希值的哈希值（对于单数个叶子节点，有着不同的处理方法，也可以采用复制最后一个叶子节点凑齐偶数个叶子节点的方式）。循环重复上述计算过程，最后计算得到最后一个节点的哈希值，将该节点的哈希值作为整棵树的哈希。<br>若两棵树的根哈希一致，则这两棵树的结构、节点的内容必然相同。</p>
+<h2 id="优势-1"><a href="#优势-1" class="headerlink" title="优势"></a>优势</h2><ul>
+<li>快速重哈希<br>Merkle tree 的特点之一就是当树节点内容发生变化时，能够在前一次哈希计算的基础上，仅仅将被修改的树节点进行哈希重计算，便能得到一个新的根哈希用来代表整棵树的状态。</li>
+<li>轻节点扩展<br>采用 Merkle tree，可以在公链环境下扩展一种 “轻节点”。轻节点的特点是对于每个区块，仅仅需要存储约 80 个字节大小的区块头数据，而不存储交易列表，回执列表等数据。然而通过轻节点，可以实现在非信任的公链环境中验证某一笔交易是否被收录在区块链账本的功能。这使得像比特币，以太坊这样的区块链能够运行在个人 PC，智能手机等拥有小存储容量的终端上。<br>对于轻节点来说，验证一条交易只需要验证包含该交易的路径即可，并不需要把所有交易的 Hash 全部重新算一遍。<br><img src="en-resource://database/3160:1" alt="1acfb4f6da08977b33ee75e349f83d88.jpeg"><h2 id="劣势-1"><a href="#劣势-1" class="headerlink" title="劣势"></a>劣势</h2>存储空间开销大<h1 id="MPT"><a href="#MPT" class="headerlink" title="MPT"></a>MPT</h1><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2>在深入 MPT 数据结构之前，我们先了解一下如下概念：</li>
+<li>世界状态：在以太坊中，所有账户（包括合约账户、普通账户）的状态数据统称为世界状态；</li>
+<li>轻节点：指只存储区块头数据的区块链节点；</li>
+<li>区块链分叉：指向同一个父块的 2 个区块被同时生成的情况，某些部分的矿工看到其中一个区块，其他的矿工则看到另外一个区块。这导致 2 种区块链同时增长；</li>
+<li>区块头：指以太坊区块结构体的一部分，用于存储该区块的头部信息，如父区块哈希、世界状态哈希、交易回执集合哈希等。区块头仅存储一些 “固定” 长度的哈希字段；<h2 id="MPT-树中的节点"><a href="#MPT-树中的节点" class="headerlink" title="MPT 树中的节点"></a>MPT 树中的节点</h2></li>
+<li>空节点 (NULL) - represented as the empty string<br>简单的表示空，在代码中是一个空串。</li>
+<li>叶子节点 (leaf) - a 2-item node [encodedPath, value]<br>表示为 [key,value] 的一个键值对，其中 key 是 key 的一种特殊十六进制编码 (MP 编码)， value 是 value 的 RLP 编码。</li>
+<li>分支节点 (branch) - a 17-item node [v0 … v15, vt]<br>因为 MPT 树中的 key 被编码成一种特殊的 16 进制的表示，再加上最后的 value，所以分支节点是一个 长度为 17 的 list，前 16 个元素对应着 key 中的 16 个可能的十六进制字符，如果有一个 [key,value] 对在这个分支节点终止，最后一个元素代表一个值，即分支节点既可以搜索路径的终止也可以是路径的中间节点。</li>
+<li>扩展节点 (extension) - a 2-item node [encodedPath, key]也是 [key，value] 的一个键值对 ，但是这里的 value 是其他节点的 hash 值 ，这个 hash 可以被用来查询数据库中的节点。也就是说通过 hash 链接到其他节点。<br>因此，有两种 [key,value] 节点(叶节点和扩展节点)<h2 id="以太坊中对-Key-的编码"><a href="#以太坊中对-Key-的编码" class="headerlink" title="以太坊中对 Key 的编码"></a>以太坊中对 Key 的编码</h2>在以太坊中，MPT 树的 key 值共有三种不同的编码方式，以满足不同场景的不同需求。<br>三种编码方式分别为：<br>1.Raw 编码（原生的字符）；<br>2.Hex 编码（扩展的 16 进制编码）；<br>3.Hex-Prefix 编码（16 进制前缀编码）；<h3 id="Raw-编码"><a href="#Raw-编码" class="headerlink" title="Raw 编码"></a>Raw 编码</h3>Raw 编码就是原生的 key 值，不做任何改变。这种编码方式的 key，是 MPT 对外提供接口的默认编码方式。<br>例如一条 key 为 “cat”，value 为“dog” 的数据项，其 key 的 Raw 编码就是[‘c’, ‘a’, ‘t’]，换成 ASCII 表示方式就是[63, 61, 74]（Hex）<h3 id="Hex-编码"><a href="#Hex-编码" class="headerlink" title="Hex 编码"></a>Hex 编码</h3>Hex 编码就是把一个 8 位的字节数据用两个十六进制数展示出来，编码时，将 8 位二进制码重新分组成两个 4 位的字节，其中一个字节的低 4 位是原字节的高四位，另一个字节的低 4 位是原数据的低 4 位，高 4 位都补 0，然后输出这两个字节对应十六进制数字作为编码。Hex 编码后的长度是源数据的 2 倍。<br>例如：<br>ASCII 码：A (65) 二进制码：0100_0001 重新分组：0000_0100 0000_0001 十六进制： 4 1 Hex 编码：41<br>若该 Key 对应的节点存储的是真实的数据项内容（即该节点是叶子节点），则在末位添加一个 ASCII 值为 16 的字符作为 terminator；<br>若该 key 对应的节点存储的是另外一个节点的哈希索引（即该节点是扩展节点），则不加任何字符；<br>[‘c’,’a’,’t’] -&gt; [6,3,6,1,7,4,16]<h2 id="HP-编码"><a href="#HP-编码" class="headerlink" title="HP 编码"></a>HP 编码</h2>目的：</li>
+<li>区分 leaf 和 extension</li>
+<li>把奇数路径变成偶数路径</li>
+</ul>
+<p>步骤：</p>
+<ul>
+<li>如果有 terminator（16）那么就去掉 terminator。根据表格给 key 加上 prefix</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>node type</th>
+<th>path length</th>
+<th>prefix</th>
+<th>hexchar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>extension</td>
+<td>even</td>
+<td>0000</td>
+<td>0x0</td>
+</tr>
+<tr>
+<td>extension</td>
+<td>odd</td>
+<td>0001</td>
+<td>0x1</td>
+</tr>
+<tr>
+<td>leaf</td>
+<td>even</td>
+<td>0010</td>
+<td>0x2</td>
+</tr>
+<tr>
+<td>leaf</td>
+<td>odd</td>
+<td>0011</td>
+<td>0x3</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>如果 prefix 是 0x0 或者 0x2，加一个 padding nibble 0 在 prefix 后面，所以最终应该是 0x00 和 0x20。原因是为了保证 key（path）的长度为偶数。<br>例子： 末尾的字符 “16” 说明该节点为叶子结点，并且加上了 0x20<br>[ 0, f, 1, c, b, 8, 16] -&gt; ‘20 0f 1c b8’</p>
+<h2 id="编码转换关系"><a href="#编码转换关系" class="headerlink" title="编码转换关系"></a>编码转换关系</h2><p>以上三种编码方式的转换关系为：<br>Raw 编码：原生的 key 编码，是 MPT 对外提供接口中使用的编码方式，当数据项被插入到树中时，Raw 编码被转换成 Hex 编码；<br>Hex 编码：16 进制扩展编码，用于对内存中树节点 key 进行编码，当树节点被持久化到数据库时，Hex 编码被转换成 HP 编码；<br>HP 编码：16 进制前缀编码，用于对数据库中树节点 key 进行编码，当树节点被加载到内存时，HP 编码被转换成 Hex 编码；<img src="en-resource://database/3161:1" alt="232537cfac5103618cb9b0b45e9a47e2.jpeg"></p>
+<h2 id="MPT-的结构"><a href="#MPT-的结构" class="headerlink" title="MPT 的结构"></a>MPT 的结构</h2><p>MPT 树的特点如下:</p>
+<ul>
+<li>叶子节点和分支节点可以保存 value, 扩展节点保存 key；</li>
+<li>没有公共的 key 就成为 2 个叶子节点；key1=[1,2,3] key2=[2,2,3]</li>
+<li>有公共的 key 需要提取为一个扩展节点；key1=[1,2,3] key2=[1,3,3] =&gt; ex-node=[1], 下一级分支 node 的 key</li>
+<li>如果公共的 key 也是一个完整的 key，数据保存到下一级的分支节点中；key1=[1,2] key2=[1,2,3] =&gt; ex-node=[1,2], 下一级分支 node 的 key; 下一级分支 =[3], 上一级 key 对应的 value</li>
+</ul>
+<p>简单的结构如下图：<br><img src="en-resource://database/3162:1" alt="e2698781750973ae4a083f3dbe8bb517.jpeg"><br>我们将存入如下 state 数据:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>key</th>
+<th>values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a711355</td>
+<td>45.0 ETH</td>
+</tr>
+<tr>
+<td>a77d337</td>
+<td>1.00 WEI</td>
+</tr>
+<tr>
+<td>a7f9365</td>
+<td>1.1  ETH</td>
+</tr>
+<tr>
+<td>a77d397</td>
+<td>0.12 ETH</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>插入第一个<a711355, 45>，由于只有一个 key, 直接用 leaf node 既可表示<img src="en-resource://database/3163:1" alt="ed1f460bb6353d5817ce4cb24a6d5d3d.jpeg"><br>接着插入 a77d337, 由于和 a711355 共享前缀’a7’, 因而可以创建’a7’扩展节点。<img src="en-resource://database/3164:1" alt="b8117db4cafb85f52e840899ff22241e.jpeg"><br>接着插入 a7f9365, 也是共享’a7’, 只需新增一个 leaf node.<img src="en-resource://database/3165:1" alt="fb9cace75809b83abb90c79957a6d675.jpeg"><br>最后插入 a77d397, 这个 key 和 a77d337 共享’a7’+’d3’, 因而再需要创建一个’d3’扩展节点<img src="en-resource://database/3166:1" alt="4fcf5ab87c1b497a34f9e113a3da5be9.jpeg"><br>将叶子节点和最后的 short node 合并到一个节点了，事实上源码实现需要再深一层，最后一层的叶子节点只有数据<img src="en-resource://database/3167:1" alt="345a4e2896e9605aea982b206dcbd940.jpeg"><br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="comment">// nodeFlag contains caching-related metadata about a node.</span></span><br><span class="line"><span class="keyword">type</span> nodeFlag <span class="keyword">struct</span> &#123;</span><br><span class="line">    hash  hashNode <span class="comment">// cached hash of the node (may be nil)</span></span><br><span class="line">    gen   <span class="keyword">uint16</span>   <span class="comment">// cache generation counter</span></span><br><span class="line">    dirty <span class="keyword">bool</span>     <span class="comment">// whether the node has changes that must be written to the database</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>MPT 节点有个 flag 字，nodeFlag，记录了一些辅助数据：</a711355,></p>
+<ul>
+<li>节点哈希：若该字段不为空，则当需要进行哈希计算时，可以跳过计算过程而直接使用上次计算的结果（当节点变脏时，该字段被置空）；</li>
+<li>诞生标志：当该节点第一次被载入内存中（或被修改时），会被赋予一个计数值作为诞生标志，该标志会被作为节点驱除的依据，清除内存中 “太老” 的未被修改的节点，防止占用的内存空间过多；</li>
+<li>脏标志：当一个节点被修改时，该标志位被置为 1；</li>
+</ul>
+<p>flag.hash 会保存该节点采用 merkle tree 类似算法生成的 hash。同时会将 hash 和源数据以 <hash, node.rlp.rawdata> 方式保存在 leveldb 数据库中。这样后面通过 hash 就可以反推出节点数据。具体结构如下 (蓝色的 hash 部分就是 flag.hash 字段)<br><img src="en-resource://database/3168:1" alt="7d1caad737c77663a8ae43611eff29af.jpeg"></hash,></p>
+<h3 id="核心思想"><a href="#核心思想" class="headerlink" title="核心思想"></a>核心思想</h3><p>hash 可以还原出节点上的数据，这样只需要保存一个 root(hash)，即可还原出完整的树结构，同时还可以按需展开节点数据，比如如果需要访问 <a771355, 45> 这个数据，只需展开 h00, h10, h20, h30 这四个 hash 对应的节点。</a771355,></p>
+<h2 id="出块后的变化"><a href="#出块后的变化" class="headerlink" title="出块后的变化"></a>出块后的变化</h2><p>新发布一个区块的时候，某些账户的状态会发生变化，新区块中会为变化的账户重新建立分支，大部分不变的数据则指向历史区块中的分支，因此区块间会共享大部分不变的状态分支。如下图所示：<img src="en-resource://database/3236:1" alt="df12ba2a0c3a1aaebb7a24d02c730245.png"></p>
+<p>保留历史状态的好处：<br>未胜出的临时性分叉需要回滚才能继续出块，由于智能合约的执行不易反推执行，保留起始与结束的记录，回滚才比较方便。</p>
+<p>账户树中保存全部账户信息的原因：<br>查找某个账户更快速，如果区块内只保存区块内交易的相关账户信息，查询某个很久没有交易的账户就要花费很长时间，最坏的情况是如果转账给一个从未进行交易的账户，就必须追溯到创世区块，最后有可能发现区块内没有该账户的信息。</p>
+<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><p>以太坊中的状态树、交易树、收据树都采用MPT。只有状态树会共享分支。</p>
+<h2 id="交易树"><a href="#交易树" class="headerlink" title="交易树"></a>交易树</h2><p>NewBlock函数里包含交易树、收据树的创建以及叔父区块处理。<br>创建交易树的步骤：</p>
+<ul>
+<li>判断交易列表是否为空，如果为空，那么块头的根哈希就是空哈希值</li>
+<li>如果不为空，调用DeriveSha函数得到交易树的根哈希值</li>
+<li>然后创建区块的交易列表<h2 id="收据树"><a href="#收据树" class="headerlink" title="收据树"></a>收据树</h2>创建收据树的步骤：</li>
+<li>判断收据列表是否为空，如果为空，那么根哈希就是空哈希值</li>
+<li>如果不为空，调用DeriveSha函数得到收据树的根哈希值</li>
+<li>然后调用CreateBloom函数创建块头里的bloom filter<h2 id="叔父区块"><a href="#叔父区块" class="headerlink" title="叔父区块"></a>叔父区块</h2>处理叔父区块：</li>
+<li>判断叔父区块列表是否为空，如果为空，那么块头的叔父区块哈希值就是空的哈希值</li>
+<li>如果不为空，调用CalcUncleHash计算哈希值</li>
+<li>通过一个循环构建区块里的叔父数组</li>
+</ul>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://learnblockchain.cn/books/geth/part3/mpt.html">MPT</a></p>
+]]></content>
+      <categories>
+        <category>区块链</category>
+        <category>eth</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>hash</title>
+    <url>/blog/d1b862b8.html</url>
+    <content><![CDATA[<h1 id="hash"><a href="#hash" class="headerlink" title="hash"></a>hash</h1><p>以SHA256算法为例。<br><a id="more"></a><br>SHA256是SHA-2下细分出的一种算法。<br>SHA-2，名称来自于安全散列算法2（英语：Secure Hash Algorithm 2）的缩写，一种密码散列函数算法标准，由美国国家安全局研发，属于SHA算法之一，是SHA-1的后继者。<br>对于任意长度的消息，SHA256都会产生一个256bit长的哈希值，称作消息摘要。这个摘要相当于是个长度为32个字节的数组，通常用一个长度为64的十六进制字符串来表示。</p>
+<h2 id="信息预处理"><a href="#信息预处理" class="headerlink" title="信息预处理"></a>信息预处理</h2><h3 id="STEP1：附加填充比特"><a href="#STEP1：附加填充比特" class="headerlink" title="STEP1：附加填充比特"></a>STEP1：附加填充比特</h3><p>在报文末尾进行填充，使报文长度在对512取模以后的余数是448<br>填充是这样进行的：先补第一个比特为1，然后都补0，直到长度满足对512取模后余数是448。<br>需要注意的是，信息必须进行填充，也就是说，即使长度已经满足对512取模后余数是448，补位也必须要进行，这时要填充512个比特。<br>因此，填充是至少补一位，最多补512位。<br>例：以信息“abc”为例显示补位的过程。<br>a,b,c对应的ASCII码分别是97,98,99<br>于是原始信息的二进制编码为：01100001 01100010 01100011<br>补位第一步，首先补一个“1” ： 0110000101100010 01100011 1<br>补位第二步,补423个“0”：01100001 01100010 01100011 10000000 00000000 … 00000000</p>
+<blockquote>
+<p>为什么是448?<br>因为在第一步的预处理后，第二步会再附加上一个64bit的数据，用来表示原始报文的长度信息。而448+64=512，正好拼成了一个完整的结构。</p>
+</blockquote>
+<h3 id="STEP2：附加长度值"><a href="#STEP2：附加长度值" class="headerlink" title="STEP2：附加长度值"></a>STEP2：附加长度值</h3><p>附加长度值就是将原始数据（第一步填充前的消息）的长度信息补到已经进行了填充操作的消息后面。<br>SHA256用一个64位的数据来表示原始消息的长度。<br>因此，通过SHA256计算的消息长度必须要小于2^64，当然绝大多数情况这足够大了。<br>长度信息的编码方式为64-bit big-endian integer。<br>回到刚刚的例子，消息“abc”，3个字符，占用24个bit，末尾加上00000000 00000018。</p>
+<h2 id="逻辑运算"><a href="#逻辑运算" class="headerlink" title="逻辑运算"></a>逻辑运算</h2><p>逻辑位运算。<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2442" alt="4c945b7bf1b7ec1e62acbaa9112c32d3.png"></p>
+<h2 id="计算消息摘要"><a href="#计算消息摘要" class="headerlink" title="计算消息摘要"></a>计算消息摘要</h2><p>首先：将消息分解成512-bit大小的块(break message into 512-bit chunks)<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=6c08ee2b2b16c69cf6e75e98b61ea1df" alt="6c08ee2b2b16c69cf6e75e98b61ea1df.png"><br>假设消息M可以被分解为n个块，于是整个算法需要做的就是完成n次迭代，n次迭代的结果就是最终的哈希值，即256bit的数字摘要。<br>一个256-bit的摘要的初始值H0，经过第一个数据块进行运算，得到H1，即完成了第一次迭代。<br>H1经过第二个数据块得到H2，……，依次处理，最后得到Hn，Hn即为最终的256-bit消息摘要。<br>将每次迭代进行的映射用$ Map(H<em>{i-1}) = H</em>{i} $表示，于是迭代可以更形象的展示为：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=25ec4d1e8c4301a43e1960501075bb9b" alt="25ec4d1e8c4301a43e1960501075bb9b.png"></p>
+<blockquote>
+<p>8个哈希初值：这些初值是对自然数中前8个质数（2,3,5,7,11,13,17,19）的平方根的小数部分取前32bit而来。<br>64个常量：和8个哈希初值类似，这些常量是对自然数中前64个质数(2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97…)的立方根的小数部分取前32bit而来。</p>
+</blockquote>
+<p>图中256-bit的Hi被描述8个小块，这是因为SHA256算法中的最小运算单元称为“字”（Word），一个字是32位。<br>此外，第一次迭代中，映射的初值设置为前面介绍的8个哈希初值，如下图所示：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=1a0df915b0c4d9439a5265c0fd59d242" alt="1a0df915b0c4d9439a5265c0fd59d242.png"></p>
+<h3 id="迭代"><a href="#迭代" class="headerlink" title="迭代"></a>迭代</h3><h4 id="STEP1：构造64个字（word）"><a href="#STEP1：构造64个字（word）" class="headerlink" title="STEP1：构造64个字（word）"></a>STEP1：构造64个字（word）</h4><p>break chunk into sixteen 32-bit big-endian words w[0], …, w[15]<br>对于每一块，将块分解为16个32-bit的big-endian的字，记为w[0], …, w[15]<br>也就是说，前16个字直接由消息的第i个块分解得到<br>其余的字由如下迭代公式得到：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2450" alt="f2098805de36b73a980268f69a5a3462.png"></p>
+<h4 id="STEP2：进行64次循环"><a href="#STEP2：进行64次循环" class="headerlink" title="STEP2：进行64次循环"></a>STEP2：进行64次循环</h4><p>映射 $ Map(H<em>{i-1}) = H</em>{i} $ 包含了64次加密循环<br>即进行64次加密循环即可完成一次迭代<br>每次加密循环可以由下图描述：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=2b6b5ad6ec73e40907818601a7ee9a13" alt="2b6b5ad6ec73e40907818601a7ee9a13.png"><br>图中，ABCDEFGH这8个字（word）在按照一定的规则进行更新，其中<br>深蓝色方块是事先定义好的非线性逻辑函数，上文已经做过铺垫<br>红色田字方块代表 mod $ 2^{32} $ addition，即将两个数字加在一起，如果结果大于$ 2^{32}$ ，你必须除以 $ 2^{32} $并找到余数。<br>ABCDEFGH一开始的初始值分别为$ H<em>{i-1}(0),H</em>{i-1}(1),…,H<em>{i-1}(7) $<br>Kt是第t个密钥，对应我们上文提到的64个常量。<br>Wt是本区块产生第t个word。原消息被切成固定长度512-bit的区块，对每一个区块，产生64个word，通过重复运行循环n次对ABCDEFGH这八个字循环加密。<br>最后一次循环所产生的八个字合起来即是第i个块对应到的散列字符串$ H</em>{i} $</p>
+<h1 id="伪代码"><a href="#伪代码" class="headerlink" title="伪代码"></a>伪代码</h1><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">Note: All variables are unsigned 32 bits and wrap modulo 232 when calculating</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Initialize variables</span><br><span class="line">(first 32 bits of the fractional parts of the square roots of the first 8 primes 2..19):</span><br><span class="line">h0 := 0x6a09e667</span><br><span class="line">h1 := 0xbb67ae85</span><br><span class="line">h2 := 0x3c6ef372</span><br><span class="line">h3 := 0xa54ff53a</span><br><span class="line">h4 := 0x510e527f</span><br><span class="line">h5 := 0x9b05688c</span><br><span class="line">h6 := 0x1f83d9ab</span><br><span class="line">h7 := 0x5be0cd19</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Initialize table of round constants</span><br><span class="line">(first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311):</span><br><span class="line">k[0..63] :=</span><br><span class="line">   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,</span><br><span class="line">   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,</span><br><span class="line">   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,</span><br><span class="line">   0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,</span><br><span class="line">   0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,</span><br><span class="line">   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,</span><br><span class="line">   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,</span><br><span class="line">   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Pre-processing:</span><br><span class="line">append the bit <span class="string">&#x27;1&#x27;</span> to the message</span><br><span class="line">append k bits <span class="string">&#x27;0&#x27;</span>, <span class="built_in">where</span> k is the minimum number &gt;= 0 such that the resulting message</span><br><span class="line">    length (<span class="keyword">in</span> bits) is congruent to 448(mod 512)</span><br><span class="line">append length of message (before pre-processing), <span class="keyword">in</span> bits, as 64-bit big-endian <span class="built_in">integer</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Process the message <span class="keyword">in</span> successive 512-bit chunks:</span><br><span class="line"><span class="built_in">break</span> message into 512-bit chunks</span><br><span class="line"><span class="keyword">for</span> each chunk</span><br><span class="line">    <span class="built_in">break</span> chunk into sixteen 32-bit big-endian words w[0..15]</span><br><span class="line"></span><br><span class="line">    Extend the sixteen 32-bit words into sixty-four 32-bit words:</span><br><span class="line">    <span class="keyword">for</span> i from 16 to 63</span><br><span class="line">        s0 := (w[i-15] rightrotate 7) xor (w[i-15] rightrotate 18) xor(w[i-15] rightshift 3)</span><br><span class="line">        s1 := (w[i-2] rightrotate 17) xor (w[i-2] rightrotate 19) xor(w[i-2] rightshift 10)</span><br><span class="line">        w[i] := w[i-16] + s0 + w[i-7] + s1</span><br><span class="line"></span><br><span class="line">    Initialize <span class="built_in">hash</span> value <span class="keyword">for</span> this chunk:</span><br><span class="line">    a := h0</span><br><span class="line">    b := h1</span><br><span class="line">    c := h2</span><br><span class="line">    d := h3</span><br><span class="line">    e := h4</span><br><span class="line">    f := h5</span><br><span class="line">    g := h6</span><br><span class="line">    h := h7</span><br><span class="line"></span><br><span class="line">    Main loop:</span><br><span class="line">    <span class="keyword">for</span> i from 0 to 63</span><br><span class="line">        s0 := (a rightrotate 2) xor (a rightrotate 13) xor(a rightrotate 22)</span><br><span class="line">        maj := (a and b) xor (a and c) xor(b and c)</span><br><span class="line">        t2 := s0 + maj</span><br><span class="line">        s1 := (e rightrotate 6) xor (e rightrotate 11) xor(e rightrotate 25)</span><br><span class="line">        ch := (e and f) xor ((not e) and g)</span><br><span class="line">        t1 := h + s1 + ch + k[i] + w[i]</span><br><span class="line">        h := g</span><br><span class="line">        g := f</span><br><span class="line">        f := e</span><br><span class="line">        e := d + t1</span><br><span class="line">        d := c</span><br><span class="line">        c := b</span><br><span class="line">        b := a</span><br><span class="line">        a := t1 + t2</span><br><span class="line"></span><br><span class="line">    Add this chunk<span class="string">&#x27;s hash to result so far:</span></span><br><span class="line"><span class="string">    h0 := h0 + a</span></span><br><span class="line"><span class="string">    h1 := h1 + b</span></span><br><span class="line"><span class="string">    h2 := h2 + c</span></span><br><span class="line"><span class="string">    h3 := h3 + d</span></span><br><span class="line"><span class="string">    h4 := h4 + e</span></span><br><span class="line"><span class="string">    h5 := h5 + f</span></span><br><span class="line"><span class="string">    h6 := h6 + g</span></span><br><span class="line"><span class="string">    h7 := h7 + h</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Produce the final hash value (big-endian):</span></span><br><span class="line"><span class="string">digest = hash = h0 append h1 append h2 append h3 append h4 append h5 append h6 append h7</span></span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://blog.csdn.net/u011583927/article/details/80905740">SHA256算法原理详解</a></p>
+]]></content>
+      <categories>
+        <category>区块链</category>
+        <category>密码学</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>wallet</title>
+    <url>/blog/7c68921f.html</url>
+    <content><![CDATA[<p>钱包的定义：存储加密数字货币的软件程序；<br><a id="more"></a><br>关键：安全方便地生成、保存和备份/恢复密钥。</p>
+<h1 id="钱包发展历史"><a href="#钱包发展历史" class="headerlink" title="钱包发展历史"></a>钱包发展历史</h1><h2 id="非确定性（随机）钱包"><a href="#非确定性（随机）钱包" class="headerlink" title="非确定性（随机）钱包"></a>非确定性（随机）钱包</h2><ol>
+<li>钱包生成私钥，私钥之间没有任何关系，都是独立的；</li>
+<li>安全性，资产不放到一个篮子里；</li>
+<li>带来了麻烦，私钥都要保存、备份，导入导出也麻烦。</li>
+</ol>
+<h2 id="确定性（种子）钱包"><a href="#确定性（种子）钱包" class="headerlink" title="确定性（种子）钱包"></a>确定性（种子）钱包</h2><ol>
+<li>引入了种子的概念；</li>
+<li>解决了非确定钱包存储和备份的麻烦，一个种子搞定；</li>
+<li>一个种子能恢复所有的私钥。</li>
+</ol>
+<h2 id="分层确定性钱包（HD钱包）"><a href="#分层确定性钱包（HD钱包）" class="headerlink" title="分层确定性钱包（HD钱包）"></a>分层确定性钱包（HD钱包）</h2><ol>
+<li>HD钱包（BIP-32）的全文：hierarchical Deterministic ；</li>
+<li>私钥的衍生结构是树状结构，父密钥可以衍生一系列子密钥；子密钥又可以衍生孙密钥，无限衍生；</li>
+<li>引入了助记词概念（BIP-39），只要记住助记词就行了。</li>
+</ol>
+<h3 id="生成助记词"><a href="#生成助记词" class="headerlink" title="生成助记词"></a>生成助记词</h3><p>使用BIP-39中定义的标准化过程，钱包自动生成助记词。钱包从一个熵源开始，添加一个校验和，然后将熵映射到一个单词列表:</p>
+<ol>
+<li>创建128到256位的随机序列（熵）。</li>
+<li>通过获取SHA256哈希的第一（熵长度/ 32）位来创建随机序列的校验和。</li>
+<li>将校验和添加到随机序列的末尾。</li>
+<li>将序列分成11位的部分。</li>
+<li>将每个11位值映射到来自2048个单词的预定义字典中的单词。</li>
+<li>助记词是单词序列。</li>
+</ol>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:center">熵（bits）</th>
+<th style="text-align:center">Checksum（bits）</th>
+<th style="text-align:center">熵+Checksum（bits）</th>
+<th style="text-align:center">助记词长度（words）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">128</td>
+<td style="text-align:center">4</td>
+<td style="text-align:center">132</td>
+<td style="text-align:center">12</td>
+</tr>
+<tr>
+<td style="text-align:center">160</td>
+<td style="text-align:center">5</td>
+<td style="text-align:center">165</td>
+<td style="text-align:center">15</td>
+</tr>
+<tr>
+<td style="text-align:center">192</td>
+<td style="text-align:center">6</td>
+<td style="text-align:center">198</td>
+<td style="text-align:center">18</td>
+</tr>
+<tr>
+<td style="text-align:center">224</td>
+<td style="text-align:center">7</td>
+<td style="text-align:center">231</td>
+<td style="text-align:center">21</td>
+</tr>
+<tr>
+<td style="text-align:center">256</td>
+<td style="text-align:center">8</td>
+<td style="text-align:center">264</td>
+<td style="text-align:center">24</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h1 id="备份方式"><a href="#备份方式" class="headerlink" title="备份方式"></a>备份方式</h1><p>除了私钥和之前提到的助记词方式，还有<a href="/blog/2475f3a5.html" title="keystore">keystore</a>文件的方式。</p>
+<h1 id="Refer"><a href="#Refer" class="headerlink" title="Refer"></a>Refer</h1><p><a href="https://www.jianshu.com/p/9c5af78453f4">《精通以太坊》-钱包</a></p>
+]]></content>
+      <categories>
+        <category>区块链</category>
+        <category>eth</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>账户模型</title>
+    <url>/blog/1d646e11.html</url>
+    <content><![CDATA[<h1 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h1><ol>
+<li>节省大量空间<a id="more"></a></li>
+<li>可替代性更高</li>
+<li>实现简单</li>
+<li>轻客户端</li>
+</ol>
+<h1 id="账户基本概念"><a href="#账户基本概念" class="headerlink" title="账户基本概念"></a>账户基本概念</h1><h2 id="外部账户"><a href="#外部账户" class="headerlink" title="外部账户"></a>外部账户</h2><p>EOAs-外部账户(external owned accouts)是由人们通过私钥创建的账户。 是真实世界的金融账户的映射，拥有该账户私钥的任何人都可以控制该账户。 如同银行卡，到ATM机取款时只需要密码输入正确即可交易。 这也是人类与以太坊账本沟通的唯一媒介，因为以太坊中的交易需要签名， 而只能使用拥有私有外部账户签名。<br>外部账户特点总结：</p>
+<ul>
+<li>拥有以太余额。</li>
+<li>能发送交易，包括转账和执行合约代码。</li>
+<li>被私钥控制。</li>
+<li>没有相关的可执行代码。</li>
+</ul>
+<h2 id="合约账户"><a href="#合约账户" class="headerlink" title="合约账户"></a>合约账户</h2><p>含有合约代码的账户。被外部账户或者合约创建，合约在创建时被自动分配到一个账户地址，用于存储合约代码以及合约部署或执行过程中产生的存储数据。 合约账户地址是通过SHA3哈希算法产生，而非私钥。因无私钥，因此无人可以拿合约账户当做外部账户使用。只能通过外部账户来驱动合约执行合约代码。<br>合约账户特点总结：</p>
+<ul>
+<li>拥有以太余额。</li>
+<li>有相关的可执行代码（合约代码）。</li>
+<li>合约代码能够被交易或者其他合约消息调用。</li>
+<li>合约代码被执行时可再调用其他合约代码。</li>
+<li>合约代码被执行时可执行复杂运算，可永久地改变合约内部的数据存储。</li>
+</ul>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">type</span> Account <span class="keyword">struct</span> &#123;</span><br><span class="line">    Nonce    <span class="keyword">uint64</span></span><br><span class="line">    Balance  *big.Int</span><br><span class="line">    Root     common.Hash</span><br><span class="line">    CodeHash []<span class="keyword">byte</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>外部账户的 Root/StateRootHash/StorageRootHash 和 CodeHash 是一个空默认值。</p>
+<h1 id="存储"><a href="#存储" class="headerlink" title="存储"></a>存储</h1><p>MPT存储所有账户状态。</p>
+<h2 id="账户状态值存储"><a href="#账户状态值存储" class="headerlink" title="账户状态值存储"></a>账户状态值存储</h2><p>账户状态数据经过RLP（Recursive Length Prefix）序列化后存储，RLP序列化方式相比protobuf较为简单，只支持字符嵌套数组（nested array of bytes），实现起来比较容易。</p>
+<h2 id="RLP编码"><a href="#RLP编码" class="headerlink" title="RLP编码"></a>RLP编码</h2><h3 id="RLP编码定义"><a href="#RLP编码定义" class="headerlink" title="RLP编码定义"></a>RLP编码定义</h3><p>RLP编码只处理两类数据：一类是字符串（字节数组），一类是列表。</p>
+<ul>
+<li>字符串，指的是一串二进制数据，</li>
+<li>列表，是一个嵌套递归的结构，里面可以包含字符串和列表，例如[“cat”,[“puppy”,”cow”],”horse”,[[]],”pig”,[“”],”sheep”]就是一个复杂的列表。</li>
+</ul>
+<p>其他类型的数据需要转成以上的两类，转换的规则不是RLP编码定义的，可以根据自己的规则转换。例如struct可以转成列表，int可以转成二进制（属于字符串一类），以太坊中整数都以大端形式存储。<br>RLP编码方式的特点：</p>
+<ul>
+<li>递归，被编码的数据是递归的结构，编码算法也是递归进行处理的；</li>
+<li>长度前缀，也就是RLP编码都带有一个前缀，这个前缀是跟被编码数据的长度相关的，从下面的编码规则中可以看出这一点。</li>
+</ul>
+<h3 id="编码规则"><a href="#编码规则" class="headerlink" title="编码规则"></a>编码规则</h3><p>规则一：对于单个字节，如果它的值范围是[0x00, 0x7f]，它的RLP编码就是它本身。这里面需要注意的是0x7f这个边界，因为ASCII编码最大值就是0x7f，也就是说在0x7f以内完全当做ASCII编码使用。<br>规则二：如果一个字符串的长度是0-55字节，它的RLP编码包含一个单字节的前缀，后面跟着字符串本身，这个前缀的值是0x80加上字符串的长度。由于被编码的字符串最大长度是55=0x37,因此单字节前缀的最大值是0x80+0x37=0xb7，即编码的第一个字节的取值范围是[0x80, 0xb7]。<br>规则三：如果字符串的长度大于55个字节，它的RLP编码包含一个单字节的前缀，后面跟着字符串的长度，后面再跟着字符串本身。这个前缀的值是0xb7加上字符串长度的二进制形式的字节长度，说的有点绕，举个例子就明白了，例如一个字符串的长度是1024，它的二进制形式是10000000000，这个二进制形式的长度是2个字节，所以前缀应该是0xb7+2=0xb9，字符串长度1024=0x400，因此整个RLP编码应该是\xb9\x04\x00再跟上字符串本身。编码的第一个字节即前缀的取值范围是[0xb8, 0xbf]，因为字符串长度二进制形式最少是1个字节，因此最小值是0xb7+1=0xb8，字符串长度二进制最大是8个字节，因此最大值是0xb7+8=0xbf。<br>规则四：如果一个列表的总长度（列表的总长度指的是它包含的项的数量加它包含的各项的长度之和）是0-55字节，它的RLP编码包含一个单字节的前缀，后面跟着列表中各元素项的RLP编码，这个前缀的值是0xc0加上列表的总长度。编码的第一个字节的取值范围是[0xc0, 0xf7]。<br>规则五：如果一个列表的总长度大于55字节，它的RLP编码包含一个单字节的前缀，后面跟着列表的长度，后面再跟着列表中各元素项的RLP编码，这个前缀的值是0xf7加上列表总长度的二进制形式的字节长度。编码的第一个字节的取值范围是[0xf8, 0xff]。</p>
+<p>例子分析：<br>15(‘\x0f’) = 0x0f （规则一）<br>空字符串 “” = 0x80 （规则二）<br>字符串 “dog” = [0x83, ‘d’, ‘o’, ‘g’ ] （规则二）<br>1024(‘\x04\00’) = [0x82, 0x04, 0x00] （规则二）<br>字符串 “Lorem ipsum dolor sit amet, consectetur adipisicing elit” = [0xb8, 0x38, ‘L’, ‘o’, ‘r’, ‘e’, ‘m’, ‘ ‘, … , ‘e’, ‘l’, ‘i’, ‘t’]（规则三）<br>空列表 [] = [0xc0] （规则四）<br>列表 [“cat”,”dog”] = [0xc8, 0x83, ‘c’, ‘a’, ‘t’, 0x83, ‘d’, ‘o’, ‘g’ ] （规则四）</p>
+<h3 id="设计思想"><a href="#设计思想" class="headerlink" title="设计思想"></a>设计思想</h3><p>RLP的设计思想，就是通过首字节快速判断一串编码的类型，充分利用了一个字节的存储空间，将0x7f以后的值赋予了新的含义，以往我们见到的编码方式主要是对指定长度字节进行编码，比如Unicode等，在处理这些编码时一般按照指定长度进行拆分解码，最大的弊端是传统编码无法表现一个结构，就是本文说的列表，RLP最大的优点是在充分利用字节的情况下，同时支持列表结构，也就是说可以很轻易的利用RLP存储一个树状结构。<br>  程序处理RLP编码时也非常容易，根据首字节就可以判断出这段编码的类型，同时调用不同的方法进行解码，如果您熟悉jason这种结构，会发现RLP很类似，支持嵌套的结构，通过递归调用可以将整个RLP快速还原成一颗树，或者转译成一个jason结构，便于其他程序使用。<br>  RLP使用首字节存储长度的位数，再用后续的字节表明整体字符串的长度，根据规则二计算，RLP可以支持的单个最大字符串长度为2的64次方，这无疑是个天文数字，再加上嵌套规则，所以理论上RLP可以编码任何数据。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://learnblockchain.cn/books/geth">以太坊技术与实现</a></p>
+]]></content>
+      <categories>
+        <category>区块链</category>
+        <category>eth</category>
+      </categories>
+  </entry>
 </search>
