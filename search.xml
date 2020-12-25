@@ -1133,14 +1133,13 @@
 <li>sc_block_builder::BlockBuilder::push(&amp;mut block_builder, pending_tx_data)：打包pending并且ready的交易，如果发现无效，从交易池移除。<ul>
 <li>apply_extrinsic_with_context：Executinve:apply_extrinsic<ul>
 <li>apply_extrinsic_with_len<ul>
-<li>apply</li>
-</ul>
-</li>
 <li>unchecked_extrinsic.check</li>
 <li>checkedExtrinsic.apply：执行验证过的交易<ul>
 <li>pre_dispatch：再次validate</li>
-<li>dispatch：执行Call</li>
+<li>dispatch：执行Call =&gt; Runtime中decl_module!的Call</li>
 <li>post_dispatch：调整weight，payment</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1319,7 +1318,7 @@
 <p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201124161206.png" alt="call"></p>
 <p>在<code>ExecutionContext::call</code>中，首先判断了调用深度，接着调用<code>collect_rent</code>收取存储空间的租用费用。代码在 <code>contracts/src/rent.rs</code>。该函数涉及费用计算，因此在<strong>合约收费</strong>中介绍。</p>
 <p>如果<code>value</code>不为0的话，会调用<code>transfer</code>将<code>value</code>传给<code>dest</code>账户（不一定是合约账户 ）。</p>
-<p>然后根据<code>code_hash</code>执行合约。<code>nested.loader.load_main(&amp;contract.code_hash)</code>会得到包含合约的调用接口<code>call</code>的<code>executable</code>：<code>load_main</code>调用了<code>load_code</code>，它会比较 schedule 的版本，之前在 <code>put_code</code>的最后是写入了两个存储，一个是原始代码，一个是原始代码预处理后的 <code>prefab_module</code>。如果当前版本大于已经预处理好的版本， 那么需要重新预处理，否则直接返回已经存储的 <code>prefab_module</code>。<code>load_init</code> 最终返回 <code>WasmExecutable</code> 结构体。 </p>
+<p>然后根据<code>code_hash</code>执行合约。<code>nested.loader.load_main(&amp;contract.code_hash)</code>会得到包含合约的调用接口<code>call</code>的<code>executable</code>：<code>load_main</code>调用了<code>load_code</code>，它会比较 schedule 的版本，之前在 <code>put_code</code>的最后是写入了两个存储，一个是原始代码，一个是原始代码预处理后的 <code>prefab_module</code>。如果当前版本大于已经预处理好的版本， 那么需要<code>prepare::prepare_contract</code>重新预处理，否则直接返回已经存储的 <code>prefab_module</code>。<code>load_main</code> 最终返回 <code>WasmExecutable</code> 结构体（包含entrypoint和prefab_module）。 </p>
 <p>然后与合约部署时一样，将返回的 <code>executable</code>放到 <code>WasmVm</code> 执行 <code>execute</code>。通过<code>call</code>(合约暴露的接口)执行合约代码内的相应函数。</p>
 <p>根据执行的结果，调用<code>commit_transaction()</code> 或者 <code>rollback_transaction()</code>。注意，如果是gas耗尽导致的<code>Revert</code>，只会回滚当前合约的状态，而更高层次的合约状态无法回滚。</p>
 <p>最后就是返回剩余手续费。</p>
@@ -3981,6 +3980,121 @@ public String call() throws Exception &#123;
       <categories>
         <category>Java</category>
         <category>并发</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>平行链系统架构</title>
+    <url>/blog/8e017055.html</url>
+    <content><![CDATA[<p>这篇文章基于Polkadot的6be14014提交（2020/12），目的是介绍Polkadot在平行链角度上的系统架构。<br><a id="more"></a></p>
+<h1 id="角色"><a href="#角色" class="headerlink" title="角色"></a>角色</h1><p><img src="https://wiki.polkadot.network/docs/assets/network/one_parachain.png" alt="架构图"></p>
+<h2 id="链"><a href="#链" class="headerlink" title="链"></a>链</h2><ul>
+<li>Relay chain：中继链，负责平台安全性。</li>
+<li>Parachain：平行链，拥有自己独立的状态与业务逻辑，共享中继链提供的安全性。<h2 id="节点"><a href="#节点" class="headerlink" title="节点"></a>节点</h2></li>
+<li>validator：验证人，负责中继链的出块，同时验证来自收集者的证明，与其他验证人进行共识投票。中继链全节点，需要抵押DOT。</li>
+<li>collator：收集者，为验证人收集平行链的交易和状态转移证明（collation）。平行链全节点，同时内嵌中继链全节点服务，不一定需要抵押DOT，可以由平行链自行激励。注意，平行线程的 collator 需要持有DOT，以便参与出块资格的拍卖。</li>
+<li>fishermen：渔民，监控验证人和收集者，检查无效的候选收据。collator 或者 validator 都可以作为 fishermen，需要抵押DOT。</li>
+</ul>
+<h1 id="平行链节点结构"><a href="#平行链节点结构" class="headerlink" title="平行链节点结构"></a>平行链节点结构</h1><p>平行链节点主要有以下两点变动。</p>
+<h2 id="共识"><a href="#共识" class="headerlink" title="共识"></a>共识</h2><p>collator 在平行链上的角色类似于以往的独立链上的 validator。<br>但是 collator 只提供候选区块，然后交由中继链上的 validator 进行共识。所以，平行链不再需要自己的共识机制。当然，可以保留对 collator 的选择机制。</p>
+<h2 id="双服务"><a href="#双服务" class="headerlink" title="双服务"></a>双服务</h2><p>平行链节点与以往单链节点的不同在于：需要启动一个中继链全节点服务。<br>内嵌的中继链全节点服务中，包含了 overseer （关于 overseer 在“中继链节点结构”部分介绍）与子系统服务，并且将 overseer_handle 共享给 collator，在<code>collator_protocol</code>上注册为 <code>collator_side</code>。因此，collator 能与 validator 通过 overseer 进行消息交互，例如传递候选区块相关消息。<br>另外，平行链全节点还需要通过内嵌的中继链节点来“跟随”中继链的出块。所谓“跟随”，指的是平行链全节点的最佳区块为中继链上最佳区块包含的相应平行链区块，终结区块亦如此。</p>
+<h1 id="中继链节点结构"><a href="#中继链节点结构" class="headerlink" title="中继链节点结构"></a>中继链节点结构</h1><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201216170820.png" alt="relay_chain"></p>
+<p>中继链上除了必须的基础组件外，比较重要的就是<code>overseer</code>与子系统。</p>
+<h2 id="overseer"><a href="#overseer" class="headerlink" title="overseer"></a>overseer</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201106103000.png" alt="overseer"></p>
+<p>Overseer 主要有以下功能：</p>
+<ul>
+<li>启动和关闭一系列子系统</li>
+<li>作为子系统之间的消息总线</li>
+<li>监听外部事件，触发子系统相应任务</li>
+</ul>
+<h3 id="消息协议"><a href="#消息协议" class="headerlink" title="消息协议"></a>消息协议</h3><p>overseer 向子系统发送两种类型的消息：<code>Communication</code>, <code>Signal</code>。</p>
+<ul>
+<li><code>Communication</code>：子系统之间交互的消息被封装在<code>Communication</code>类型中，根据被封装的消息类型传递到指定的子系统。例如子系统A向子系统B发送一个消息M：1. A向overseer发送<code>AllMessages::B&#123;M&#125;</code>；2. overseer收到后，向B发送<code>FromOverseer::Communication&#123;M&#125;</code>。</li>
+<li><code>Signal</code>：系统消息，例如块导入、块终结、关闭子系统，被封装在<code>Signal</code>中。系统消息会被广播到所有子系统。</li>
+</ul>
+<h2 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h2><p>目前设计上共有18个子系统，其中3个未完全实现。</p>
+<h3 id="Collator相关"><a href="#Collator相关" class="headerlink" title="Collator相关"></a>Collator相关</h3><ul>
+<li><strong>collation_generation_subsystem</strong>：collator在块更新时生成collation</li>
+<li>collator_protocol_subsystem：collation的请求与回应，根据validator/collator的角色执行对应的任务</li>
+</ul>
+<h3 id="候选区块共识"><a href="#候选区块共识" class="headerlink" title="候选区块共识"></a>候选区块共识</h3><ul>
+<li><strong>candidate_selection_subsystem</strong>：触发对collation的请求，收到collation后请求投票</li>
+<li><strong>candidate_backing_subsystem</strong>：对collation投票，签署<code>statement</code></li>
+<li>statement_distribution_subsystem：广播<code>statement</code></li>
+<li>pov_distribution_subsystem：广播<code>PoV</code></li>
+<li>apporoval_subsystems(TODO)：在finalize前对候选区块的再次检查</li>
+</ul>
+<h3 id="可用性相关"><a href="#可用性相关" class="headerlink" title="可用性相关"></a>可用性相关</h3><ul>
+<li>availability_distribution_subsystem</li>
+<li>bitfield_signing_subsystem</li>
+<li>bitfield_distribution_subsystem</li>
+<li>availability_recovery(TODO)</li>
+</ul>
+<h3 id="工具类子系统"><a href="#工具类子系统" class="headerlink" title="工具类子系统"></a>工具类子系统</h3><ul>
+<li>candidate_validation_subsystem：验证候选区块</li>
+<li><strong>provisioner_subsystem</strong>：提供平行链相关的出块打包数据</li>
+<li>runtime_api_subsystem：调用runtime api</li>
+<li>availability_store_subsystem：存储可用性数据</li>
+<li>network_bridge_subsystem：与collation相关数据在节点间传递的网桥协议</li>
+<li>chain_api_subsystem</li>
+<li>misbehavior_arbitration(TODO)</li>
+</ul>
+<h1 id="Collator"><a href="#Collator" class="headerlink" title="Collator"></a>Collator</h1><p>以平行链上的Collator为例，介绍节点如何与子系统协作。</p>
+<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><ul>
+<li>平行链启动时，<code>build_polkadot_full_node</code>启动一个中继链全节点，包含overseer和子系统，并且在 collator_protocol_subsystem 注册为<code>collator_side</code>。如果要以collator的身份启动节点，启动时需要设定<code>--collator</code>，类似于以往独立链设定<code>--validator</code>启动验证人节点。<ul>
+<li><code>start_collator</code>：<code>polkadot_full_node.client.execute_with(StartCollator&#125;</code>，collator和polkadot_full_node共享一个<code>overseer_handler</code>。<ul>
+<li><code>follow_polkadot</code>：根据中继链的出块来更新平行链</li>
+<li>初始化<strong>collation_generation_subsystem</strong>，在此时注册<code>collator.produce_candidate</code>，用来生成<code>collation</code>。</li>
+<li>在 collator_protocol_subsystem 上注册 Collator 所在的para_id。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="准备候选区块"><a href="#准备候选区块" class="headerlink" title="准备候选区块"></a>准备候选区块</h2><ul>
+<li><strong>collation_generation_subsystem</strong> 启动后会循环<code>handle_incoming</code>。接受到<code>ActiveLeavesUpdate</code>后<code>handle_new_activations</code>。<ul>
+<li><code>request_full_validation_data_ctx</code> 在中继链上获取辅助验证的数据<code>ValidationData</code>。</li>
+<li><code>task_config.collator</code> -&gt; <code>produce_candidate</code><ul>
+<li><code>propose</code>一个候选区块</li>
+<li><code>build_collation</code>：构建候选区块的<code>Collation</code></li>
+<li>开启<code>wait_to_announce</code>任务，注册成为<code>StatementListener</code>。当收到validator发来的<code>Statement::Seconded</code>就广播当前候选区块</li>
+</ul>
+</li>
+<li><code>collator_signature_payload</code>签名</li>
+<li>生成<code>CandidateReceipt</code>（包含<code>erasure_root</code>和<code>CandidateCommitments</code>的hash），发送<code>CollatorProtocolMessage::DistributeCollation</code>给 collator_protocol_subsystem。</li>
+</ul>
+</li>
+</ul>
+<h2 id="通知validator"><a href="#通知validator" class="headerlink" title="通知validator"></a>通知validator</h2><ul>
+<li>collator_protocol_subsystem 监听Communication(CollatorProtocolMessage)，<code>process_msg</code>处理消息。收到<code>DistributeCollation</code>后，检查para_id，然后<code>distribute_collation</code>向validator广播。<ul>
+<li><code>distribute_collation</code>：检查collation在active-leaves上，collation没有在该relay parent上出现<ul>
+<li><code>determine_core</code>：计算当前平行链分配到的core</li>
+<li><code>determine_our_validators</code>：计算分配到该平行链的validator集合，包括当前集合和下一次分配的集合</li>
+<li><code>connect_to_validators</code>：同时连接当前validator集合和下一组validator</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>连接上新的validator后，在collator protocol子系统中<code>handle_validator_connected</code><ul>
+<li>发送一个<code>CollatorProtocolMessage::Declare</code>给validator，注册collator</li>
+<li>如果validator是属于该平行链的验证人集合，那么<code>advertise_collation</code>，向validator 发送<code>CollatorProtocolMessage::AdvertiseCollation</code> ，通知validator准备发送collation了。</li>
+</ul>
+</li>
+</ul>
+<h2 id="回应请求"><a href="#回应请求" class="headerlink" title="回应请求"></a>回应请求</h2><ul>
+<li>收到validator消息<code>CollatorProtocolMessage::RequestCollation</code><ul>
+<li><code>send_collation</code>：回应validtor。回应的message中包含<code>CandidateReceipt</code>和<code>PoV</code>，发送<code>CollatorProtocolMessage::Collation(request_id,receipt,pov)</code>给validator。由于这是节点间通信，overseer的中继只能作用于节点内的子系统之间，所以这个消息是被封装在<code>NetworkBridgeMessage::SendCollationMessage</code>中的，通过 network_bridge_subsystem 向validator转发消息。</li>
+</ul>
+</li>
+</ul>
+<h2 id="出块"><a href="#出块" class="headerlink" title="出块"></a>出块</h2><ul>
+<li>当中继链上statement被checked后（状态为seconded），collator在平行链上<code>announce_block</code>，此时为暂时同步。</li>
+<li>最佳区块和终结区块跟随中继链的出块。</li>
+</ul>
+<h1 id="More"><a href="#More" class="headerlink" title="More"></a>More</h1><p>实际上，以上所描述的Collator与子系统的交互也可以说是以Collator角度的平行链出块流程。关于以Validator角度的平行链出块流程将在《平行链节点的出块流程》中介绍。</p>
+]]></content>
+      <categories>
+        <category>Polkadot</category>
+        <category>平行链</category>
       </categories>
   </entry>
 </search>
