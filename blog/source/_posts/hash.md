@@ -8,6 +8,7 @@ category:
   - 密码学
 mathjax: true
 toc: false
+abbrlink: d1b862b8
 ---
 # hash
 以SHA256算法为例。

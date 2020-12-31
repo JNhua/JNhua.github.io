@@ -8,6 +8,7 @@ category:
   - eth
 mathjax: true
 toc: false
+abbrlink: 51be0f38
 ---
 # 概述
 Merkle Patricia Tree（又称为 Merkle Patricia Trie）是一种经过改良的、融合了 Merkle tree 和前缀树两种树结构优点的数据结构，是以太坊中用来组织管理账户数据、生成交易集合哈希的重要数据结构。

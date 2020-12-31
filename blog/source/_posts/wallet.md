@@ -8,6 +8,7 @@ category:
   - eth
 mathjax: true
 toc: false
+abbrlink: 7c68921f
 ---
 钱包的定义：存储加密数字货币的软件程序；
 <!--more-->
