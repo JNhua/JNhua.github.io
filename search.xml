@@ -1311,7 +1311,7 @@
   <entry>
     <title>合约模块解析</title>
     <url>/blog/7029f79.html</url>
-    <content><![CDATA[<p>分析基于 substrate 的 2020年11月23日 756212f36 版本。本文将介绍合约模块的合约调用 <code>call</code> 的基本逻辑，并且会介绍关于合约收费的设计。<br><a id="more"></a></p>
+    <content><![CDATA[<p>分析基于 substrate 的 2021年2月19日 f53d72f 版本。本文将介绍合约模块的合约调用 <code>call</code> 的基本逻辑，并且会介绍关于合约收费的设计。<br><a id="more"></a></p>
 <h1 id="call-：调用合约"><a href="#call-：调用合约" class="headerlink" title="call ：调用合约"></a><code>call</code> ：调用合约</h1><p><code>call</code>也是Module<T>中的函数，在调用一开始就被收取了fee，其中包含了合约的gas费用。</T></p>
 <p>首先是调用了账户查找<code>lookup</code>，返回给<code>dest</code>的是<code>AccountId</code>。</p>
 <p>接着主要是调用了<code>ctx.call</code>这个函数，和<code>instantiate</code>一样走得是<code>execute_wasm</code>。<code>ctx.call</code>实际上调用的是 <code>ExecutionContext::call</code>。</p>
@@ -1322,82 +1322,29 @@
 <p>然后与合约部署时一样，将返回的 <code>executable</code>放到 <code>WasmVm</code> 执行 <code>execute</code>。通过<code>call</code>(合约暴露的接口)执行合约代码内的相应函数。</p>
 <p>根据执行的结果，调用<code>commit_transaction()</code> 或者 <code>rollback_transaction()</code>。注意，如果是gas耗尽导致的<code>Revert</code>，只会回滚当前合约的状态，而更高层次的合约状态无法回滚。</p>
 <p>最后就是返回剩余手续费。</p>
-<h1 id="合约收费"><a href="#合约收费" class="headerlink" title="合约收费"></a>合约收费</h1><h2 id="存储收费"><a href="#存储收费" class="headerlink" title="存储收费"></a>存储收费</h2><p>涉及到存储收费的主要是在<code>contracts/src/rent.rs</code>中的<code>collect_rent</code>函数。</p>
+<h1 id="合约收费"><a href="#合约收费" class="headerlink" title="合约收费"></a>合约收费</h1><h2 id="合约数据存储收费"><a href="#合约数据存储收费" class="headerlink" title="合约数据存储收费"></a>合约数据存储收费</h2><p>涉及到存储收费的主要是在<code>contracts/src/rent.rs</code>中的<code>collect_rent</code>函数。</p>
 <p>如果合约不存在或者为<code>tombstone</code>（可恢复的死亡状态）状态，则直接返回错误。</p>
-<p>在<code>instantiate</code>时，我们传入了<code>endowment</code>这个值，令合约账户中拥有资产。根据合约账户的<code>free_balance</code>大小，可以根据<code>RentDepositOffset</code>计算得到一个免费的存储空间大小。计算公式为<code>free_storage = free_balance / RentDepositOffset</code>。</p>
-<p>而如果合约大小超过了这个免费空间，那么需要按<code>RentByteFee</code>收费，该值的单位为每块每字节。所以需要支付的租用费用计算公式为：<br><code>dues = effective_storage_size(超过的空间) * RentByteFee * blocks_passed(距离上一次支付)</code>。</p>
-<p>其中，<code>effective_storage_size = contract.storage_size + StorageSizeOffset（只要创建合约就存在的默认size） + empty_pairs_equivalent（空的kv对，每对按1字节算） - free_storage</code>。</p>
-<p>根据合约可以用来支付rent的资产，决定合约的存活状态。<br><code>rent_budget（可以用来支付租赁费用的资产） =  min(contract.rent_allowance, free_balance - subsistence_threshold)</code>。</p>
-<p><code>subsistence_threshold（实例存活下限） = Currency::minimum_balance() + TombstoneDeposit</code>。如果合约的总资产（包括reserved)都小于实例存活下限，那么会永久删除合约。</p>
-<p>如果足够支付，就直接扣除。如果不足以支付租赁费用，合约会变成<code>tombstone</code>状态。但是分为两种情况: 1.支付后账户都不能存在了，那么不进行扣除租赁费用；2.支付后账户还能存在，还是要扣除租赁费用。这里注意区分合约实例存活下限和合约账户存活下限。</p>
-<p>可见，随着时间的流逝，（如果不对合约账户进行充值）合约的资产会减少到无法维持<code>Alive</code>状态，从而变更为<code>tombstone</code>，甚至被永久删除。这是一个合理的设计，使得<code>runtime</code>中不会存储太多“无效”合约，存储空间得到充分利用。如果需要估算当前合约的资产能在链上实例存活多久，可以调用<code>compute_rent_projection</code>来估算。</p>
-<p>在我们<code>instantiate</code>时，默认设置<code>rent_allowance</code>为<code>balance</code>能支持的最大值。该值会随着每次支付<code>rent</code>而逐渐减少。所以实际上，设置<code>rent_allowance</code>这个值也可以限制合约需要的资产门槛。</p>
-<p>状态为<code>tombstone</code>的合约，在后面可以用状态为<code>Alive</code>的合约<code>retore_to</code>进行替换。注意，当合约状态变更为<code>tombstone</code>时，合约数据已经被删除，所以用该方法对依赖数据的合约进行复活是不可行的。</p>
-<h3 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h3><p>以下数据均为假设或模拟。例如合约的<code>storage_size</code>为简单计算，直接按照 key-value 对的数据类型大小统计。<br>假设条件：</p>
-<ul>
-<li><code>rent_allowance</code>足够大，比如是balance的最大值。<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">TombstoneDeposit &#x3D; 20 ;</span><br><span class="line">RentByteFee &#x3D; 4 ;</span><br><span class="line">RentDepositOffset &#x3D; 1000 ;</span><br><span class="line">SurchargeReward &#x3D; 150;</span><br><span class="line">StorageSizeOffset &#x3D; 8;</span><br><span class="line">ExistentialDeposit&#x3D; 100;</span><br></pre></td></tr></table></figure>
-<h4 id="Flip合约"><a href="#Flip合约" class="headerlink" title="Flip合约"></a>Flip合约</h4>假设部署合约时给予1000的初始资产。<br>在块100部署（或者是支付过租赁费用），当前为块110，期间没有调用过<code>call</code>。<h5 id="支付租赁费用"><a href="#支付租赁费用" class="headerlink" title="支付租赁费用"></a>支付租赁费用</h5>endowment = 1000<br>free_storage = 1000 / 1000 = 1 B<br>effective_storage_size = 1 + 8 + 0 - 1 = 8 B<br>dues = 8 * 4 * 10 = 320<br>subsistence_threshold = 100 + 20 = 120<br>rent_budget = 1000 - 120 = 880<br>rent_budget足够支付dues，支付后，free_balance剩下 680。<h5 id="kill"><a href="#kill" class="headerlink" title="kill"></a>kill</h5>假如，合约账户转账给了其他合约900，那么total_balance变为100，小于 subsistence_threshold，合约被永久删除。<h5 id="tombstone"><a href="#tombstone" class="headerlink" title="tombstone"></a>tombstone</h5>合约账户因某种原因reserve了900，total_balance不变，但是free_balance变为100。此时rent_budget = 0（非负数减法，最小为0），rent_budget &lt; dues，合约变为<code>tombstone</code>。</li>
-</ul>
-<h4 id="erc20合约"><a href="#erc20合约" class="headerlink" title="erc20合约"></a>erc20合约</h4><h5 id="简单计算"><a href="#简单计算" class="headerlink" title="简单计算"></a>简单计算</h5><p>假设有5个账户存有erc20代币，但是allowances为空。合约账户的free_balance为10000。<br>在块100是支付过租赁费用，当前为块110，调用<code>call</code>给一个新账户（已有5个账户之外）转了一笔erc20代币。<br>free_storage = 10000 / 1000 = 10 B<br>effective_storage_size = （20 * 5 + 16 ) + 8 + 1 - 10 = 115 B<br>dues = 115 * 4 * 10 = 4600<br>subsistence_threshold = 100 + 20 = 120<br>rent_budget = 10000 - 120 = 9880<br>rent_budget足够支付dues，支付完租赁费用后，free_balance还剩下 5400。</p>
-<h5 id="动态增长"><a href="#动态增长" class="headerlink" title="动态增长"></a>动态增长</h5><p>假设在上述”静态”条件下的块110开始，每个块增长一个erc20合约用户，每5个块发生一个<code>allowance</code>操作。注意，对合约操作时显然是调用了<code>call</code>。</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th>当前块</th>
-<th>租赁费用dues</th>
-<th>账户数量</th>
-<th>allowance数量</th>
-<th>剩余free_balance</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>111</td>
-<td>560</td>
-<td>7</td>
-<td>0</td>
-<td>4848</td>
-</tr>
-<tr>
-<td>112</td>
-<td>644</td>
-<td>8</td>
-<td>0</td>
-<td>4196</td>
-</tr>
-<tr>
-<td>113</td>
-<td>724</td>
-<td>9</td>
-<td>0</td>
-<td>3472</td>
-</tr>
-<tr>
-<td>114</td>
-<td>808</td>
-<td>10</td>
-<td>0</td>
-<td>2664</td>
-</tr>
-<tr>
-<td>115</td>
-<td>892</td>
-<td>11</td>
-<td>1</td>
-<td>1772</td>
-</tr>
-<tr>
-<td>116</td>
-<td>1068</td>
-<td>12</td>
-<td>1</td>
-<td>704</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>以块高为x轴，剩余free_balance为y轴，拟合曲线为 $y=3016595 -83784·x+781·x^2-2·x^3$。<br>在块117时，rent_budget = 704 - 120 = 584。rent_budget不足够支付dues，合约变为<code>tombstone</code>。但是仍旧要支付rent_budget等量的费用，支付后剩余free_balance为120.</p>
+<p>在<code>instantiate</code>时，我们传入了<code>endowment</code>这个值，令合约账户中拥有资产。根据合约账户的<code>free_balance</code>大小，可以拥有一定大小的免费存储空间。</p>
+<p>需要计费的合约代码大小的计算公式：<code>occupied_storage = [ original_code_len + code.len() ] / refcount</code></p>
+<blockquote>
+<p><code>original_code_len</code>：原始合约代码大小；<br><code>code</code>：注入gas_meter，stack_height_meter后编码成的wasm代码；<br><code>refcount</code>：该合约代码的引用计数，即使用该合约代码的合约账户数。</p>
+</blockquote>
+<p>而如果合约大小超过了这个免费空间，那么需要收费。需要支付的租用费用计算公式为：</p>
+<ol>
+<li><code>dues = fee_per_block * blocks_passed</code></li>
+<li><code>fee_per_block = RentFraction * uncovered_by_balance</code></li>
+<li><code>uncovered_by_balance = DepositPerStorageByte * (contract.storage_size + occupied_storage) + DepositPerStorageItem * contract.pair_count + DepositPerContract - free_balance</code><blockquote>
+<p><code>RentFraction</code>：每个区块租赁费用的乘法系数，决定了deposit对应的租赁费用有多高<br><code>DepositPerStorageByte</code>：每个存储字节需要的deposit<br><code>DepositPerStorageItem</code>：每个存储键值对需要的deposit<br><code>DepositPerContract</code>：每个合约存活就基本需要的deposit</p>
+</blockquote>
+</li>
+</ol>
+<p>根据合约可以用来支付rent的资产，决定合约的存活状态。<br>可以用来支付租赁费用的资产：<code>rent_budget =  min(contract.rent_allowance, free_balance - subsistence_threshold)</code>。</p>
+<blockquote>
+<p><code>contract.rent_allowance</code>：一个设置值（该合约可以用来支付租赁费用的最大值），刚部署时默认为balance的最大值，随着租赁费用的支付而逐渐减小。可以通过合约方法<code>set_rent_allowance</code>重新设置该值<br>实例存活下限：<code>subsistence_threshold = Currency::minimum_balance() + TombstoneDeposit</code>。</p>
+</blockquote>
+<p>如果合约的总资产（包括reserved)都小于实例存活下限，那么会永久删除合约。<br>如果足够支付，就直接扣除。如果不足以支付租赁费用，合约会变成<code>tombstone</code>状态。但是分为两种情况:<br>1.支付后账户都不能存在了，那么不进行扣除租赁费用；<br>2.支付后账户还能存在，还是要扣除租赁费用。<br>这里注意区分合约实例存活下限和合约账户存活下限。<br>合约变为<code>tombstone</code>状态时，保存一个键值对(account,(child_storage_root + code_hash))。对该合约的引用计数减1，如果合约的引用计数为0，会直接删除contracts模块中合约代码的存储。之后如果又有基于同样合约代码的部署，会被认为是新合约代码。</p>
+<p>可见，随着时间的流逝，（如果不对合约账户进行充值）合约的资产会减少到无法维持<code>Alive</code>状态，从而变更为<code>tombstone</code>，甚至被永久删除。如果需要估算当前合约的资产能在链上实例存活多久，可以调用<code>rent_projection</code>来估算。</p>
+<p>状态为<code>tombstone</code>的合约，在后面可以用状态为<code>Alive</code>的合约<code>retore_to</code>进行替换。</p>
 ]]></content>
       <categories>
         <category>Polkadot</category>
@@ -2216,12 +2163,17 @@
 <p>使用<code>as</code>进行类型转换：</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> a = <span class="number">13u8</span>;</span><br><span class="line"><span class="keyword">let</span> b = <span class="number">7u32</span>;</span><br><span class="line"><span class="keyword">let</span> c = a <span class="keyword">as</span> <span class="built_in">u32</span> + b;</span><br></pre></td></tr></table></figure>
 <h2 id="元组-amp-数组"><a href="#元组-amp-数组" class="headerlink" title="元组 &amp; 数组"></a>元组 &amp; 数组</h2><h3 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> arr: [<span class="built_in">i32</span>; <span class="number">3</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>];</span><br></pre></td></tr></table></figure>
-<p>数组初始就固定了长度，即使声明为mut也只能修改索引上的元素，而不是数组本身。</p>
+<p>数组初始就固定了长度，即使声明为mut也只能修改索引上的元素，而不是数组本身。数组的长度是其类型的一部分。可用于数组的方法（例如排序、搜索、筛选等），其实都是切片的方法，使用时会隐式地把数组转换为对切片的引用。</p>
 <h3 id="元组"><a href="#元组" class="headerlink" title="元组"></a>元组</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> tuple: (&amp;<span class="symbol">&#x27;static</span> <span class="built_in">str</span>, <span class="built_in">i32</span>, <span class="built_in">char</span>) = (<span class="string">&quot;hello&quot;</span>, <span class="number">5</span>, <span class="string">&#x27;c&#x27;</span>);</span><br><span class="line"><span class="keyword">let</span> (x, y ,z) = tuple;</span><br></pre></td></tr></table></figure>
 <p>当元组只有一个值的时候，需要写成(x, )，这是为了和括号中的其他值进行区分。</p>
 <h1 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h1><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> x = (<span class="keyword">let</span> y = <span class="number">6</span>);	<span class="comment">//error</span></span><br></pre></td></tr></table></figure>
 <p><code>let</code>没有右值语义，Rust中不允许这么用，可以这么写：</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> y = &#123;</span><br><span class="line">	<span class="keyword">let</span> x = <span class="number">3</span>;</span><br><span class="line">	x</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h1 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h1><h2 id="与C-引用比较"><a href="#与C-引用比较" class="headerlink" title="与C++引用比较"></a>与C++引用比较</h2><ol>
+<li>Rust中，必须使用&amp;和*来创建和解引用，只有 . 操作符例外，它会隐式地借用和解引用。</li>
+<li>给Rust引用赋值会导致它指向新值，而给C++引用赋值会将值存储在引用中，而且指向地址固定为初始值的地址。</li>
+</ol>
+<h2 id="引用安全"><a href="#引用安全" class="headerlink" title="引用安全"></a>引用安全</h2><p>Rust会给每个引用类型附加一个<strong>生命周期</strong>。</p>
 <h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><h2 id="函数-1"><a href="#函数-1" class="headerlink" title="函数"></a>函数</h2><h3 id="多个返回值"><a href="#多个返回值" class="headerlink" title="多个返回值"></a>多个返回值</h3><p>函数可以通过<strong>元组</strong>来返回多个值。</p>
 <p>元组元素可以通过他们的索引来获取。</p>
 <p>支持各种形式的解构，允许我们以符合人类工程学的方式提取数据结构的子片段。</p>
@@ -2240,10 +2192,10 @@
 <h3 id="自动推导"><a href="#自动推导" class="headerlink" title="自动推导"></a>自动推导</h3><p>闭包会为每个参数和返回类型推导一个具体类型，但是不能推导两次。如下错误：</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> example_closure = |x| x;</span><br><span class="line"><span class="keyword">let</span> s = example_closure(<span class="built_in">String</span>::from(<span class="string">&quot;hello&quot;</span>));</span><br><span class="line"><span class="keyword">let</span> n = example_closure(<span class="number">5</span>); <span class="comment">//报错，尝试推导两次，变成了不同的类型</span></span><br></pre></td></tr></table></figure>
 <h3 id="与trait结合"><a href="#与trait结合" class="headerlink" title="与trait结合"></a>与trait结合</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Cacher</span></span>&lt;T&gt; </span><br><span class="line">    <span class="keyword">where</span> T: <span class="built_in">Fn</span>(<span class="built_in">u32</span>) -&gt; <span class="built_in">u32</span></span><br><span class="line">&#123;</span><br><span class="line">    calcuation: T,</span><br><span class="line">    value: <span class="built_in">Option</span>&lt;<span class="built_in">u32</span>&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;T&gt; Cacher&lt;T&gt;</span><br><span class="line">    <span class="keyword">where</span> T: <span class="built_in">Fn</span>(<span class="built_in">u32</span>) -&gt; <span class="built_in">u32</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(calcuation: T) -&gt; Cacher&lt;T&gt; &#123;</span><br><span class="line">        Cacher &#123;</span><br><span class="line">            calcuation,</span><br><span class="line">            value: <span class="literal">None</span>,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> c = Cacher::new(|x| x+<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="流程控制"><a href="#流程控制" class="headerlink" title="流程控制"></a>流程控制</h1><h2 id="while"><a href="#while" class="headerlink" title="while"></a>while</h2><p>略。</p>
+<h1 id="流程控制"><a href="#流程控制" class="headerlink" title="流程控制"></a>流程控制</h1><h2 id="while"><a href="#while" class="headerlink" title="while"></a>while</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">while</span> condition &#123;</span><br><span class="line">    block</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
 <h2 id="for"><a href="#for" class="headerlink" title="for"></a>for</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">for</span> x <span class="keyword">in</span> <span class="number">0</span>..<span class="number">5</span>&#123;</span><br><span class="line">  printfln!(<span class="string">&quot;&#123;&#125;&quot;</span>,x);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 0..=5 包含5</span></span><br></pre></td></tr></table></figure>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> number = <span class="number">3</span>;</span><br><span class="line"><span class="keyword">if</span> number&#123;&#125;	<span class="comment">//error</span></span><br></pre></td></tr></table></figure>
-<p>Rust不能从<code>number</code>推断出<code>bool</code>值。另，<code>if</code>后的判断表达式不需要括号。</p>
+<p>Rust不能从<code>number</code>推断出<code>bool</code>值。另，<code>if</code>后的判断表达式不需要括号。<br>循环可以加上生命期标签，从而直接退出外部循环。例如：<br><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">`tag</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> array &#123;</span><br><span class="line">    <span class="keyword">for</span> j <span class="keyword">in</span> list &#123;</span><br><span class="line">        <span class="keyword">if</span> condition &#123;</span><br><span class="line">            <span class="keyword">break</span> `tag;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h2 id="从块表达式返回值"><a href="#从块表达式返回值" class="headerlink" title="从块表达式返回值"></a>从块表达式返回值</h2><h3 id="if-let"><a href="#if-let" class="headerlink" title="if let"></a>if let</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> number = <span class="keyword">if</span> condition &#123;</span><br><span class="line">    <span class="number">5</span></span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="number">6</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 <p><code>if</code>、<code>else</code>返回值的类型必须是相同的。当所有<code>if</code>，<code>else if</code>块无法匹配时，调用任何一个<code>else</code>块，如果无<code>else</code>，则返回<code>()</code>。因此，此代码中的<code>if</code>表达式的<code>else</code>块（虽然没有显式写出）返回值为<code>()</code>，与<code>if</code>块中的<code>i32</code>类型不一致，报<code>E0308</code>错误。举例如下：</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">r</span></span>(n: <span class="built_in">i32</span>) -&gt; <span class="built_in">i32</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> n &gt; <span class="number">0</span> &#123;</span><br><span class="line">        <span class="number">0</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -2254,6 +2206,7 @@
 <p>编译器报错，”use of possibly uninitialised variable”。</p>
 <h2 id="match"><a href="#match" class="headerlink" title="match"></a>match</h2><p><code>match</code> 是穷尽的，意为所有可能的值都必须被考虑到。</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">match</span> x &#123;</span><br><span class="line">        <span class="number">0</span> =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;found zero&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 我们可以匹配多个值</span></span><br><span class="line">        <span class="number">1</span> | <span class="number">2</span> =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;found 1 or 2!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 我们可以匹配迭代器</span></span><br><span class="line">        <span class="number">3</span>..=<span class="number">9</span> =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;found a number 3 to 9 inclusively&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 我们可以将匹配数值绑定到变量</span></span><br><span class="line">        matched_num @ <span class="number">10</span>..=<span class="number">100</span> =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;found &#123;&#125; number between 10 to 100!&quot;</span>, matched_num);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 这是默认匹配，如果没有处理所有情况，则必须存在该匹配</span></span><br><span class="line">        _ =&gt; &#123;</span><br><span class="line">            <span class="built_in">println!</span>(<span class="string">&quot;found something else!&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>编译器可以使用跳转表（jump table）来优化match表达式，除了边界检查，在编译后的代码中根本没有分支。</p>
 <h1 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h1><p>Rust中结构体有：具名结构体、元组结构体、单元结构体。</p>
 <h2 id="具名结构体"><a href="#具名结构体" class="headerlink" title="具名结构体"></a>具名结构体</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">SeaCreature</span></span> &#123;</span><br><span class="line">    animal_type: <span class="built_in">String</span>,</span><br><span class="line">    name: <span class="built_in">String</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="元祖结构体"><a href="#元祖结构体" class="headerlink" title="元祖结构体"></a>元祖结构体</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 这仍然是一个在栈上的结构体</span></span><br><span class="line"><span class="keyword">let</span> loc = Location(<span class="number">42</span>, <span class="number">32</span>);</span><br></pre></td></tr></table></figure>
@@ -2270,6 +2223,7 @@
 <h1 id="泛型"><a href="#泛型" class="headerlink" title="泛型"></a>泛型</h1><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 一个部分定义的结构体类型</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">BagOfHolding</span></span>&lt;T&gt; &#123;</span><br><span class="line">    item: T,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="comment">// 注意：通过使用泛型，我们创建了编译时创建的类型，使代码更大</span></span><br><span class="line">    <span class="comment">// Turbofish 使之显式化</span></span><br><span class="line">    <span class="keyword">let</span> i32_bag = BagOfHolding::&lt;<span class="built_in">i32</span>&gt; &#123; item: <span class="number">42</span> &#125;;</span><br><span class="line">    <span class="keyword">let</span> bool_bag = BagOfHolding::&lt;<span class="built_in">bool</span>&gt; &#123; item: <span class="literal">true</span> &#125;;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Rust 也可以推断出泛型的类型！</span></span><br><span class="line">    <span class="keyword">let</span> float_bag = BagOfHolding &#123; item: <span class="number">3.14</span> &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> bag_in_bag = BagOfHolding &#123;</span><br><span class="line">        item: BagOfHolding &#123; item: <span class="string">&quot;boom!&quot;</span> &#125;,</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <h2 id="常用的内置泛型："><a href="#常用的内置泛型：" class="headerlink" title="常用的内置泛型："></a>常用的内置泛型：</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Option</span></span>&lt;T&gt; &#123;</span><br><span class="line">    <span class="literal">None</span>,</span><br><span class="line">    <span class="literal">Some</span>(T),</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Result</span></span>&lt;T, E&gt; &#123;</span><br><span class="line">    <span class="literal">Ok</span>(T),</span><br><span class="line">    <span class="literal">Err</span>(E),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><code>Result</code> 如此常见以至于 Rust 有个强大的操作符 <code>?</code> 来与之配合。</p>
+<h2 id="方法调用"><a href="#方法调用" class="headerlink" title="方法调用"></a>方法调用</h2><p>通常用于函数调用或方法调用的语法不能用于泛型。例如Vec<T>。<br><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Vec</span>&lt;<span class="built_in">i32</span>&gt;::with_capacity(<span class="number">100</span>); <span class="comment">//error</span></span><br><span class="line">(<span class="number">0</span>..n).collect&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">i32</span>&gt;&gt;(); <span class="comment">//error</span></span><br></pre></td></tr></table></figure><br>Rust编译器会建议使用::<T>而不是<T>：<br><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="built_in">Vec</span>::&lt;<span class="built_in">i32</span>&gt;::with_capacity(<span class="number">100</span>);</span><br><span class="line">(<span class="number">0</span>..n).collect::&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">i32</span>&gt;&gt;(); </span><br></pre></td></tr></table></figure><br>符号::&lt;..&gt;称为极速鱼（turbofish）。<br>如果可以推断出类型，推荐使用省略类型参数：<br><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> v: <span class="built_in">Vec</span>&lt;<span class="built_in">i32</span>&gt; = (<span class="number">0</span>..n).collect(); </span><br></pre></td></tr></table></figure></T></T></T></p>
 <h2 id="option"><a href="#option" class="headerlink" title="option"></a>option</h2><h3 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h3><p>Option主要有以下一些用法：</p>
 <ul>
 <li>初始化值；</li>
@@ -2288,24 +2242,27 @@
 <p>内存细节：</p>
 <ul>
 <li><code>Vec</code> 是一个结构体，但是内部其实保存了在堆上固定长度数据的引用。</li>
-<li>一个 vector 开始有默认大小容量，当更多的元素被添加进来后，它会重新在堆上分配一个新的并具有更大容量的定长列表。（类似 C++ 的 vector）</li>
+<li>一个 vector 开始有默认大小容量，当更多的元素被添加进来后，它会重新在堆上分配一个新的并具有更大容量的定长列表。（类似 C++ 的 vector）。所以使用<code>Vec::with_capacity</code>而不是<code>Vec::new</code>可以从速度上改进。</li>
 </ul>
 <h2 id="迭代器"><a href="#迭代器" class="headerlink" title="迭代器"></a>迭代器</h2><p>迭代器实现了<code>Iterator</code>（<code>trait</code>），定义于标准库中。该<code>trait</code>定义如下：</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Iterator</span></span> &#123;</span><br><span class="line">	<span class="class"><span class="keyword">type</span> <span class="title">Item</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">fn</span> <span class="title">next</span></span>(<span class="keyword">mut</span> <span class="keyword">self</span>) -&gt; <span class="built_in">Option</span>&lt;Self::Item&gt;;</span><br><span class="line">	<span class="comment">//省略其它内容</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>如果希望迭代可变引用，可以使用<code>iter_mut</code>。</p>
 <h1 id="切片"><a href="#切片" class="headerlink" title="切片"></a>切片</h1><p>Slice是对一个数组的引用片段，代表一个指向数组起始位置的指针和数组长度。</p>
-<p>Slice是一种新的类型，而不是简单的一个引用而已。</p>
+<p>Slice是一种新的类型，而不是简单的一个引用而已。slice写作不指定长度的[T]，而&amp;[T]是对切片的引用，只是通常把&amp;[T]和&amp;str这样的引用类型直接称为引用 。切片永远只能按照引用传递。</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> arr: [<span class="built_in">i32</span>;<span class="number">2</span>]=[<span class="number">1</span>,<span class="number">2</span>];</span><br><span class="line"><span class="built_in">assert_eq!</span>((&amp;arr).len(), <span class="number">2</span>);</span><br><span class="line"><span class="built_in">assert_eq!</span>(&amp;arr.len(), &amp;<span class="number">2</span>);</span><br></pre></td></tr></table></figure>
 <h2 id="str（字符串切片）"><a href="#str（字符串切片）" class="headerlink" title="str（字符串切片）"></a>str（字符串切片）</h2><p>字符串常量是&amp;’static str。str字符串是固定长度的，String字符串是可变长度的。</p>
 <p><code>let hello_world = &quot;Hello, World!&quot;;</code> 声明了一个 <code>&amp;str</code>类型；</p>
 <p><code>let hello_world: &amp;&#39;static str = &quot;Hello, world!&quot;;</code> hello_world 与 字符串常量一样。</p>
 <h3 id="utf8"><a href="#utf8" class="headerlink" title="utf8"></a>utf8</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// &amp;a[3..7]表示螃蟹</span></span><br><span class="line"><span class="keyword">let</span> a = <span class="string">&quot;hi 🦀&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// chars[3]表示螃蟹，chars[i]表示一个字符，每个char占4字节</span></span><br><span class="line"><span class="keyword">let</span> chars = <span class="string">&quot;hi 🦀&quot;</span>.chars().collect::&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">char</span>&gt;&gt;();</span><br></pre></td></tr></table></figure>
-<h1 id="String"><a href="#String" class="headerlink" title="String"></a>String</h1><p>String不能用index访问的原因：</p>
+<h1 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h1><h2 id="String"><a href="#String" class="headerlink" title="String"></a>String</h2><p>String不能用index访问的原因：</p>
 <ul>
 <li>避免根据UTF-8编码得到的长度与期望的不一致；</li>
 <li>根据index访问需要从头遍历（在Rust中需要判断有效字符数量），所以访问的时间复杂度不为<code>O(1)</code>。</li>
 </ul>
-<h2 id="String格式"><a href="#String格式" class="headerlink" title="String格式"></a>String格式</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> haiku: &amp;<span class="symbol">&#x27;static</span> <span class="built_in">str</span> = <span class="string">&quot;</span></span><br><span class="line"><span class="string">        I write, erase, rewrite</span></span><br><span class="line"><span class="string">        - Katsushika Hokusai&quot;</span>;</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, haiku);</span><br><span class="line">    </span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;hello \</span></span><br><span class="line"><span class="string">world&quot;</span>) <span class="comment">// notice that the spacing before w is ignored</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> a: &amp;<span class="symbol">&#x27;static</span> <span class="built_in">str</span> = r#<span class="string">&quot;</span></span><br><span class="line"><span class="string">        &lt;div class=&quot;</span>advice<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">            Raw strings are useful for some situations.</span></span><br><span class="line"><span class="string">        &lt;/div&gt;</span></span><br><span class="line"><span class="string">        &quot;</span>#;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 从文件读取大量字符串</span></span><br><span class="line"><span class="keyword">let</span> <span class="number">00_</span>html = <span class="built_in">include_str!</span>(<span class="string">&quot;00_en.html&quot;</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="字面量"><a href="#字面量" class="headerlink" title="字面量"></a>字面量</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> haiku: &amp;<span class="symbol">&#x27;static</span> <span class="built_in">str</span> = <span class="string">&quot;</span></span><br><span class="line"><span class="string">        I write, erase, rewrite</span></span><br><span class="line"><span class="string">        - Katsushika Hokusai&quot;</span>;</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, haiku);</span><br><span class="line">    </span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;hello \</span></span><br><span class="line"><span class="string">world&quot;</span>) <span class="comment">// notice that the spacing before w is ignored</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 原始字符串（raw），使反斜杠转义无效</span></span><br><span class="line"><span class="comment">// 如果需要包含双引号，需要加&#x27;#&#x27;对，如果要包含#，则需要多加一对&#x27;#&#x27;</span></span><br><span class="line"><span class="keyword">let</span> a: &amp;<span class="symbol">&#x27;static</span> <span class="built_in">str</span> = r#<span class="string">&quot;</span></span><br><span class="line"><span class="string">        &lt;div class=&quot;</span>advice<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">            Raw strings are useful for some situations.</span></span><br><span class="line"><span class="string">        &lt;/div&gt;</span></span><br><span class="line"><span class="string">        &quot;</span>#;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 从文件读取大量字符串</span></span><br><span class="line"><span class="keyword">let</span> <span class="number">00_</span>html = <span class="built_in">include_str!</span>(<span class="string">&quot;00_en.html&quot;</span>);</span><br></pre></td></tr></table></figure>
+<p>单引号无须转义，双引号需要。</p>
+<h3 id="在内存中的存储"><a href="#在内存中的存储" class="headerlink" title="在内存中的存储"></a>在内存中的存储</h3><p>字符串是Unicode字符序列，但是在内存中不是以char数组形式存储的，是使用utf-8可变宽度编码存储的。<br>String有一个在堆上的可伸缩缓冲区存储utf-8文本。&amp;str是包含实际数据的地址及其长度的胖指针。字符串字面量就是一个引用预分配文本的&amp;str，通常和程序的机器码一起存储在只读内存中。</p>
+<h3 id="字符串比较"><a href="#字符串比较" class="headerlink" title="字符串比较"></a>字符串比较</h3><p>对于==和!=，如果两个字符串包含的字符相同、顺序也相同，那么它们就是相等的，无论指向地址是否相同。</p>
 <h1 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h1><h2 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">HashMap::new();</span><br><span class="line"><span class="keyword">let</span> scores: HashMap&lt;_, _&gt; = keys.iter().zip(values.iter()).collect(); </span><br></pre></td></tr></table></figure>
 <h2 id="读取"><a href="#读取" class="headerlink" title="读取"></a>读取</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> key = <span class="built_in">String</span>::from(<span class="string">&quot;Blue&quot;</span>);</span><br><span class="line"><span class="keyword">let</span> value = ss.get(&amp;key); </span><br></pre></td></tr></table></figure>
 <h2 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h2><p><code>for (key, value) in &amp;ss</code></p>
@@ -2349,11 +2306,12 @@
 <li>Rust 通过自动释放内存来帮助确保减少内存泄漏。</li>
 <li>每个内存资源仅会被释放一次。</li>
 </ul>
-<h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><p>引用默认也是不可变的。可变引用才可以修改被引用的值。已经被引用的变量，其所有权不可以被移动。</p>
+<h2 id="引用-1"><a href="#引用-1" class="headerlink" title="引用"></a>引用</h2><p>引用默认也是不可变的。可变引用才可以修改被引用的值。已经被引用的变量，其所有权不可以被移动。</p>
 <h3 id="可变引用-amp-mut"><a href="#可变引用-amp-mut" class="headerlink" title="可变引用(&amp;mut)"></a>可变引用(&amp;mut)</h3><ul>
 <li>可变引用只能出现一次，避免数据竞争。</li>
 <li>已有不可变引用，可变引用就不能再出现。</li>
 </ul>
+<p>共享不可变引用和可变引用互斥，从根基上就不会存在数据争用，让并发更加安全。</p>
 <h3 id="解引用"><a href="#解引用" class="headerlink" title="解引用"></a>解引用</h3><p>使用 <code>&amp;mut</code> 引用时, 你可以通过 <code>*</code> 操作符来修改其指向的值。 你也可以使用 <code>*</code> 操作符来对所拥有的值进行拷贝（前提是该值可以被拷贝）。</p>
 <p>操作符”<code>.</code>“可以自动解引用：</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> f = Foo &#123; value: <span class="number">42</span> &#125;;</span><br><span class="line"><span class="keyword">let</span> ref_ref_ref_f = &amp;&amp;&amp;f;</span><br><span class="line"><span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, ref_ref_ref_f.value);</span><br></pre></td></tr></table></figure>
@@ -2364,7 +2322,11 @@
 <li>当 T: Deref<Target=U> 时从 &amp;mut T 到 &amp;U。（注意：此处反之是不可能的）</Target=U></li>
 </ul>
 <h1 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h1><p>生命周期的主要目标是避免悬垂引用，大部分时候是可以隐含并且被推断的。</p>
-<h2 id="显式生命周期"><a href="#显式生命周期" class="headerlink" title="显式生命周期"></a>显式生命周期</h2><p>尽管 Rust 不总是在代码中将它展示出来，但编译器会理解每一个变量的生命周期并进行验证以确保一个引用不会有长于其所有者的存在时间。 同时，函数可以通过使用一些符号来参数化函数签名，以帮助界定哪些参数和返回值共享同一生命周期。 生命周期注解总是以 <code>&#39;</code> 开头，例如 <code>&#39;a</code>，<code>&#39;b</code> 以及 <code>&#39;c</code>。</p>
+<h2 id="约束"><a href="#约束" class="headerlink" title="约束"></a>约束</h2><ol>
+<li>引用的生命期最长的限制：&amp;x不能比x本身还“长寿”，即x的生命期必须涵盖其引用的生命期，在x销毁前，&amp;x必须已经销毁；</li>
+<li>引用的生命期最短的约束：<code>let r = &amp;x</code>，&amp;x的生命期要涵盖r的生命期；<br>这是Rust评判所有代码的流程的本质。由于生命周期的存在，Rust中不可能写出与函数签名意图不匹配的函数来，例如想把引用保存到全局变量中是不可能的，所以Rust函数签名始终反映函数体的行为。<h2 id="显式生命周期"><a href="#显式生命周期" class="headerlink" title="显式生命周期"></a>显式生命周期</h2></li>
+</ol>
+<p>尽管 Rust 不总是在代码中将它展示出来，但编译器会理解每一个变量的生命周期并进行验证以确保一个引用不会有长于其所有者的存在时间。 同时，函数可以通过使用一些符号来参数化函数签名，以帮助界定哪些参数和返回值共享同一生命周期。 生命周期注解总是以 <code>&#39;</code> 开头，例如 <code>&#39;a</code>，<code>&#39;b</code> 以及 <code>&#39;c</code>。</p>
 <figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 参数 foo 和返回值共享同一生命周期</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">do_something</span></span>&lt;<span class="symbol">&#x27;a</span>&gt;(foo: &amp;<span class="symbol">&#x27;a</span> Foo) -&gt; &amp;<span class="symbol">&#x27;a</span> <span class="built_in">i32</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;foo.x;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// foo_b 和返回值共享同一生命周期</span></span><br><span class="line"><span class="comment">// foo_a 则拥有另一个不相关联的生命周期</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">do_something</span></span>&lt;<span class="symbol">&#x27;a</span>, <span class="symbol">&#x27;b</span>&gt;(foo_a: &amp;<span class="symbol">&#x27;a</span> Foo, foo_b: &amp;<span class="symbol">&#x27;b</span> Foo) -&gt; &amp;<span class="symbol">&#x27;b</span> <span class="built_in">i32</span> &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, foo_a.x);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, foo_b.x);</span><br><span class="line">    <span class="keyword">return</span> &amp;foo_b.x;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 静态变量的范围也可以被限制在一个函数内</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">mut</span> SECRET: &amp;<span class="symbol">&#x27;static</span> <span class="built_in">str</span> = <span class="string">&quot;swordfish&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 字符串字面值拥有 &#x27;static 生命周期</span></span><br><span class="line"><span class="keyword">let</span> msg: &amp;<span class="symbol">&#x27;static</span> <span class="built_in">str</span> = <span class="string">&quot;Hello World!&quot;</span>;</span><br></pre></td></tr></table></figure>
 <h2 id="隐式生命周期"><a href="#隐式生命周期" class="headerlink" title="隐式生命周期"></a>隐式生命周期</h2><p>三条规则确定不需要生命周期注解：</p>
 <ul>
@@ -4002,16 +3964,16 @@ public String call() throws Exception &#123;
 <h2 id="overseer"><a href="#overseer" class="headerlink" title="overseer"></a>overseer</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201106103000.png" alt="overseer"></p>
 <p>Overseer 主要有以下功能：</p>
 <ul>
-<li>启动和关闭一系列子系统</li>
-<li>作为子系统之间的消息总线</li>
-<li>监听外部事件，触发子系统相应任务</li>
+<li>启动和关闭一系列子系统；</li>
+<li>作为子系统之间的消息总线，避免消息争用；</li>
+<li>监听外部事件，触发子系统相应任务。</li>
 </ul>
 <h3 id="消息协议"><a href="#消息协议" class="headerlink" title="消息协议"></a>消息协议</h3><p>overseer 向子系统发送两种类型的消息：<code>Communication</code>, <code>Signal</code>。</p>
 <ul>
 <li><code>Communication</code>：子系统之间交互的消息被封装在<code>Communication</code>类型中，根据被封装的消息类型传递到指定的子系统。例如子系统A向子系统B发送一个消息M：1. A向overseer发送<code>AllMessages::B&#123;M&#125;</code>；2. overseer收到后，向B发送<code>FromOverseer::Communication&#123;M&#125;</code>。</li>
 <li><code>Signal</code>：系统消息，例如块导入、块终结、关闭子系统，被封装在<code>Signal</code>中。系统消息会被广播到所有子系统。</li>
 </ul>
-<h2 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h2><p>目前设计上共有18个子系统，其中3个未完全实现。</p>
+<h2 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h2><p>目前设计上共有18个子系统。</p>
 <h3 id="Collator相关"><a href="#Collator相关" class="headerlink" title="Collator相关"></a>Collator相关</h3><ul>
 <li><strong>collation_generation_subsystem</strong>：collator在块更新时生成collation</li>
 <li>collator_protocol_subsystem：collation的请求与回应，根据validator/collator的角色执行对应的任务</li>
@@ -4021,13 +3983,13 @@ public String call() throws Exception &#123;
 <li><strong>candidate_backing_subsystem</strong>：对collation投票，签署<code>statement</code></li>
 <li>statement_distribution_subsystem：广播<code>statement</code></li>
 <li>pov_distribution_subsystem：广播<code>PoV</code></li>
-<li>apporoval_subsystems(TODO)：在finalize前对候选区块的再次检查</li>
+<li>apporoval_subsystems：在finalize前对候选区块的再次检查</li>
 </ul>
 <h3 id="可用性相关"><a href="#可用性相关" class="headerlink" title="可用性相关"></a>可用性相关</h3><ul>
 <li>availability_distribution_subsystem</li>
 <li>bitfield_signing_subsystem</li>
 <li>bitfield_distribution_subsystem</li>
-<li>availability_recovery(TODO)</li>
+<li>availability_recovery</li>
 </ul>
 <h3 id="工具类子系统"><a href="#工具类子系统" class="headerlink" title="工具类子系统"></a>工具类子系统</h3><ul>
 <li>candidate_validation_subsystem：验证候选区块</li>
@@ -4036,53 +3998,69 @@ public String call() throws Exception &#123;
 <li>availability_store_subsystem：存储可用性数据</li>
 <li>network_bridge_subsystem：与collation相关数据在节点间传递的网桥协议</li>
 <li>chain_api_subsystem</li>
-<li>misbehavior_arbitration(TODO)</li>
+<li>misbehavior_arbitration</li>
 </ul>
 <h1 id="Collator"><a href="#Collator" class="headerlink" title="Collator"></a>Collator</h1><p>以平行链上的Collator为例，介绍节点如何与子系统协作。</p>
 <h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><ul>
-<li>平行链启动时，<code>build_polkadot_full_node</code>启动一个中继链全节点，包含overseer和子系统，并且在 collator_protocol_subsystem 注册为<code>collator_side</code>。如果要以collator的身份启动节点，启动时需要设定<code>--collator</code>，类似于以往独立链设定<code>--validator</code>启动验证人节点。<ul>
+<li>平行链启动时，<code>build_polkadot_full_node</code>启动一个中继链全节点，包含overseer和子系统，并且在 collator_protocol_subsystem 注册为<code>collator_side</code>。如果要以collator的身份启动节点，启动时需要设定<code>--collator</code>，类似于以往独立链设定<code>--validator</code>启动验证人节点。中继链全节点持有平行链的<code>client</code>，即平行链嵌套在中继链全节点中运行。<ul>
 <li><code>start_collator</code>：<code>polkadot_full_node.client.execute_with(StartCollator&#125;</code>，collator和polkadot_full_node共享一个<code>overseer_handler</code>。<ul>
-<li><code>follow_polkadot</code>：根据中继链的出块来更新平行链</li>
-<li>初始化<strong>collation_generation_subsystem</strong>，在此时注册<code>collator.produce_candidate</code>，用来生成<code>collation</code>。</li>
-<li>在 collator_protocol_subsystem 上注册 Collator 所在的para_id。</li>
+<li><code>cumulus_consensus::run_parachain_consensus</code>：根据中继链的出块来更新平行链<ul>
+<li><code>follow_new_best</code>：1. 中继链监听到中继链的best区块包含新的平行链区块后，<code>handle_new_best_parachain_head</code>：如果collator已经导入了该区块，就把它当做best并且广播给平行链节点。如果还没有导入，存到<code>unset_best_header</code>中；2. collator导入区块时，优先导入<code>unset_best_header</code>。</li>
+<li><code>follow_finalized_head</code>：中继链监听到中继链的finalize区块包含新的平行链区块后，collator进行<code>finalize_block</code>。</li>
+</ul>
+</li>
+<li>初始化<strong>collation_generation_subsystem</strong>，在此时注册<code>collator.produce_candidate</code>方法，用来生成<code>collation</code>，同时注册para_id，collatorId（公钥）。</li>
+<li>在 collator_protocol_subsystem 上注册 Collator 所在的para_id，在<code>advertise_collation</code>需要用到该id。</li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 <h2 id="准备候选区块"><a href="#准备候选区块" class="headerlink" title="准备候选区块"></a>准备候选区块</h2><ul>
-<li><strong>collation_generation_subsystem</strong> 启动后会循环<code>handle_incoming</code>。接受到<code>ActiveLeavesUpdate</code>后<code>handle_new_activations</code>。<ul>
-<li><code>request_full_validation_data_ctx</code> 在中继链上获取辅助验证的数据<code>ValidationData</code>。</li>
+<li><strong>collation_generation_subsystem</strong> 启动后会循环<code>handle_incoming</code>。接受到<code>Signal(ActiveLeaves(ActiveLeavesUpdate&#123;..&#125;)</code>后触发<code>handle_new_activations</code>。<ul>
+<li>获取availability_cores：core的数量为max(n_parachains + config.parathread_cores, validators.len() / config.max_validators_per_core)，第i个parachain分配第i个core。调用<code>request_availability_cores_ctx</code> -&gt; <code>runtime_api_impl/v1::availability_cores</code> 得到CoreState。</li>
+<li>仅匹配CoreState::Scheduled；</li>
+<li>检查scheduled_core.para_id；</li>
+<li><code>request_full_validation_data_ctx</code> 会触发中继链调用runtime api获取<code>ValidationData</code>，实际调用<code>make_persisted_validation_data</code>构造辅助验证的数据，最终被打包进平行链的<code>SystemInherentData</code>。这时的<code>ValidationData</code>是平行链父区块所对应的；</li>
 <li><code>task_config.collator</code> -&gt; <code>produce_candidate</code><ul>
-<li><code>propose</code>一个候选区块</li>
-<li><code>build_collation</code>：构建候选区块的<code>Collation</code></li>
-<li>开启<code>wait_to_announce</code>任务，注册成为<code>StatementListener</code>。当收到validator发来的<code>Statement::Seconded</code>就广播当前候选区块</li>
+<li>500ms内<code>propose</code>一个候选区块；</li>
+<li><code>build_collation</code>：构建候选区块的<code>Collation</code>；</li>
+<li>开启<code>wait_to_announce</code>任务，注册成为<code>StatementListener</code>。当收到validator发来的<code>Statement::Seconded</code>就广播当前候选区块。</li>
 </ul>
 </li>
-<li><code>collator_signature_payload</code>签名</li>
-<li>生成<code>CandidateReceipt</code>（包含<code>erasure_root</code>和<code>CandidateCommitments</code>的hash），发送<code>CollatorProtocolMessage::DistributeCollation</code>给 collator_protocol_subsystem。</li>
+<li><code>collator_signature_payload</code>签名，payload包括：relay_parent，para_id，persisted_validation_data_hash，pov_hash；</li>
+<li><code>erasure_root</code>：将<code>available_data</code>分成chunks，组合成 merkle trie，erasure_root为树根哈希。</li>
+<li>生成<code>CandidateReceipt</code>，发送<code>CollatorProtocolMessage::DistributeCollation(CandidateReceipt, PoV)</code>给 collator_protocol_subsystem。</li>
 </ul>
 </li>
 </ul>
-<h2 id="通知validator"><a href="#通知validator" class="headerlink" title="通知validator"></a>通知validator</h2><ul>
+<h3 id="schedule-core"><a href="#schedule-core" class="headerlink" title="schedule_core"></a>schedule_core</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// AvailabilityCores</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">CoreOccupied</span></span> &#123;</span><br><span class="line">	<span class="comment">/// A parathread.</span></span><br><span class="line">	Parathread(ParathreadEntry),</span><br><span class="line">	<span class="comment">/// A parachain.</span></span><br><span class="line">	Parachain,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Scheduled</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">AssignmentKind</span></span> &#123;</span><br><span class="line">	<span class="comment">/// A parachain.</span></span><br><span class="line">	Parachain,</span><br><span class="line">	<span class="comment">/// A parathread.</span></span><br><span class="line">	Parathread(CollatorId, <span class="built_in">u32</span>),</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CoreAssignment</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The core that is assigned.</span></span><br><span class="line">	<span class="keyword">pub</span> core: CoreIndex,</span><br><span class="line">	<span class="comment">/// The unique ID of the para that is assigned to the core.</span></span><br><span class="line">	<span class="keyword">pub</span> para_id: ParaId,</span><br><span class="line">	<span class="comment">/// The kind of the assignment.</span></span><br><span class="line">	<span class="keyword">pub</span> kind: AssignmentKind,</span><br><span class="line">	<span class="comment">/// The index of the validator group assigned to the core.</span></span><br><span class="line">	<span class="keyword">pub</span> group_idx: GroupIndex,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="request-availability-cores"><a href="#request-availability-cores" class="headerlink" title="request_availability_cores"></a>request_availability_cores</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">OccupiedCore</span></span>&lt;H = Hash, N = BlockNumber&gt; &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">NOTE:</span> this has no ParaId as it can be deduced from the candidate descriptor.</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/// If this core is freed by availability, this is the assignment that is next up on this</span></span><br><span class="line">	<span class="comment">/// core, if any. None if there is nothing queued for this core.</span></span><br><span class="line">	<span class="keyword">pub</span> next_up_on_available: <span class="built_in">Option</span>&lt;ScheduledCore&gt;,</span><br><span class="line">	<span class="comment">/// The relay-chain block number this began occupying the core at.</span></span><br><span class="line">	<span class="keyword">pub</span> occupied_since: N,</span><br><span class="line">	<span class="comment">/// The relay-chain block this will time-out at, if any.</span></span><br><span class="line">	<span class="keyword">pub</span> time_out_at: N,</span><br><span class="line">	<span class="comment">/// If this core is freed by being timed-out, this is the assignment that is next up on this</span></span><br><span class="line">	<span class="comment">/// core. None if there is nothing queued for this core or there is no possibility of timing</span></span><br><span class="line">	<span class="comment">/// out.</span></span><br><span class="line">	<span class="keyword">pub</span> next_up_on_time_out: <span class="built_in">Option</span>&lt;ScheduledCore&gt;,</span><br><span class="line">	<span class="comment">/// A bitfield with 1 bit for each validator in the set. `1` bits mean that the corresponding</span></span><br><span class="line">	<span class="comment">/// validators has attested to availability on-chain. A 2/3+ majority of `1` bits means that</span></span><br><span class="line">	<span class="comment">/// this will be available.</span></span><br><span class="line">	<span class="meta">#[cfg_attr(feature = <span class="meta-string">&quot;std&quot;</span>, ignore_malloc_size_of = <span class="meta-string">&quot;outside type&quot;</span>)]</span></span><br><span class="line">	<span class="keyword">pub</span> availability: BitVec&lt;bitvec::order::Lsb0, <span class="built_in">u8</span>&gt;,</span><br><span class="line">	<span class="comment">/// The group assigned to distribute availability pieces of this candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> group_responsible: GroupIndex,</span><br><span class="line">	<span class="comment">/// The hash of the candidate occupying the core.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate_hash: CandidateHash,</span><br><span class="line">	<span class="comment">/// The descriptor of the candidate occupying the core.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate_descriptor: CandidateDescriptor&lt;H&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ScheduledCore</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The ID of a para scheduled.</span></span><br><span class="line">	<span class="keyword">pub</span> para_id: Id,</span><br><span class="line">	<span class="comment">/// The collator required to author the block, if any.</span></span><br><span class="line">	<span class="keyword">pub</span> collator: <span class="built_in">Option</span>&lt;CollatorId&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">CoreState</span></span>&lt;H = Hash, N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// The core is currently occupied.</span></span><br><span class="line">	Occupied(OccupiedCore&lt;H, N&gt;),</span><br><span class="line">	<span class="comment">/// The core is currently free, with a para scheduled and given the opportunity</span></span><br><span class="line">	<span class="comment">/// to occupy.</span></span><br><span class="line">	<span class="comment">/// If a particular Collator is required to author this block, that is also present in this</span></span><br><span class="line">	<span class="comment">/// variant.</span></span><br><span class="line">	Scheduled(ScheduledCore),</span><br><span class="line">	<span class="comment">/// The core is currently free and there is nothing scheduled. This can be the case for parathread</span></span><br><span class="line">	<span class="comment">/// cores when there are no parathread blocks queued. Parachain cores will never be left idle.</span></span><br><span class="line">	Free,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="PersistedValidationData"><a href="#PersistedValidationData" class="headerlink" title="PersistedValidationData"></a>PersistedValidationData</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">PersistedValidationData</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// The parent head-data.</span></span><br><span class="line">	<span class="keyword">pub</span> parent_head: HeadData,</span><br><span class="line">	<span class="comment">/// The relay-chain block number this is in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> block_number: N,</span><br><span class="line">	<span class="comment">/// The relay-chain block storage root this is in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> relay_storage_root: Hash,</span><br><span class="line">	<span class="comment">/// The list of MQC heads for the inbound channels paired with the sender para ids. This</span></span><br><span class="line">	<span class="comment">/// vector is sorted ascending by the para id and doesn&#x27;t contain multiple entries with the same</span></span><br><span class="line">	<span class="comment">/// sender.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_mqc_heads: <span class="built_in">Vec</span>&lt;(Id, Hash)&gt;,</span><br><span class="line">	<span class="comment">/// The MQC head for the DMQ.</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// The DMQ MQC head will be used by the validation function to authorize the downward messages</span></span><br><span class="line">	<span class="comment">/// passed by the collator.</span></span><br><span class="line">	<span class="keyword">pub</span> dmq_mqc_head: Hash,</span><br><span class="line">	<span class="comment">/// The maximum legal size of a POV block, in bytes.</span></span><br><span class="line">	<span class="keyword">pub</span> max_pov_size: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="平行链的SystemInherentData"><a href="#平行链的SystemInherentData" class="headerlink" title="平行链的SystemInherentData"></a>平行链的SystemInherentData</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line">   <span class="comment">/// The payload that system inherent carries.</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">SystemInherentData</span></span> &#123;</span><br><span class="line">	<span class="keyword">pub</span> validation_data: crate::PersistedValidationData,</span><br><span class="line">	<span class="comment">/// A storage proof of a predefined set of keys from the relay-chain.</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// Specifically this witness contains the data for:</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// - active host configuration as per the relay parent,</span></span><br><span class="line">	<span class="comment">/// - the relay dispatch queue sizes</span></span><br><span class="line">	<span class="comment">/// - the list of egress HRMP channels (in the list of recipients form)</span></span><br><span class="line">	<span class="comment">/// - the metadata for the egress HRMP channels</span></span><br><span class="line">	<span class="keyword">pub</span> relay_chain_state: sp_trie::StorageProof,</span><br><span class="line">	<span class="comment">/// Downward messages in the order they were sent.</span></span><br><span class="line">	<span class="keyword">pub</span> downward_messages: <span class="built_in">Vec</span>&lt;InboundDownwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// HRMP messages grouped by channels. The messages in the inner vec must be in order they</span></span><br><span class="line">	<span class="comment">/// were sent. In combination with the rule of no more than one message in a channel per block,</span></span><br><span class="line">	<span class="comment">/// this means `sent_at` is **strictly** greater than the previous one (if any).</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: BTreeMap&lt;ParaId, <span class="built_in">Vec</span>&lt;InboundHrmpMessage&gt;&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对SystemInherentData创建的Inherent交易为<code>set_validation_data</code>：可更新parachain的runtime wasm，更新[存储中的PersistedValidationData，RelevantMessagingState，HostConfiguration，processed_downward_messages，hrmp_watermark]，处理数据[<code>on_validation_data</code>，<code>DownwardMessageHandlers::handle_downward_message</code>，<code>HrmpMessageHandlers::handle_hrmp_message</code>]</p>
+<h3 id="Collation"><a href="#Collation" class="headerlink" title="Collation"></a>Collation</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Collation</span></span>&lt;BlockNumber = polkadot_primitives::v1::BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// Messages destined to be interpreted by the Relay chain itself.</span></span><br><span class="line">	<span class="keyword">pub</span> upward_messages: <span class="built_in">Vec</span>&lt;UpwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// The horizontal messages sent by the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: <span class="built_in">Vec</span>&lt;OutboundHrmpMessage&lt;ParaId&gt;&gt;,</span><br><span class="line">	<span class="comment">/// New validation code. Used by upgrade</span></span><br><span class="line">	<span class="keyword">pub</span> new_validation_code: <span class="built_in">Option</span>&lt;ValidationCode&gt;,</span><br><span class="line">	<span class="comment">/// The head-data produced as a result of execution.</span></span><br><span class="line">    <span class="comment">// HeadData(ParachainBlockData.header.encode())</span></span><br><span class="line">	<span class="keyword">pub</span> head_data: HeadData,</span><br><span class="line">	<span class="comment">/// Proof to verify the state transition of the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> proof_of_validity: PoV,</span><br><span class="line">	<span class="comment">/// The number of messages processed from the DMQ.</span></span><br><span class="line">	<span class="keyword">pub</span> processed_downward_messages: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The mark which specifies the block number up to which all inbound HRMP messages are processed.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_watermark: BlockNumber,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">PoV</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The block witness data.</span></span><br><span class="line">	<span class="keyword">pub</span> block_data: BlockData,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// PoV = BlockData(ParachainBlockData.encode())</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ParachainBlockData</span></span>&lt;B: BlockT&gt; &#123;</span><br><span class="line">	<span class="comment">/// The header of the parachain block.</span></span><br><span class="line">	header: &lt;B <span class="keyword">as</span> BlockT&gt;::Header,</span><br><span class="line">	<span class="comment">/// The extrinsics of the parachain block without the `PolkadotInherent`.</span></span><br><span class="line">	extrinsics: <span class="built_in">Vec</span>&lt;&lt;B <span class="keyword">as</span> BlockT&gt;::Extrinsic&gt;,</span><br><span class="line">	<span class="comment">/// The data that is required to emulate the storage accesses executed by all extrinsics.</span></span><br><span class="line">	storage_proof: StorageProof,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">StorageProof</span></span> &#123;</span><br><span class="line">	trie_nodes: <span class="built_in">Vec</span>&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Ensure-Code的available-data"><a href="#Ensure-Code的available-data" class="headerlink" title="Ensure Code的available_data"></a>Ensure Code的available_data</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">AvailableData</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The Proof-of-Validation of the candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> pov: std::sync::Arc&lt;PoV&gt;,</span><br><span class="line">	<span class="comment">/// The persisted validation data needed for secondary checks.</span></span><br><span class="line">	<span class="keyword">pub</span> validation_data: PersistedValidationData,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="连接并通知validator"><a href="#连接并通知validator" class="headerlink" title="连接并通知validator"></a>连接并通知validator</h2><ul>
 <li>collator_protocol_subsystem 监听Communication(CollatorProtocolMessage)，<code>process_msg</code>处理消息。收到<code>DistributeCollation</code>后，检查para_id，然后<code>distribute_collation</code>向validator广播。<ul>
-<li><code>distribute_collation</code>：检查collation在active-leaves上，collation没有在该relay parent上出现<ul>
+<li><code>distribute_collation</code>：要求collation在active-leaves上，collation未被发送<ul>
 <li><code>determine_core</code>：计算当前平行链分配到的core</li>
-<li><code>determine_our_validators</code>：计算分配到该平行链的validator集合，包括当前集合和下一次分配的集合</li>
-<li><code>connect_to_validators</code>：同时连接当前validator集合和下一组validator</li>
+<li><code>determine_our_validators</code>：计算分配到该平行链的validator集合，包括当前集合和下一次分配的集合。每个session会依据<code>n_cores</code>和<code>validators.len()</code>重新排列ValidatorGroups，但是不一定是一个session才更换分配给平行链的group。</li>
+<li><code>connect_to_validators</code>：同时连接当前validators和下一组validators。</li>
 </ul>
 </li>
 </ul>
 </li>
 <li>连接上新的validator后，在collator protocol子系统中<code>handle_validator_connected</code><ul>
-<li>发送一个<code>CollatorProtocolMessage::Declare</code>给validator，注册collator</li>
-<li>如果validator是属于该平行链的验证人集合，那么<code>advertise_collation</code>，向validator 发送<code>CollatorProtocolMessage::AdvertiseCollation</code> ，通知validator准备发送collation了。</li>
+<li>发送一个<code>CollatorProtocolMessage::Declare(CollatorId)</code>给validator，注册collator</li>
+<li>如果validator是属于该平行链的验证人集合，那么<code>add_peer_id_for_validator</code>记录validators的peer_id，<code>advertise_collation</code>，向validator 发送<code>CollatorProtocolMessage::AdvertiseCollation(relay_parent, collating_on)</code> ，通知validator准备发送collation了。</li>
 </ul>
 </li>
 </ul>
-<h2 id="回应请求"><a href="#回应请求" class="headerlink" title="回应请求"></a>回应请求</h2><ul>
+<h3 id="Candidate"><a href="#Candidate" class="headerlink" title="Candidate"></a>Candidate</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateReceipt</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The descriptor of the candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> descriptor: CandidateDescriptor&lt;H&gt;,</span><br><span class="line">	<span class="comment">/// The hash of the encoded commitments made as a result of candidate execution.</span></span><br><span class="line">	<span class="keyword">pub</span> commitments_hash: Hash,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateDescriptor</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The ID of the para this is a candidate for.</span></span><br><span class="line">	<span class="keyword">pub</span> para_id: Id,</span><br><span class="line">	<span class="comment">/// The hash of the relay-chain block this is executed in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> relay_parent: H,</span><br><span class="line">	<span class="comment">/// The collator&#x27;s sr25519 public key.</span></span><br><span class="line">	<span class="keyword">pub</span> collator: CollatorId,</span><br><span class="line">	<span class="comment">/// The blake2-256 hash of the persisted validation data. This is extra data derived from</span></span><br><span class="line">	<span class="comment">/// relay-chain state which may vary based on bitfields included before the candidate.</span></span><br><span class="line">	<span class="comment">/// Thus it cannot be derived entirely from the relay-parent.</span></span><br><span class="line">	<span class="keyword">pub</span> persisted_validation_data_hash: Hash,</span><br><span class="line">	<span class="comment">/// The blake2-256 hash of the pov.</span></span><br><span class="line">	<span class="keyword">pub</span> pov_hash: Hash,</span><br><span class="line">	<span class="comment">/// The root of a block&#x27;s erasure encoding Merkle tree.</span></span><br><span class="line">	<span class="keyword">pub</span> erasure_root: Hash,</span><br><span class="line">	<span class="comment">/// Signature on blake2-256 of components of this receipt:</span></span><br><span class="line">	<span class="comment">/// The parachain index, the relay parent, the validation data hash, and the pov_hash.</span></span><br><span class="line">	<span class="keyword">pub</span> signature: CollatorSignature,</span><br><span class="line">	<span class="comment">/// Hash of the para header that is being generated by this candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> para_head: Hash,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// CandidateCommitments = Collation - PoV</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateCommitments</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// Messages destined to be interpreted by the Relay chain itself.</span></span><br><span class="line">	<span class="keyword">pub</span> upward_messages: <span class="built_in">Vec</span>&lt;UpwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// Horizontal messages sent by the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: <span class="built_in">Vec</span>&lt;OutboundHrmpMessage&lt;Id&gt;&gt;,</span><br><span class="line">	<span class="comment">/// New validation code.</span></span><br><span class="line">	<span class="keyword">pub</span> new_validation_code: <span class="built_in">Option</span>&lt;ValidationCode&gt;,</span><br><span class="line">	<span class="comment">/// The head-data produced as a result of execution.</span></span><br><span class="line">	<span class="keyword">pub</span> head_data: HeadData,</span><br><span class="line">	<span class="comment">/// The number of messages processed from the DMQ.</span></span><br><span class="line">	<span class="keyword">pub</span> processed_downward_messages: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The mark which specifies the block number up to which all inbound HRMP messages are processed.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_watermark: N,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="回应validator的请求"><a href="#回应validator的请求" class="headerlink" title="回应validator的请求"></a>回应validator的请求</h2><ul>
 <li>收到validator消息<code>CollatorProtocolMessage::RequestCollation</code><ul>
-<li><code>send_collation</code>：回应validtor。回应的message中包含<code>CandidateReceipt</code>和<code>PoV</code>，发送<code>CollatorProtocolMessage::Collation(request_id,receipt,pov)</code>给validator。由于这是节点间通信，overseer的中继只能作用于节点内的子系统之间，所以这个消息是被封装在<code>NetworkBridgeMessage::SendCollationMessage</code>中的，通过 network_bridge_subsystem 向validator转发消息。</li>
+<li><code>send_collation</code>：回应validtor，发送<code>CollatorProtocolMessage::Collation(request_id,receipt,pov)</code>给validator。对PoV进行<code>compress</code>再发送，减少通信压力。CandidateReceipt中只存储commitments_hash，validator在验证时从PoV中重新组装出commitments，最后验证hash是否一致。<br>由于这是节点间通信，overseer的中继只能作用于节点内的子系统之间，所以这个消息是被封装在<code>NetworkBridgeMessage::SendCollationMessage</code>中的，通过 network_bridge_subsystem 向validator转发消息（一对一，非广播）。</li>
 </ul>
 </li>
 </ul>
@@ -4401,84 +4379,246 @@ public String call() throws Exception &#123;
   <entry>
     <title>平行链节点的出块流程</title>
     <url>/blog/494d34b2.html</url>
-    <content><![CDATA[<h1 id="中继链"><a href="#中继链" class="headerlink" title="中继链"></a>中继链</h1><h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><ul>
-<li>中继链启动时，启动overseer，包含一些子系统：candidate_backing，candidate_selection，statement_distribution，availability_distribution等,<code>route_message</code>为子系统进行<code>AllMessages</code>消息中继，发送到指定的子系统。中继链<code>forward_events</code>将中继链主系统的消息传递给overseer。<a id="more"></a></li>
-<li>中继链节点与overseer交互由事件触发，主要的事件是块导入，块终结，send_msg。块导入和块终结会更改activeLeaves，send_msg主要用来初始化collation_generation子系统，激活CollatorProtocol，向provisioner请求候选区块。<ul>
+    <content><![CDATA[<h1 id="出块流程"><a href="#出块流程" class="headerlink" title="出块流程"></a>出块流程</h1><a id="more"></a>
+<ol>
+<li>为平行链尽可能平均地分配validator group；</li>
+<li>collator生成一个平行链区块，和该区块的PoV一起组成collation/candidate；</li>
+<li>collator将candidate通过Collator Protocol传递给group内的validator（1 to 1， 非广播）；</li>
+<li>group内的validators通过Candidate Backing对candidate进行验证和共识。collation通过共识后状态变更为”backable”；</li>
+<li>中继链出块人将backable candidate打包上链，此时candidate状态为”pending availability”，此时不会更新parachain的head；</li>
+<li>在后续的中继链区块中，validators会通过Availability Distribution子系统使得candidate变为available（所有validators的2/3以上持有candidate的PoV）；</li>
+<li>中继链出块人将available的candidate打包上链，此时更新parachain的head，并对candidate中包含的消息（主要是跨链消息）进行处理；</li>
+<li>类似于finalize，对candidate也有Approval Process的过程，来对candidate进行二次检查，如果有validator报告检查不通过，那么触发所有validators对该candidate进行重新验证。</li>
+</ol>
+<h1 id="中继链"><a href="#中继链" class="headerlink" title="中继链"></a>中继链</h1><h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><ul>
+<li>中继链启动时，启动overseer，包含一些子系统：candidate_backing，candidate_selection，statement_distribution，availability_distribution等,<code>route_message</code>为子系统进行<code>AllMessages</code>消息中继，发送到指定的子系统。中继链<code>forward_events</code>将中继链主系统的消息传递给overseer。</li>
+<li>中继链节点与overseer交互由事件触发，主要的事件是块导入，块终结，send_msg。<code>Event::BlockImported</code>和<code>Event::BlockFinalized</code>会更改<code>active_leaves</code>，<code>send_msg</code>主要用来初始化collation_generation子系统，激活CollatorProtocol，向provisioner请求候选区块。<ul>
 <li>OverseerHandler{events_tx} 外部发送事件，overseer.events_rx接收外部消息。</li>
 <li>子系统持有OverseerSubsystemContext 与overseer 交互</li>
 <li>子系统A，B交互，A发送AllMessages::B，overseer转换为Fromoverseer::Communication{B}发送给B。</li>
 </ul>
 </li>
 </ul>
-<h2 id="请求候选区块"><a href="#请求候选区块" class="headerlink" title="请求候选区块"></a>请求候选区块</h2><ul>
-<li>接受到<code>Declare</code>，将collator保存到State.known_collators。</li>
-<li>接受到<code>AdvertiseCollation</code>,触发<code>notify_candidate_selection</code>：通知CandidateSelectionSubsystem。</li>
+<h2 id="请求候选区块"><a href="#请求候选区块" class="headerlink" title="请求候选区块"></a>请求候选区块</h2><p>CollatorProtocol::validator_side：</p>
+<ul>
+<li>接受到来自collator的<code>Declare</code>，将collator的信息（peer_id, collatorId）保存到State.known_collators。collatorId是collator的公钥。</li>
+<li>接受到来自collator的<code>AdvertiseCollation</code>，触发<code>notify_candidate_selection</code>：通知CandidateSelectionSubsystem。</li>
 <li>CandidateSelectionSubsystem <code>handle_collation</code>:<ul>
-<li><code>get_collation</code>发送CollatorProtocolMessage::FetchCollation，触发<code>fetch_collation</code><ul>
-<li><code>request_collation</code>发送CollatorProtocolMessage::RequestCollation，向<code>known_collators</code>请求collation。</li>
-<li>收到collator发来的protocol_v1::CollatorProtocolMessage::Collation，触发<code>received_collation</code>：取消正在进行collation的请求，回复requests_in_progress一个CollationRequestResult，回复请求的validotr一个元组(candidate_receipt, pov)，存储collation。如果是过时的collation，会降低collator的声誉。</li>
+<li>检查<code>para_id</code>是否是该validator负责的，如果不是，<code>forward_invalidity_note</code> -&gt; <code>report_collator</code> 降低collator的信誉。</li>
+<li><code>get_collation</code>发送CollatorProtocolMessage::FetchCollation，触发<code>fetch_collation</code>，等待回应：<ul>
+<li><code>request_collation</code>发送CollatorProtocolMessage::RequestCollation(relay_parent, para_id)，向<code>known_collators</code>请求collation。</li>
+<li>收到collator发来的protocol_v1::CollatorProtocolMessage::Collation，触发<code>received_collation</code>：取消仍然正在进行的request_collation（第一次选择了Collation的地方，先到先得，还没准备好发送的collator被排除），唤醒requests_in_progress（如果超时，惩罚collator），回复请求一个元组(candidate_receipt, pov)唤醒<code>get_collation</code>，存储collation。如果是过时的collation，会降低collator的声誉。</li>
 </ul>
 </li>
-<li><code>second_candidate</code>：发送CandidateBackingMessage::Second，通知candidate backing子系统。</li>
+<li><code>second_candidate</code>：发送<code>CandidateBackingMessage::Second(relay_parent,candidate_receipt,pov)</code> 给 candidate backing子系统；</li>
+</ul>
+</li>
+</ul>
+<h2 id="验证、支持候选区块"><a href="#验证、支持候选区块" class="headerlink" title="验证、支持候选区块"></a>验证、支持候选区块</h2><ul>
+<li>candidate backing子系统 <code>process_msg</code>处理 CandidateBackingMessage::Second。<ul>
+<li>检查<code>para_id</code>是否是<code>self.assignment</code>；</li>
+<li>检查是否second（支持）过其他candidate；</li>
+<li>检查是否对该candidate已经有issued_statements；</li>
+<li><code>validate_and_second</code><ul>
+<li>检查candidate中的collator是否为schdule计划中的，如果无效，惩罚collator；</li>
+<li>background_validate_and_make_available：将candidate加入<code>awaiting_validation</code>，启动异步任务<code>validate_and_make_available</code>：<ul>
+<li>从params获取到PoV（Second消息中携带了PoV）；</li>
+<li><code>request_candidate_validation</code>发送<code>CandidateValidationMessage::ValidateFromChainState</code>，candidate validation子系统<code>spawn_validate_from_chain_state</code><ul>
+<li><code>find_assumed_validation_data</code>检查candidate的<code>PersistedValidationData</code>是否与中继链上一致；</li>
+<li><code>spawn_validate_exhaustive</code> -&gt; <code>validate_candidate_exhaustive</code>，<ul>
+<li><code>perform_basic_checks</code>基础检查：pov大小是否超过max_pov_size，candidate.descriptor.pov_hash与pov.hash是否一致，<code>check_collator_signature</code>；</li>
+<li><code>validate</code> -&gt; <code>wasm_executor::validate_candidate</code> -&gt; <code>pool.validate_candidate</code> -&gt; <code>validate_candidate_custom</code> -&gt; <code>ValidationHost::validate_candidate</code>: <code>start_worker</code>通过<code>process::Command::new</code>子命令创建子进程执行<code>run_worker</code>，父子进程通过共享内存进行通信<ul>
+<li><code>run_worker</code> -&gt; <code>validate_candidate_internal</code><ul>
+<li>调用validation_code中的<code>validate_block(ValidationParams)</code>： <code>E::execute_block(block)</code>执行区块，然后读取变更后的存储组装成ValidationResult（数据结构与CandidateCommitments一致）</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>检查ValidationResult.head_data.hash() == descriptor.para_head ?</li>
+<li>将ValidationResult组装成CandidateCommitments，返回验证结果(CandidateCommitments, persisted_validation_data)</li>
+</ul>
+</li>
+<li><code>runtime_api_request</code>发送<code>RuntimeApiRequest::CheckValidationOutputs</code>，Runtime api子系统调用inclusion模块的<code>check_validation_outputs_for_runtime_api</code>，主要是检查<code>CandidateCommitments</code>是否满足接受标准：数据大小，消息数量。</li>
+</ul>
+</li>
+<li>检查commitments_hash是否与ValidationResuld的一致；</li>
+<li><code>make_pov_available</code>：生成纠删码，验证<code>erasure_root</code>。<code>store_available_data</code>：发送AvailabilityStoreMessage::StoreAvailableData(CandidateReceipt.hash, self.ValidatorIndex, n_validators, AvailableData, tx)，av store存储可用数据available_data和整个纠删码。</li>
+<li>发送<code>ValidatedCandidateCommand::Second(candidate, commitments, pov)</code><h3 id="validate"><a href="#validate" class="headerlink" title="validate"></a>validate</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 主要是persisted_validation_data的数据</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ValidationParams</span></span> &#123;</span><br><span class="line">	<span class="comment">/// Previous head-data.</span></span><br><span class="line">	<span class="keyword">pub</span> parent_head: HeadData,  <span class="comment">// persisted_validation_data.parent_head</span></span><br><span class="line">	<span class="comment">/// The collation body.</span></span><br><span class="line">	<span class="keyword">pub</span> block_data: BlockData,  <span class="comment">// pov.block_data</span></span><br><span class="line">	<span class="comment">/// The current relay-chain block number.</span></span><br><span class="line">	<span class="keyword">pub</span> relay_chain_height: RelayChainBlockNumber,</span><br><span class="line">	<span class="comment">/// The relay-chain block&#x27;s storage root.</span></span><br><span class="line">	<span class="keyword">pub</span> relay_storage_root: Hash,</span><br><span class="line">	<span class="comment">/// The MQC head for the DMQ.</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// The DMQ MQC head will be used by the validation function to authorize the downward messages</span></span><br><span class="line">	<span class="comment">/// passed by the collator.</span></span><br><span class="line">	<span class="keyword">pub</span> dmq_mqc_head: Hash,</span><br><span class="line">	<span class="comment">/// The list of MQC heads for the inbound HRMP channels paired with the sender para ids. This</span></span><br><span class="line">	<span class="comment">/// vector is sorted ascending by the para id and doesn&#x27;t contain multiple entries with the same</span></span><br><span class="line">	<span class="comment">/// sender.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_mqc_heads: <span class="built_in">Vec</span>&lt;(Id, Hash)&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ValidationResult</span></span> &#123;</span><br><span class="line">	<span class="comment">/// New head data that should be included in the relay chain state.</span></span><br><span class="line">	<span class="keyword">pub</span> head_data: HeadData,</span><br><span class="line">	<span class="comment">/// An update to the validation code that should be scheduled in the relay chain.</span></span><br><span class="line">	<span class="keyword">pub</span> new_validation_code: <span class="built_in">Option</span>&lt;ValidationCode&gt;,</span><br><span class="line">	<span class="comment">/// Upward messages send by the Parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> upward_messages: <span class="built_in">Vec</span>&lt;UpwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// Outbound horizontal messages sent by the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: <span class="built_in">Vec</span>&lt;OutboundHrmpMessage&lt;Id&gt;&gt;,</span><br><span class="line">	<span class="comment">/// Number of downward messages that were processed by the Parachain.</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// It is expected that the Parachain processes them from first to last.</span></span><br><span class="line">	<span class="keyword">pub</span> processed_downward_messages: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The mark which specifies the block number up to which all inbound HRMP messages are processed.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_watermark: RelayChainBlockNumber,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="AvailableData"><a href="#AvailableData" class="headerlink" title="AvailableData"></a>AvailableData</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">AvailableData</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The Proof-of-Validation of the candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> pov: std::sync::Arc&lt;PoV&gt;,</span><br><span class="line">	<span class="comment">/// The persisted validation data needed for secondary checks.</span></span><br><span class="line">	<span class="keyword">pub</span> validation_data: PersistedValidationData,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 <h2 id="对候选区块共识"><a href="#对候选区块共识" class="headerlink" title="对候选区块共识"></a>对候选区块共识</h2><ul>
-<li>candidate backing子系统 <code>process_msg</code>处理CandidateBackingMessage::Second，要求该candidate没有被签署valid statement，并且该validator没有second（支持）过其他candidate。<ul>
-<li><code>validate_and_second</code><ul>
-<li><code>request_candidate_validation</code>发送CandidateValidationMessage::ValidateFromChainState，candidate validation子系统<code>spawn_validate_from_chain_state</code> -&gt; <code>spawn_validate_exhaustive</code> -&gt; <code>validate_candidate_exhaustive</code>，<code>runtime_api_request</code>发送<code>RuntimeApiRequest::CheckValidationOutputs</code>检查ValidationResult， Runtime api子系统调用inclusion模块的<code>check_validation_outputs</code></li>
-<li><code>make_pov_available</code>：生成纠删码，CandidateCommitments =》 CommittedCandidateReceipt。<code>store_available_data</code>：发送AvailabilityStoreMessage::StoreAvailableData，av store存储整个可用数据，纠删码只存属于该validator的那份。</li>
-<li>发送<code>ValidatedCandidateCommand::Second</code></li>
+<li><p>CandidateBackingJob监听任务，<code>handle_validated_candidate_command</code>接受命令<code>ValidatedCandidateCommand::Second</code>：将candidate_hash插入self.seconded和self.issued_statements，组装Statement::Seconded(CommittedCandidateReceipt)</p>
+<ul>
+<li><p><code>sign_import_and_distribute_statement</code>对statement共识</p>
+<ul>
+<li><code>sign_statement</code>对statement签名</li>
+<li><code>import_statement</code><ul>
+<li><code>primitive_statement_to_table</code>转换statement为SignedStatement</li>
+<li><code>Table::import_statement</code><ul>
+<li><code>import_candidate</code>：导入Statement::Candidate状态的candidate。digest = CommittedCandidateReceipt.hash()。如果Table.authority_data已经有proposal，验证digest，如果不相符，要报告Misbehavior::MultipleCandidates。Table::candidate_votes插入CandidateData。进行投票ValidityVote::Issued。</li>
+<li><code>validity_vote</code><ul>
+<li><code>requisite_votes</code>：计算至少需要的票数，group.validators.len()/2 + 1；</li>
+<li>检查本validator是否是group内，如果不是，报告Misbehavior::UnauthorizedStatement；</li>
+<li>如果已经投票过，报告Misbehavior::ValidityDoubleVote或者Misbehavior::DoubleSign；</li>
+<li>如果是第一次投票，<code>insert(vote)</code>。当票数足够时（大于该group的1/2），<code>update_includable_count</code>更新<code>Table::includable_count</code>，记录parachain是否通过。返回<code>Summary</code>。</li>
 </ul>
 </li>
-<li><code>handle_validated_candidate_command</code>接受命令<ul>
-<li><code>sign_import_and_distribute_statement</code>对statement共识。<ul>
-<li><code>import_statement</code>：<code>primitive_statement_to_table</code>转换statement，<code>validity_vote</code>。当票数足够时（大于1/2+1），can_be_included(v_threshold)等于true，<code>update_includable_count</code>更新全局的通过数。<ul>
-<li><code>attested_candidate</code>：仅当<code>can_be_included</code>为true时，才返回AttestedCandidate,将<code>summary.candidate</code>插入CandidateBackingJob的backed集合，将AttestedCandidate转换为BackedCandidate，<code>CommittedCandidateReceipt</code>存储到provisioner_subsystem。当<code>can_be_included</code>为false时，不会存储到provisioner_subsystem，中继链就不会打包这个候选区块。</li>
+<li><code>attested_candidate</code>：仅当<code>can_be_included</code>为true时，才返回AttestedCandidate</li>
+<li>将<code>summary.candidate</code>(digest)插入CandidateBackingJob的backed集合，<code>table_attested_to_backed</code>将AttestedCandidate转换为BackedCandidate，<code>send_to_provisioner</code>将(relay_parent, CommittedCandidateReceipt) 通过封装在ProvisionableData::BackedCandidate消息中存储到provisioner_subsystem。当<code>can_be_included</code>为false时，不会存储到provisioner_subsystem，中继链就不会打包这个候选区块。</li>
+<li><code>issue_new_misbehaviors</code>报告之前出现的misbehaviors。</li>
 </ul>
 </li>
-<li><code>distribute_signed_statement</code>：发送StatementDistributionMessage::Share。statement distribution子系统收到后，<code>inform_statement_listeners</code>（collator在<code>wait_to_announce</code>时注册成为listener），<code>circulate_statement_and_dependents</code>(更新后）广播statement。</li>
-<li>其他validator收到CandidateBackingMessage::Statement后，<code>check_statement_signature</code>，<code>maybe_validate_and_import</code><ul>
+</ul>
+</li>
+<li><p><code>distribute_signed_statement</code>：发送StatementDistributionMessage::Share。statement distribution子系统收到后：</p>
+<ul>
+<li><code>inform_statement_listeners</code>（collator在<code>wait_to_announce</code>时注册成为listener）</li>
+<li><p><code>circulate_statement_and_dependents</code>(更新后）广播statement：active_head在之前收到OverseerSignal::ActiveLeaves时创建</p>
+<ul>
+<li><code>note_statement</code>：做一些简单检查，标记statement的状态，比如如果可以接受并且是未存到active_head的，那么返回NotedStatement::Fresh。</li>
+<li>如果是NotedStatement::Fresh，<code>circulate_statement</code>查找其他还未拥有该statement的validators，返回peers_needing_dependents。</li>
+<li><p><code>send_statements_about</code>给peers_needing_dependents发送statements。</p>
+</li>
+<li><p>其他validator <code>handle_network_update</code> 收到NetworkBridgeEvent::PeerMessage后，<code>handle_incoming_message</code>：</p>
+<ul>
+<li>如果是不需要的statement, <code>report_peer</code>降低peer的信誉；</li>
+<li><code>check_statement_signature</code>，签名错误<code>report_peer</code>；</li>
+<li>检查statement是否真的存在于收到的peer data，不存在则<code>report_peer</code>；</li>
+<li>如果该statement不在该validator的known_candidates中，<code>send_statements_about</code>发送该candidate的statements给peer。所以group内的validator不一定需要直连，通过p2p网络最终也能收到其他的statement。</li>
+<li>inform_statement_listeners</li>
+<li>note_statement：如果是NotedStatement::Fresh，发送CandidateBackingMessage::Statement。</li>
+<li>CandidateBacking子系统收到后：<ul>
+<li>check_statement_signature</li>
+<li><code>maybe_validate_and_import</code><ul>
 <li><code>import_statement</code></li>
-<li><code>kick_off_validation_work</code>(如果已经issued_statements则直接退出，否则request_pov_from_distribution(notify_all_we_are_awaiting)， request_candidate_validation， 存储可用数据，标记Statement为Valid)</li>
-<li>继续<code>sign_import_and_distribute_statement</code>。</li>
+<li><code>kick_off_validation_work</code>：如果已经在issued_statements中则直接退出。检查group_id。如果candidate的collator与required_collator不一致，将其直接插入到issued_statements，然后返回。否则<ul>
+<li><code>background_validate_and_make_available</code>：此时传入的PoV为None，在<code>validate_and_make_available</code>中会触发<code>request_pov_from_distribution</code>，向所有拥有当前relay_parent的peers广播awaiting pov状态，最后发送ValidatedCandidateCommand::Attest给CandidateBackingJob。</li>
+<li>CandidateBackingJob收到Attest后，检查issued_statements，未issue的话插入其中，然后<code>sign_import_and_distribute_statement</code>。</li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 </li>
-<li><code>distribute_pov</code>：发送PoVDistributionMessage::DistributePoV。<ul>
-<li>子系统pov distribution接受DistributePoV后<code>handle_distribute</code>：<code>distribute_to_awaiting</code>把pov发给等待该relay_parent的validator，发送PoVDistributionMessage::SendPoV，其他validator收到后<code>handle_incoming_pov</code>继续<code>distribute_to_awaiting</code>。</li>
+</ul>
+</li>
+<li>如果是fresh的，<code>circulate_statement</code>，但是忽略peers_needing_dependents。</li>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
+</li>
+<li><p><code>distribute_pov</code>：发送PoVDistributionMessage::DistributePoV。</p>
+<ul>
+<li>子系统pov distribution接受DistributePoV后<code>handle_distribute</code>：<code>distribute_to_awaiting</code>把pov发给等待该relay_parent的validator（之前有<code>request_pov_from_distribution</code>），发送PoVDistributionMessage::SendPoV，其他validator收到后<code>handle_incoming_pov</code>继续<code>distribute_to_awaiting</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="CommittedCandidateReceipt"><a href="#CommittedCandidateReceipt" class="headerlink" title="CommittedCandidateReceipt"></a>CommittedCandidateReceipt</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CommittedCandidateReceipt</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The descriptor of the candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> descriptor: CandidateDescriptor&lt;H&gt;,</span><br><span class="line">	<span class="comment">/// The commitments of the candidate receipt.</span></span><br><span class="line">	<span class="keyword">pub</span> commitments: CandidateCommitments,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="CandidateData"><a href="#CandidateData" class="headerlink" title="CandidateData"></a>CandidateData</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateData</span></span>&lt;Ctx: Context&gt; &#123;</span><br><span class="line">	group_id: Ctx::GroupId, <span class="comment">// para_id</span></span><br><span class="line">	candidate: Ctx::Candidate,  <span class="comment">// CommittedCandidateReceipt</span></span><br><span class="line">	validity_votes: HashMap&lt;Ctx::AuthorityId, ValidityVote&lt;Ctx::Signature&gt;&gt;,</span><br><span class="line">	indicated_bad_by: <span class="built_in">Vec</span>&lt;Ctx::AuthorityId&gt;, <span class="comment">// count ValidityVote::Invalid</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Summary</span></span>&lt;Digest, Group&gt; &#123;</span><br><span class="line">	<span class="comment">/// The digest of the candidate referenced.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate: Digest,</span><br><span class="line">	<span class="comment">/// The group that the candidate is in.</span></span><br><span class="line">	<span class="keyword">pub</span> group_id: Group,</span><br><span class="line">	<span class="comment">/// How many validity votes are currently witnessed.</span></span><br><span class="line">	<span class="keyword">pub</span> validity_votes: <span class="built_in">usize</span>,</span><br><span class="line">	<span class="comment">/// Whether this has been signalled bad by at least one participant.</span></span><br><span class="line">	<span class="keyword">pub</span> signalled_bad: <span class="built_in">bool</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="AttestedCandidate"><a href="#AttestedCandidate" class="headerlink" title="AttestedCandidate"></a>AttestedCandidate</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">AttestedCandidate</span></span>&lt;Group, Candidate, AuthorityId, Signature&gt; &#123;</span><br><span class="line">	<span class="comment">/// The group ID that the candidate is in.</span></span><br><span class="line">	<span class="keyword">pub</span> group_id: Group,</span><br><span class="line">	<span class="comment">/// The candidate data.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate: Candidate,</span><br><span class="line">	<span class="comment">/// Validity attestations.</span></span><br><span class="line">	<span class="keyword">pub</span> validity_votes: <span class="built_in">Vec</span>&lt;(AuthorityId, ValidityAttestation&lt;Signature&gt;)&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="BackedCandidate"><a href="#BackedCandidate" class="headerlink" title="BackedCandidate"></a>BackedCandidate</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">BackedCandidate</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The candidate referred to.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate: CommittedCandidateReceipt&lt;H&gt;,</span><br><span class="line">	<span class="comment">/// The validity votes themselves, expressed as signatures.</span></span><br><span class="line">	<span class="keyword">pub</span> validity_votes: <span class="built_in">Vec</span>&lt;ValidityAttestation&gt;,</span><br><span class="line">	<span class="comment">/// The indices of the validators within the group, expressed as a bitfield.</span></span><br><span class="line">	<span class="keyword">pub</span> validator_indices: BitVec&lt;bitvec::order::Lsb0, <span class="built_in">u8</span>&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="可用性检查"><a href="#可用性检查" class="headerlink" title="可用性检查"></a>可用性检查</h2><ul>
-<li>每次ActiveLeaves都会派发一个BitfieldSigningJob，调用RuntimeApiRequest::CandidatePendingAvailability查询candidate处于等待被检查可用性的，<code>handle_bitfield_distribution</code>处理bitfield<ul>
-<li><code>relay_message</code>将bitfield发送给Provisioner记录到ProvisionableData::Bitfield。并且广播给其他validators。</li>
+<li><p>Availability Distribution子系统:</p>
+<ul>
+<li><code>handle_our_view_change</code>：将处于pending availability队列中（根据core获得，core的状态是根据链上存储计算的）的backed candidates对应的ErasureChunk广播给peers（如果拥有的话）。遍历所有validator获取chunk_index，获取对应的ErasureChunk；</li>
+<li><code>process_incoming_peer_message</code>：发送<code>StoreChunk</code>给av store来保存与本validator_index对应的chunk。</li>
+<li><code>handle_peer_view_change</code>：将所有活跃信息重新发送给该peer；</li>
+</ul>
+</li>
+<li><p>BitfieldSigning子系统：每次收到ActiveLeaves(ActiveLeavesUpdate)都会派发一个BitfieldSigningJob，延迟1.5秒后<code>construct_availability_bitfield</code>：</p>
+<ul>
+<li><code>get_availability_cores</code>；</li>
+<li><code>get_core_availability</code>：发送AvailabilityStoreMessage::QueryChunkAvailability(candidate, validator_index, tx)向Availability Store查询对于该validator对某个Core是否拥有availability chunk</li>
+<li>遍历所有availability_cores，得到bitfield: Vec<bool>；</bool></li>
+</ul>
+</li>
+<li><code>validator.sign</code>对bitfield签名；</li>
+<li><p>发送BitfieldDistributionMessage::DistributeBitfield(relay_parent, signed_bitfield)。</p>
+</li>
+<li><p>bitfield distribution收到后，<code>handle_bitfield_distribution</code>处理signed_bitfield：</p>
+<ul>
+<li><code>validator_index</code>从签名中获取validator_index，再从ProtocolState::per_relay_parent::validator_set中得到validatorId；</li>
+<li><code>relay_message</code>将bitfield发送ProvisionableData::Bitfield给Provisioner记录到signed_bitfields。</li>
 </ul>
 </li>
 </ul>
+<h3 id="ErasureChunk"><a href="#ErasureChunk" class="headerlink" title="ErasureChunk"></a>ErasureChunk</h3><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ErasureChunk</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The erasure-encoded chunk of data belonging to the candidate block.</span></span><br><span class="line">	<span class="keyword">pub</span> chunk: <span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;,</span><br><span class="line">	<span class="comment">/// The index of this erasure-encoded chunk of data.</span></span><br><span class="line">	<span class="keyword">pub</span> index: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// Proof for this chunk&#x27;s branch in the Merkle tree.</span></span><br><span class="line">	<span class="keyword">pub</span> proof: <span class="built_in">Vec</span>&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h2 id="出块"><a href="#出块" class="headerlink" title="出块"></a>出块</h2><ul>
 <li>中继链<code>propose</code><ul>
 <li><code>get_provisioner_data</code><ul>
-<li>overseer.<code>wait_for_activation</code>等待relay_parent为中继链父哈希的叶子激活，发送ProvisionerMessage::RequestInherentData请求数据，2秒内需要收到数据否则超时</li>
+<li>overseer.<code>wait_for_activation</code>等待relay_parent为中继链父哈希的叶子在overseer上激活，发送ProvisionerMessage::RequestInherentData请求数据，PROPOSE_TIMEOUT(2.5秒)内需要收到数据；</li>
 </ul>
 </li>
 <li>打包进inherent_data。</li>
 </ul>
 </li>
-</ul>
+<li>Provisioner子系统启动job时，ProvisioningJob::inherent_after设置为Delay(PRE_PROPOSE_TIMEOUT) 2秒；</li>
+<li><p>收到RequestInherentData消息后，等待inherent_after空闲，然后</p>
 <ul>
-<li>进入共识流程，直到被GRANDPA确认。</li>
+<li><code>send_inherent_data</code>：回应RequestInherentData请求<ul>
+<li><code>request_availability_cores</code></li>
+<li><code>select_availability_bitfields</code>：此时存储在signed_bitfields中的可能有多个bitfields。选择规则：对每个validator，选择通过可用性检查最多的bitfields；</li>
+<li><code>select_candidates</code>：<ul>
+<li>转换availability_cores为(ScheduledCore, OccupiedCoreAssumption)</li>
+<li><code>request_persisted_validation_data</code>：向RuntimeApi请求；</li>
+<li>比对para_id和persisted_validation_data_hash；</li>
+<li>发送CandidateBackingMessage::GetBackedCandidates获取candidates: Vec<BackedCandidate>；</BackedCandidate></li>
+<li>检查candidates的顺序是否与selected_candidates一致；</li>
 </ul>
-<h1 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h1><h2 id="build-collation"><a href="#build-collation" class="headerlink" title="build_collation"></a>build_collation</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Collation</span></span>&lt;BlockNumber = polkadot_primitives::v1::BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// Messages destined to be interpreted by the Relay chain itself.</span></span><br><span class="line">	<span class="keyword">pub</span> upward_messages: <span class="built_in">Vec</span>&lt;UpwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// The horizontal messages sent by the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: <span class="built_in">Vec</span>&lt;OutboundHrmpMessage&lt;ParaId&gt;&gt;,</span><br><span class="line">	<span class="comment">/// New validation code. Used by upgrade</span></span><br><span class="line">	<span class="keyword">pub</span> new_validation_code: <span class="built_in">Option</span>&lt;ValidationCode&gt;,</span><br><span class="line">	<span class="comment">/// The head-data produced as a result of execution.</span></span><br><span class="line">    <span class="comment">// HeadData(ParachainBlockData.header.encode())</span></span><br><span class="line">	<span class="keyword">pub</span> head_data: HeadData,</span><br><span class="line">	<span class="comment">/// Proof to verify the state transition of the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> proof_of_validity: PoV,</span><br><span class="line">	<span class="comment">/// The number of messages processed from the DMQ.</span></span><br><span class="line">	<span class="keyword">pub</span> processed_downward_messages: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The mark which specifies the block number up to which all inbound HRMP messages are processed.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_watermark: BlockNumber,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">PoV</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The block witness data.</span></span><br><span class="line">	<span class="keyword">pub</span> block_data: BlockData,</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// PoV = BlockData(ParachainBlockData.encode())</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ParachainBlockData</span></span>&lt;B: BlockT&gt; &#123;</span><br><span class="line">	<span class="comment">/// The header of the parachain block.</span></span><br><span class="line">	header: &lt;B <span class="keyword">as</span> BlockT&gt;::Header,</span><br><span class="line">	<span class="comment">/// The extrinsics of the parachain block without the `PolkadotInherent`.</span></span><br><span class="line">	extrinsics: <span class="built_in">Vec</span>&lt;&lt;B <span class="keyword">as</span> BlockT&gt;::Extrinsic&gt;,</span><br><span class="line">	<span class="comment">/// The data that is required to emulate the storage accesses executed by all extrinsics.</span></span><br><span class="line">	storage_proof: StorageProof,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">StorageProof</span></span> &#123;</span><br><span class="line">	trie_nodes: <span class="built_in">Vec</span>&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="handle-new-activations"><a href="#handle-new-activations" class="headerlink" title="handle_new_activations"></a>handle_new_activations</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">PersistedValidationData</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// The head-data of registered para.</span></span><br><span class="line">	<span class="keyword">pub</span> parent_head: HeadData,</span><br><span class="line">	<span class="comment">/// The relay-chain block number this is in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> block_number: N,</span><br><span class="line">	<span class="comment">/// The list of MQC heads for the inbound channels paired with the sender para ids. This</span></span><br><span class="line">	<span class="comment">/// vector is sorted ascending by the para id and doesn&#x27;t contain multiple entries with the same</span></span><br><span class="line">	<span class="comment">/// sender.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_mqc_heads: <span class="built_in">Vec</span>&lt;(Id, Hash)&gt;,</span><br><span class="line">	<span class="comment">/// The MQC head for the DMQ.</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// The DMQ MQC head will be used by the validation function to authorize the downward messages</span></span><br><span class="line">	<span class="comment">/// passed by the collator.</span></span><br><span class="line">	<span class="keyword">pub</span> dmq_mqc_head: Hash,</span><br><span class="line">	<span class="comment">/// The maximum legal size of a POV block, in bytes.</span></span><br><span class="line">	<span class="keyword">pub</span> max_pov_size: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">TransientValidationData</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// The maximum code size permitted, in bytes.</span></span><br><span class="line">	<span class="keyword">pub</span> max_code_size: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The maximum head-data size permitted, in bytes.</span></span><br><span class="line">	<span class="keyword">pub</span> max_head_data_size: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The balance of the parachain at the moment of validation.</span></span><br><span class="line">	<span class="keyword">pub</span> balance: Balance,</span><br><span class="line">	<span class="keyword">pub</span> code_upgrade_allowed: <span class="built_in">Option</span>&lt;N&gt;,</span><br><span class="line">	<span class="comment">/// The number of messages pending of the downward message queue.</span></span><br><span class="line">	<span class="keyword">pub</span> dmq_length: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ValidationData</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// The persisted validation data.</span></span><br><span class="line">	<span class="keyword">pub</span> persisted: PersistedValidationData&lt;N&gt;,</span><br><span class="line">	<span class="comment">/// The transient validation data.</span></span><br><span class="line">	<span class="keyword">pub</span> transient: TransientValidationData&lt;N&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="send-collation"><a href="#send-collation" class="headerlink" title="send_collation"></a>send_collation</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="comment">// CandidateCommitments = Collation - PoV</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateCommitments</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// Messages destined to be interpreted by the Relay chain itself.</span></span><br><span class="line">	<span class="keyword">pub</span> upward_messages: <span class="built_in">Vec</span>&lt;UpwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// Horizontal messages sent by the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: <span class="built_in">Vec</span>&lt;OutboundHrmpMessage&lt;Id&gt;&gt;,</span><br><span class="line">	<span class="comment">/// New validation code.</span></span><br><span class="line">	<span class="keyword">pub</span> new_validation_code: <span class="built_in">Option</span>&lt;ValidationCode&gt;,</span><br><span class="line">	<span class="comment">/// The head-data produced as a result of execution.</span></span><br><span class="line">	<span class="keyword">pub</span> head_data: HeadData,</span><br><span class="line">	<span class="comment">/// The number of messages processed from the DMQ.</span></span><br><span class="line">	<span class="keyword">pub</span> processed_downward_messages: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The mark which specifies the block number up to which all inbound HRMP messages are processed.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_watermark: N,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateDescriptor</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The ID of the para this is a candidate for.</span></span><br><span class="line">	<span class="keyword">pub</span> para_id: Id,</span><br><span class="line">	<span class="comment">/// The hash of the relay-chain block this is executed in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> relay_parent: H,</span><br><span class="line">	<span class="comment">/// The collator&#x27;s sr25519 public key.</span></span><br><span class="line">	<span class="keyword">pub</span> collator: CollatorId,</span><br><span class="line">	<span class="comment">/// The blake2-256 hash of the persisted validation data. This is extra data derived from</span></span><br><span class="line">	<span class="comment">/// relay-chain state which may vary based on bitfields included before the candidate.</span></span><br><span class="line">	<span class="comment">/// Thus it cannot be derived entirely from the relay-parent.</span></span><br><span class="line">	<span class="keyword">pub</span> persisted_validation_data_hash: Hash,</span><br><span class="line">	<span class="comment">/// The blake2-256 hash of the pov.</span></span><br><span class="line">	<span class="keyword">pub</span> pov_hash: Hash,</span><br><span class="line">	<span class="comment">/// The root of a block&#x27;s erasure encoding Merkle tree.</span></span><br><span class="line">	<span class="keyword">pub</span> erasure_root: Hash,</span><br><span class="line">	<span class="comment">/// Signature on blake2-256 of components of this receipt:</span></span><br><span class="line">	<span class="comment">/// The parachain index, the relay parent, the validation data hash, and the pov_hash.</span></span><br><span class="line">	<span class="keyword">pub</span> signature: CollatorSignature,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateReceipt</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The descriptor of the candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> descriptor: CandidateDescriptor&lt;H&gt;,</span><br><span class="line">	<span class="comment">/// The hash of the encoded commitments made as a result of candidate execution.</span></span><br><span class="line">	<span class="keyword">pub</span> commitments_hash: Hash,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="statement"><a href="#statement" class="headerlink" title="statement"></a>statement</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">Statement</span></span> &#123;</span><br><span class="line">	<span class="comment">/// A statement that a validator seconds a candidate.</span></span><br><span class="line">	<span class="meta">#[codec(index = <span class="meta-string">&quot;1&quot;</span>)]</span></span><br><span class="line">	Seconded(CommittedCandidateReceipt),</span><br><span class="line">	<span class="comment">/// A statement that a validator has deemed a candidate valid.</span></span><br><span class="line">	<span class="meta">#[codec(index = <span class="meta-string">&quot;2&quot;</span>)]</span></span><br><span class="line">	Valid(CandidateHash),</span><br><span class="line">	<span class="comment">/// A statement that a validator has deemed a candidate invalid.</span></span><br><span class="line">	<span class="meta">#[codec(index = <span class="meta-string">&quot;3&quot;</span>)]</span></span><br><span class="line">	Invalid(CandidateHash),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="get-provisioner-data"><a href="#get-provisioner-data" class="headerlink" title="get_provisioner_data"></a>get_provisioner_data</h2><figure class="highlight rust"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">type</span> <span class="title">SignedAvailabilityBitfield</span></span> = Signed&lt;AvailabilityBitfield&gt;;</span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">AvailabilityBitfield</span></span>(<span class="keyword">pub</span> BitVec&lt;bitvec::order::Lsb0, <span class="built_in">u8</span>&gt;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">BackedCandidate</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The candidate referred to.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate: CommittedCandidateReceipt&lt;H&gt;,</span><br><span class="line">	<span class="comment">/// The validity votes themselves, expressed as signatures.</span></span><br><span class="line">	<span class="keyword">pub</span> validity_votes: <span class="built_in">Vec</span>&lt;ValidityAttestation&gt;,</span><br><span class="line">	<span class="comment">/// The indices of the validators within the group, expressed as a bitfield.</span></span><br><span class="line">	<span class="keyword">pub</span> validator_indices: BitVec&lt;bitvec::order::Lsb0, <span class="built_in">u8</span>&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> provisioner_data: (<span class="built_in">Vec</span>&lt;SignedAvailabilityBitfield&gt;,<span class="built_in">Vec</span>&lt;BackedCandidate&gt;) = get_provisioner_data();</span><br></pre></td></tr></table></figure>]]></content>
+</li>
+<li>返回(bitfields, candidates)。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>inclusion_inherent模块中<code>create_inherent</code>，调用<code>Call::inclusion(signed_bitfields, backed_candidates, parent_header)</code>。</p>
+<ul>
+<li>每个块只能执行一次<code>inclusion</code>；</li>
+<li>检查parent_header；</li>
+<li><code>process_bitfields</code>：处理bitfields，返回已经处理完置为free的core队列，对应的candidates一定已经是baked：<ul>
+<li>读取PendingAvailability存储（<code>process_candidates</code>中会插入）</li>
+<li>根据signed_bitfields签名的validator_index更新pending_availability中的availability_votes[val_idx]为true；</li>
+<li>AvailabilityBitfields::insert(validator_index, record)；</li>
+<li>检查pending_availability::availability_votes是否大于2/3的validators.len()；</li>
+<li><code>enact_candidate</code>:<ul>
+<li><code>T::RewardValidators::reward_backing</code></li>
+<li><code>T::RewardValidators::reward_bitfields</code></li>
+<li><code>schedule_code_upgrade</code></li>
+<li><code>prune_dmq</code></li>
+<li><code>enact_upward_messages</code></li>
+<li><code>prune_hrmp</code></li>
+<li><code>queue_outbound_hrmp</code></li>
+<li><code>note_new_head</code>更新平行链head；</li>
+</ul>
+</li>
+<li>pending_availability.core插入freed队列；</li>
+</ul>
+</li>
+<li><code>&lt;scheduler::Module&lt;T&gt;&gt;::clear()</code>；</li>
+<li><code>&lt;scheduler::Module&lt;T&gt;&gt;::schedule(freed,block_number)</code>；</li>
+<li><code>process_candidates</code>：处理backed的candidates，<code>PendingAvailability::insert(para_id, CandidatePendingAvailability)</code>，返回来自scheduled的Vec&lt;(core_index, bakers)&gt;；</li>
+<li><code>scheduler::Module::occupied</code>：backed candidates将<code>process_candidates</code>返回的cores进行占用，然后才能进行Availability Distribution与BitfieldSigning；</li>
+<li><code>&lt;ump::Module&lt;T&gt;&gt;::process_pending_upward_messages()</code>。</li>
+</ul>
+</li>
+</ul>
+<h2 id="二次检查-TODO"><a href="#二次检查-TODO" class="headerlink" title="二次检查(TODO)"></a>二次检查(TODO)</h2><p>group内的validator可能作恶，需要二次检查（类似finalized)。随机选取一些validator来再次验证平行链区块，如果验证失败，触发escalation，要求所有的validator来验证这个平行链区块。Approval Process是可以一次最终确认多个平行链区块的。</p>
+<ul>
+<li>进入中继链出块的共识流程，直到被GRANDPA确认。</li>
+</ul>
+]]></content>
       <categories>
         <category>Polkadot</category>
         <category>平行链</category>
