@@ -17,20 +17,21 @@
     var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="分析基于 substrate 的 2021年2月19日 f53d72f 版本。本文将介绍合约模块的合约调用 call 的基本逻辑，并且会介绍关于合约收费的设计。">
+  <meta name="description" content="分析基于 substrate 的 2021年3月11日 b24c43af 版本。本文将介绍合约模块的合约调用 的基本逻辑，并且会介绍关于合约存储收费的设计。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="合约模块解析">
 <meta property="og:url" content="http://munan.tech/blog/7029f79.html">
 <meta property="og:site_name" content="Jenner&#39;s Blog">
-<meta property="og:description" content="分析基于 substrate 的 2021年2月19日 f53d72f 版本。本文将介绍合约模块的合约调用 call 的基本逻辑，并且会介绍关于合约收费的设计。">
+<meta property="og:description" content="分析基于 substrate 的 2021年3月11日 b24c43af 版本。本文将介绍合约模块的合约调用 的基本逻辑，并且会介绍关于合约存储收费的设计。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201124161206.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20210311145120.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20210311145610.png">
 <meta property="article:published_time" content="2020-10-12T13:50:04.000Z">
-<meta property="article:modified_time" content="2021-02-22T10:23:39.000Z">
+<meta property="article:modified_time" content="2021-03-11T07:50:05.000Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust,区块链">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201124161206.png">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20210311145120.png">
 
 <link rel="canonical" href="http://munan.tech/blog/7029f79.html">
 
@@ -228,7 +229,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-02-22 18:23:39" itemprop="dateModified" datetime="2021-02-22T18:23:39+08:00">2021-02-22</time>
+                <time title="修改时间：2021-03-11 15:50:05" itemprop="dateModified" datetime="2021-03-11T15:50:05+08:00">2021-03-11</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -276,18 +277,29 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>分析基于 substrate 的 2021年2月19日 f53d72f 版本。本文将介绍合约模块的合约调用 <code>call</code> 的基本逻辑，并且会介绍关于合约收费的设计。<br><a id="more"></a></p>
-<h1 id="call-：调用合约"><a href="#call-：调用合约" class="headerlink" title="call ：调用合约"></a><code>call</code> ：调用合约</h1><p><code>call</code>也是Module<T>中的函数，在调用一开始就被收取了fee，其中包含了合约的gas费用。</T></p>
-<p>首先是调用了账户查找<code>lookup</code>，返回给<code>dest</code>的是<code>AccountId</code>。</p>
-<p>接着主要是调用了<code>ctx.call</code>这个函数，和<code>instantiate</code>一样走得是<code>execute_wasm</code>。<code>ctx.call</code>实际上调用的是 <code>ExecutionContext::call</code>。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201124161206.png" alt="call"></p>
-<p>在<code>ExecutionContext::call</code>中，首先判断了调用深度，接着调用<code>collect_rent</code>收取存储空间的租用费用。代码在 <code>contracts/src/rent.rs</code>。该函数涉及费用计算，因此在<strong>合约收费</strong>中介绍。</p>
-<p>如果<code>value</code>不为0的话，会调用<code>transfer</code>将<code>value</code>传给<code>dest</code>账户（不一定是合约账户 ）。</p>
-<p>然后根据<code>code_hash</code>执行合约。<code>nested.loader.load_main(&amp;contract.code_hash)</code>会得到包含合约的调用接口<code>call</code>的<code>executable</code>：<code>load_main</code>调用了<code>load_code</code>，它会比较 schedule 的版本，之前在 <code>put_code</code>的最后是写入了两个存储，一个是原始代码，一个是原始代码预处理后的 <code>prefab_module</code>。如果当前版本大于已经预处理好的版本， 那么需要<code>prepare::prepare_contract</code>重新预处理，否则直接返回已经存储的 <code>prefab_module</code>。<code>load_main</code> 最终返回 <code>WasmExecutable</code> 结构体（包含entrypoint和prefab_module）。 </p>
-<p>然后与合约部署时一样，将返回的 <code>executable</code>放到 <code>WasmVm</code> 执行 <code>execute</code>。通过<code>call</code>(合约暴露的接口)执行合约代码内的相应函数。</p>
-<p>根据执行的结果，调用<code>commit_transaction()</code> 或者 <code>rollback_transaction()</code>。注意，如果是gas耗尽导致的<code>Revert</code>，只会回滚当前合约的状态，而更高层次的合约状态无法回滚。</p>
+        <p>分析基于 substrate 的 2021年3月11日 <code>b24c43af</code> 版本。本文将介绍合约模块的合约调用 的基本逻辑，并且会介绍关于合约存储收费的设计。<br><a id="more"></a></p>
+<h1 id="调用合约"><a href="#调用合约" class="headerlink" title="调用合约"></a>调用合约</h1><p>合约调用的大致流程，下图中只显示了<code>ExecutionContext::call</code>的内部逻辑，<code>ExecutionContext::instantiate</code>其实也是类似的。主要在于理解链的runtime层与合约WASM代码是怎么交互的。<br><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20210311145120.png" alt="call"></p>
+<h2 id="手续费"><a href="#手续费" class="headerlink" title="手续费"></a>手续费</h2><p>在Substrate的设计中，调用交易需要根据Weight收取交易手续费。contracts模块定义了几个主要执行接口：<code>call</code>、<code>instantiate_with_code</code>和<code>instantiate</code>。其中，<code>instantiate_with_code</code>接口包含了早期版本中的<code>put_code</code>和<code>instantiate</code>，是为了对合约代码存储进行收费。</p>
+<p>在调用以上三个接口时，除了收取由Weight固定的交易手续费之外，还根据<code>gas_limit</code>收取gas费用。gas费用被转换成Weight，在调用接口时，按照Weight的方式统一收取。</p>
+<p>根据<code>gas_limit</code>收取的手续费存储在<code>gas_meter</code>中，<code>gas_meter</code>可以被称为gas管家。在合约执行过程中，每次调用host_function会进行相应的gas费用收取，就是从<code>gas_meter</code>提取的。执行完所有步骤后，由<code>gas_meter</code>中记录的<code>gas_left</code>进行手续费的返还。</p>
+<h2 id="合约执行上下文"><a href="#合约执行上下文" class="headerlink" title="合约执行上下文"></a>合约执行上下文</h2><p>合约只向pallet::contracts模块层（以下简称为contracts模块）暴露两个执行入口：<code>Constructor</code>、<code>Call</code>。在contracts模块中，<code>Constructor</code>被封装在<code>ExecutionContext::instantiate</code>中，<code>Call</code>被封装在<code>ExecutionContext::call</code>中。<br>contracts模块中的三个接口调用<code>ExecutionContext</code>的两个封装后的执行入口，调用关系如下图所示。<br><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20210311145610.png" alt="ExecutionContext"></p>
+<p><code>ExecutionContext</code>是合约执行上下文，合约调用另一个合约的情况下，直接调用封装在<code>ExecutionContext</code>中的接口，不需要从最外层的三个接口调用，因此不用再收取contracts模块中定义的固定Weight的手续费。</p>
+<h3 id="call"><a href="#call" class="headerlink" title="call"></a>call</h3><p>在<code>ExecutionContext::call</code>中，需要根据<code>code_hash</code>加载合约代码，生成一个wasm module作为<code>executable</code>。然后根据<code>dest</code>获取对应的合约实例，并对该实例进行存储费用计算。该部分涉及费用计算，因此在<strong>合约存储收费</strong>中介绍。</p>
+<p>关于<code>load</code>加载合约代码：它会比较 schedule 的版本（<code>instantiate_with_code</code>在上传合约代码时，写入一个是原始代码处理后的 <code>PrefabWasmModule</code>，包含了<code>schedule_version</code>、<code>original_code</code>、<code>code_hash</code>和<code>refcount</code>等）。如果当前版本大于<code>PrefabWasmModule</code>中的版本， 那么需要重新预处理，否则直接返回已经存储的 <code>PrefabWasmModule</code>。</p>
+<blockquote>
+<p>schedule内主要定义合约命令的weight和host_fn的weight，影响了手续费的计算。</p>
+</blockquote>
+<h4 id="嵌套执行上下文"><a href="#嵌套执行上下文" class="headerlink" title="嵌套执行上下文"></a>嵌套执行上下文</h4><p>在执行具体业务逻辑之前，需要把执行上下文包装在新的<code>ExecutionContext</code>中，并且在最后能截获当前合约执行的结果。</p>
+<h4 id="ExecutionContext执行"><a href="#ExecutionContext执行" class="headerlink" title="ExecutionContext执行"></a>ExecutionContext执行</h4><p>在<code>NestedExecutionContext</code>环境中，执行以下的业务逻辑。</p>
+<p>如果调用时传入的参数<code>value</code>不为0的话，会调用<code>transfer</code>将<code>value</code>传给<code>dest</code>账户（不一定是合约账户）。</p>
+<p>以<code>executable</code>执行合约。通过<code>ExportedFunction::Call</code>(合约暴露的接口)执行合约代码内的相应函数，传入<code>input_data</code>，其中包含了<code>selector</code>与合约函数对应的传参。</p>
+<h4 id="合约Runtime与链Runtime交互"><a href="#合约Runtime与链Runtime交互" class="headerlink" title="合约Runtime与链Runtime交互"></a>合约Runtime与链Runtime交互</h4><p>在执行合约时，需要开辟一段内存空间，将合约实例加载进去，形成了合约实例的Runtime环境，把它称为合约Runtime。</p>
+<p>两个Runtime像是运行在两个不同的沙盒中，互不感知。他们之间的交互就需要一个第三方介入，它就是Host。Host是链固定的功能部分，采用原生执行的方式。对于host_fn这些接口，在合约编写框架层（例如ink!）和contracts模块需要制定一致的协议。Substrate上的host_fn代码在<code>frame/contracts/src/wasm/runtime.rs</code>中的<code>define_env!</code>宏中。</p>
+<p>更具体的机制介绍可以查看<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/321618822">赖智超的substrate的合约机制分析</a>，在文章的<strong>Wasm合约的执行Sandbox机制</strong>有相关介绍。</p>
+<p>对于合约调用另一个合约的嵌套调用情况，实际上也是两个合约Runtime交互的过程。</p>
+<h3 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h3><p>根据执行的结果，调用<code>commit_transaction()</code> 或者 <code>rollback_transaction()</code>。注意，如果是gas耗尽导致的<code>Revert</code>，只会回滚当前合约的状态，而更高层次的合约状态无法回滚。</p>
 <p>最后就是返回剩余手续费。</p>
-<h1 id="合约收费"><a href="#合约收费" class="headerlink" title="合约收费"></a>合约收费</h1><h2 id="合约数据存储收费"><a href="#合约数据存储收费" class="headerlink" title="合约数据存储收费"></a>合约数据存储收费</h2><p>涉及到存储收费的主要是在<code>contracts/src/rent.rs</code>中的<code>collect_rent</code>函数。</p>
+<h1 id="合约存储收费"><a href="#合约存储收费" class="headerlink" title="合约存储收费"></a>合约存储收费</h1><p>涉及到存储收费的主要是在<code>contracts/src/rent.rs</code>中的<code>collect_rent</code>函数。</p>
 <p>如果合约不存在或者为<code>tombstone</code>（可恢复的死亡状态）状态，则直接返回错误。</p>
 <p>在<code>instantiate</code>时，我们传入了<code>endowment</code>这个值，令合约账户中拥有资产。根据合约账户的<code>free_balance</code>大小，可以拥有一定大小的免费存储空间。</p>
 <p>需要计费的合约代码大小的计算公式：<code>occupied_storage = [ original_code_len + code.len() ] / refcount</code></p>
@@ -423,7 +435,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#call-%EF%BC%9A%E8%B0%83%E7%94%A8%E5%90%88%E7%BA%A6"><span class="nav-number">1.</span> <span class="nav-text">call ：调用合约</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%88%E7%BA%A6%E6%94%B6%E8%B4%B9"><span class="nav-number">2.</span> <span class="nav-text">合约收费</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E7%BA%A6%E6%95%B0%E6%8D%AE%E5%AD%98%E5%82%A8%E6%94%B6%E8%B4%B9"><span class="nav-number">2.1.</span> <span class="nav-text">合约数据存储收费</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B0%83%E7%94%A8%E5%90%88%E7%BA%A6"><span class="nav-number">1.</span> <span class="nav-text">调用合约</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%8B%E7%BB%AD%E8%B4%B9"><span class="nav-number">1.1.</span> <span class="nav-text">手续费</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%88%E7%BA%A6%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="nav-number">1.2.</span> <span class="nav-text">合约执行上下文</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#call"><span class="nav-number">1.2.1.</span> <span class="nav-text">call</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B5%8C%E5%A5%97%E6%89%A7%E8%A1%8C%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">嵌套执行上下文</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ExecutionContext%E6%89%A7%E8%A1%8C"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">ExecutionContext执行</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%88%E7%BA%A6Runtime%E4%B8%8E%E9%93%BERuntime%E4%BA%A4%E4%BA%92"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">合约Runtime与链Runtime交互</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E7%BB%93%E6%9E%9C"><span class="nav-number">1.2.2.</span> <span class="nav-text">执行结果</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%88%E7%BA%A6%E5%AD%98%E5%82%A8%E6%94%B6%E8%B4%B9"><span class="nav-number">2.</span> <span class="nav-text">合约存储收费</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
