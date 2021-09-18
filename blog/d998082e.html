@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="数据结构下图是以太坊交易数据结构，根据用途，我将其划分为四部分。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="交易">
+<meta property="og:url" content="http://munan.tech/blog/d998082e.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="数据结构下图是以太坊交易数据结构，根据用途，我将其划分为四部分。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1050">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1051">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1052">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1053">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1054">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1055">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1056">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1057">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1058">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1059">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1060">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1062">
+<meta property="og:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1061">
+<meta property="article:published_time" content="2020-09-18T05:53:13.000Z">
+<meta property="article:modified_time" content="2020-10-11T09:39:08.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1050">
+
+<link rel="canonical" href="http://munan.tech/blog/d998082e.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>交易 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/d998082e.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          交易
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-18 13:53:13" itemprop="dateCreated datePublished" datetime="2020-09-18T13:53:13+08:00">2020-09-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-10-11 17:39:08" itemprop="dateModified" datetime="2020-10-11T17:39:08+08:00">2020-10-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/eth/" itemprop="url" rel="index"><span itemprop="name">eth</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/d998082e.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/d998082e.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h1><p>下图是以太坊交易数据结构，根据用途，我将其划分为四部分。<br><a id="more"></a><br><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1050" alt="405a77a461ccd9c3c423461bc0815c08.png"><br>开头是一个 uint64 类型的数字，称之为随机数。用于撤销交易、防止双花和修改以太坊账户的 Nonce 值（细节在讲解交易执行流程时讲解）。<br>第二部分是关于交易执行限制的设置，gasLimit 为愿意供以太坊虚拟机运行的燃料上限。 gasPrice 是愿意支付的燃料单价。gasPrcie * gasLimit 则为愿意为这笔交易支付的最高手续费。<br>我从程序执行逻辑上可以这样解释第三部分。是交易发送者输入以太坊虚拟机执行此交易的初始信息： 虚拟机操作对象（接收方 To）、从交易发送方转移到操作对象的资产（Value），以及虚拟机运行时入参(input)。其中 To 为空时，意味着虚拟机无可操作对象，此时虚拟机将利用 input 内容部署一个新合约。<br>第四部分是交易发送方对交易的签名结果，可以利用交易内容和签名结果反向推导出签名者，即交易发送方地址。<br>四部分内容的组合，解决了交易安全问题、实现了智能合约的互动方式以及提供了灵活可调整的交易手续费。</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>将交易对象定义为一个对外可访问的Transation对象和内嵌的对外部包不可见的txdata 。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Transaction <span class="keyword">struct</span> &#123;</span><br><span class="line">	data txdata</span><br><span class="line">	<span class="comment">// caches</span></span><br><span class="line">	hash atomic.Value</span><br><span class="line">	size atomic.Value</span><br><span class="line">	from atomic.Value</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> txdata <span class="keyword">struct</span> &#123;</span><br><span class="line">	AccountNonce <span class="keyword">uint64</span>     </span><br><span class="line">	Price        *big.Int  </span><br><span class="line">	GasLimit     <span class="keyword">uint64</span>     </span><br><span class="line">	Recipient    *common.Address </span><br><span class="line">	Amount       *big.Int</span><br><span class="line">	Payload      []<span class="keyword">byte</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Signature values</span></span><br><span class="line">	V *big.Int</span><br><span class="line">	R *big.Int</span><br><span class="line">	S *big.Int</span><br><span class="line"></span><br><span class="line">	<span class="comment">// This is only used when marshaling to JSON.</span></span><br><span class="line">	Hash *common.Hash <span class="string">`json:&quot;hash&quot; rlp:&quot;-&quot;`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="签名"><a href="#签名" class="headerlink" title="签名"></a>签名</h1><p>算法归类：<br><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1051" alt="3287dddb9d106ac28f2c2e3f46c47b63.png"></p>
+<h2 id="比特币与以太坊的区别"><a href="#比特币与以太坊的区别" class="headerlink" title="比特币与以太坊的区别"></a>比特币与以太坊的区别</h2><h3 id="比特币"><a href="#比特币" class="headerlink" title="比特币"></a>比特币</h3><p>比特币在 BIP66 中对签名数据格式采用严格的 DER 编码格式，其签名数据格式如下：<br><code>0x30 [total-length] 0x02 [R-length] [R] 0x02 [S-length] [S]</code></p>
+<h3 id="以太坊"><a href="#以太坊" class="headerlink" title="以太坊"></a>以太坊</h3><p>对比比特币签名，以太坊的签名格式是r+s+v。 r 和 s 是 ECDSA 签名的原始输出，而末尾的一个字节为 recovery id 值，但在以太坊中用V表示，v 值为 1 或者 0。recovery id 简称 recid，表示从内容和签名中成功恢复出公钥时需要查找的次数（因为根据r值在椭圆曲线中查找符合要求的坐标点可能有多个），但在比特币下最多需要查找两次。这样在签名校验恢复公钥时，不需要遍历查找，一次便可找准公钥，加速签名校验速度。</p>
+<h4 id="签名流程"><a href="#签名流程" class="headerlink" title="签名流程"></a>签名流程</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Sign</span><span class="params">(hash []<span class="keyword">byte</span>, prv *ecdsa.PrivateKey)</span> <span class="params">([]<span class="keyword">byte</span>, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(hash) != <span class="number">32</span> &#123;<span class="comment">//❶</span></span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;hash is required to be exactly 32 bytes (%d)&quot;</span>, <span class="built_in">len</span>(hash))</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> prv.Curve != btcec.S256() &#123;<span class="comment">//❷</span></span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, fmt.Errorf(<span class="string">&quot;private key curve is not secp256k1&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">  <span class="comment">//❸</span></span><br><span class="line">	sig, err := btcec.SignCompact(btcec.S256(), (*btcec.PrivateKey)(prv), hash, <span class="literal">false</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Convert to Ethereum signature format with &#x27;recovery id&#x27; v at the end.</span></span><br><span class="line">	v := sig[<span class="number">0</span>] - <span class="number">27</span> <span class="comment">//❹</span></span><br><span class="line">	<span class="built_in">copy</span>(sig, sig[<span class="number">1</span>:])<span class="comment">//❺</span></span><br><span class="line">	sig[<span class="number">64</span>] = v</span><br><span class="line">	<span class="keyword">return</span> sig, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>❶ 首先，签名是针对 32 字节的 byte，实际上是对应待签名内容的哈希值，以太坊中哈希值common.Hash长度固定为 32。比如对交易签名时传入的是交易哈希crypto.Sign(tx.Hash()[:], prv)。<br>❷ 确保私钥的曲线算法是比特币的 secp256k1。目的是控制所有签名均通过 secp256k1 算法计算。<br>❸ 调用比特币的签名函数，传入 secp256k1 、私钥和签名内容, 并说明并非压缩的私钥。此时 SignCompact 函数返还一定格式的签名。其格式为：<code>[27 + recid] [R] [S]</code><br>❹ 以太坊将比特币中记录的 recovery id 提取出。减去 27 的原因是，比特币中第一个字节的值等于27+recid，因此 recid= sig[0]-27。<br>❺ 以太坊签名格式是[R] [S] [V]，和比特币不同。因此需要进行调换，将 R 和 S 值放到前面，将 recid 放到最后。</p>
+<h3 id="交易数据签名"><a href="#交易数据签名" class="headerlink" title="交易数据签名"></a>交易数据签名</h3><p>❶ 交易签名时，需要提供一个签名器 (Signer) 和私钥(PrivateKey)。需要 Singer 是因为在 EIP155 修复简单重复攻击漏洞后，需要保持旧区块链的签名方式不变，但又需要提供新版本的签名方式。因此通过接口实现新旧签名方式，根据区块高度创建不同的签名器。<br>❷ 重点介绍 EIP155 改进提案中所实现的新哈希算法，主要目的是获取交易用于签名的哈希值 TxSignHash。和旧方式相比，哈希计算中混入了链 ID 和两个空值。注意这个哈希值 TxSignHash 在 EIP155 中并不等同于交易哈希值。<br>❸ 内部利用私钥使用 secp256k1 加密算法对TxSignHash签名，获得签名结果sig。<br>❹ 执行交易WithSignature方法，将签名结果解析成三段R、S、V，拷贝交易对象并赋值签名结果。最终返回一笔新的已签名交易。<br><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1052" alt="120f4b26c82dc98598ad4c2a9f086afd.png"><br>上图中还有一个关键数据，则 Signer 是如何生成 R 、S、V 值的。从前面的签名算法过程，可以知道 R 和 S 是 ECDSA 签名的原始输出，V 值是 recid，其值是 0 或者 1。但是在交易签名时，V 值不再是 recid, 而是 <code>recid+ chainID*2+ 35</code>。</p>
+<h2 id="校验"><a href="#校验" class="headerlink" title="校验"></a>校验</h2><p>关键点在于调用校验签名函数时，第三个参数 sig 送入的是 <code>sig[:len(sig)-1]</code>去掉了末尾的一个字节。这是因为函数VerifySignature要求 sig参数必须是<code>[R] [S]</code>格式，因此需要去除末尾的<code>[V]</code>。</p>
+<h1 id="交易回执receipt"><a href="#交易回执receipt" class="headerlink" title="交易回执receipt"></a>交易回执receipt</h1><p>回执信息分为三部分：共识信息、交易信息、区块信息。下面分别介绍各类信息。<br><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1053" alt="0cadc48e6258467e7ca4ee8837b2823c.png"></p>
+<h2 id="交易回执内容介绍"><a href="#交易回执内容介绍" class="headerlink" title="交易回执内容介绍"></a>交易回执内容介绍</h2><h3 id="交易回执共识信息"><a href="#交易回执共识信息" class="headerlink" title="交易回执共识信息"></a>交易回执共识信息</h3><p>共识意味在在校验区块合法性时，这部分信息也参与校验。这些信息参与校验的原因是确保交易必须在区块中的固定顺序中执行，且记录了交易执行后的状态信息。这样可强化交易顺序。</p>
+<ul>
+<li>Status： 成功与否，1表示成功，0表示失败。注意在高度1035301前，并非1或0，而是 StateRoot，表示此交易执行完毕后的以太坊状态。<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> root []<span class="keyword">byte</span></span><br><span class="line"><span class="keyword">if</span> config.IsByzantium(header.Number) &#123;</span><br><span class="line"> statedb.Finalise(<span class="literal">true</span>)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"> root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//...</span></span><br><span class="line">receipt := types.NewReceipt(root, failed, *usedGas)</span><br></pre></td></tr></table></figure></li>
+<li>CumulativeGasUsed： 区块中已执行的交易累计消耗的Gas，包含当前交易。</li>
+<li>Logs: 当前交易执行所产生的智能合约事件列表。</li>
+<li>Bloom：是从 Logs 中提取的事件布隆过滤器，用于快速检测某主题的事件是否存在于Logs中。</li>
+</ul>
+<p>这些信息是如何参与共识校验的呢？实际上参与校验的仅仅是回执哈希，而回执哈希计算只包含这些信息。<br>首先，在校验时获取整个区块回执信息的默克尔树的根哈希值。再判断此哈希值是否同区块头定义内容相同。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">receiptSha := types.DeriveSha(receipts)</span><br><span class="line"><span class="keyword">if</span> receiptSha != header.ReceiptHash &#123;</span><br><span class="line">   <span class="keyword">return</span> fmt.Errorf(<span class="string">&quot;invalid receipt root hash (remote: %x local: %x)&quot;</span>,</span><br><span class="line">   header.ReceiptHash, receiptSha)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>而函数types.DeriveSha中生成根哈希值，是将列表元素（这里是交易回执）的RLP编码信息构成默克树，最终获得列表的哈希值。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">DeriveSha</span><span class="params">(list DerivableList)</span> <span class="title">common</span>.<span class="title">Hash</span></span> &#123;</span><br><span class="line">   keybuf := <span class="built_in">new</span>(bytes.Buffer)</span><br><span class="line">   trie := <span class="built_in">new</span>(trie.Trie)</span><br><span class="line">   <span class="keyword">for</span> i := <span class="number">0</span>; i &amp;lt; list.Len(); i++ &#123;</span><br><span class="line">      keybuf.Reset()</span><br><span class="line">      rlp.Encode(keybuf, <span class="keyword">uint</span>(i))</span><br><span class="line">      trie.Update(keybuf.Bytes(), list.GetRlp(i))</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> trie.Hash()</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r Receipts)</span> <span class="title">GetRlp</span><span class="params">(i <span class="keyword">int</span>)</span> []<span class="title">byte</span></span> &#123;</span><br><span class="line">   bytes, err := rlp.EncodeToBytes(r[i])</span><br><span class="line">   <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">      <span class="built_in">panic</span>(err)</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> bytes</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>继续往下看，交易回执实现了 RLP 编码接口。在方法EncodeRLP中是构建了一个私有的receiptRLP。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r *Receipt)</span> <span class="title">EncodeRLP</span><span class="params">(w io.Writer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">        <span class="keyword">return</span> rlp.Encode(w, </span><br><span class="line">        &amp;amp;receiptRLP&#123;r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>从代码中可以看出 receiptRLP 仅仅包含上面提到的参与共识校验的内容。<br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> receiptRLP <span class="keyword">struct</span> &#123;</span><br><span class="line">   PostStateOrStatus []<span class="keyword">byte</span></span><br><span class="line">   CumulativeGasUsed <span class="keyword">uint64</span></span><br><span class="line">   Bloom             Bloom</span><br><span class="line">   Logs              []*Log</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="交易回执交易信息"><a href="#交易回执交易信息" class="headerlink" title="交易回执交易信息"></a>交易回执交易信息</h3><p>这部分信息记录的是关于回执所对应的交易信息，有：</p>
+<ul>
+<li>TxHash ： 交易回执所对应的交易哈希。</li>
+<li>ContractAddress： 当这笔交易是部署新合约时，记录新合约的地址。<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> msg.To() == <span class="literal">nil</span> &#123;</span><br><span class="line"> receipt.ContractAddress = crypto.CreateAddress(vmenv.Context.Origin, tx.Nonce())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>GasUsed: 这笔交易执行所消耗的Gas燃料。</li>
+</ul>
+<p>这些信息不参与共识的原因是这三项信息已经在其他地方校验。</p>
+<ul>
+<li>TxHash: 区块有校验交易集的正确性。</li>
+<li>ContractAddress： 如果是新合约，实际上已经提交到以太坊状态 State 中。</li>
+<li>GasUsed： 已属于CumulativeGasUsed的一部分。<h3 id="交易回执区块信息"><a href="#交易回执区块信息" class="headerlink" title="交易回执区块信息"></a>交易回执区块信息</h3>这部分信息完全是为了方便外部读取交易回执，不但知道交易执行情况，还能方便的指定该交易属于哪个区块中第几笔交易。</li>
+<li>BlockHash: 交易所在区块哈希。</li>
+<li>BlockNumber: 交易所在区块高度.</li>
+<li>TransactionIndex： 交易在区块中的序号。</li>
+</ul>
+<p>这三项信息，主要是在数据库 Leveldb 中读取交易回执时，实时指定。</p>
+<h2 id="交易回执构造"><a href="#交易回执构造" class="headerlink" title="交易回执构造"></a>交易回执构造</h2><p>交易回执是在以太坊虚拟机处理完交易后，根据结果整理出的交易执行结果信息。反映了交易执行前后以太坊变化以及交易执行状态。<br>构造细节，已经在前面提及，不再细说。这里给出的完整的交易回执构造代码。</p>
+<h2 id="交易回执存储"><a href="#交易回执存储" class="headerlink" title="交易回执存储"></a>交易回执存储</h2><p>交易回执作为交易执行中间产物，为了方便快速获取某笔交易的执行明细。以太坊中有跟随区块存储时实时存储交易回执。但为了降低存储量，只存储了必要内容。<br>首先，在存储时，将交易回执对象转换为精简内容。<br>精简内容是专门为存储定义的一个结构ReceiptForStorage。存储时将交易回执集进行RLP编码存储。<br>所以看存储了哪些内容，只需要看 ReceiptForStorage的 EncodeRLP方法。<br>根据EncodeRLP方法实现，可以得出在存储时仅仅存储了部分内容，且 Logs 内容同样进行了特殊处理LogForStorage。<br><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1054" alt="e834d2a3965e2123455256d94195e8b9.png"></p>
+<h2 id="交易回执示例"><a href="#交易回执示例" class="headerlink" title="交易回执示例"></a>交易回执示例</h2><p>上面讲完交易回执内容与构造和存储，下面我从etherscan上查找三中不同类型的交易回执数据，供大家找找感觉。</p>
+<h3 id="一笔包含日志的交易回执"><a href="#一笔包含日志的交易回执" class="headerlink" title="一笔包含日志的交易回执"></a>一笔包含日志的交易回执</h3><p>交易 0x01e180……0a4021 执行成功，且包含了两个事件日志。<img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1055" alt="7fd11394764f9bb948f41ab2e6fce668.png"></p>
+<h3 id="一笔成功部署合约的交易回执"><a href="#一笔成功部署合约的交易回执" class="headerlink" title="一笔成功部署合约的交易回执"></a>一笔成功部署合约的交易回执</h3><p>如果是部署合约的交易，可以看到 contractAddress 有值。<img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1056" alt="d57752b9fb4c7d93d4627b6fc2e7829c.png"></p>
+<h3 id="一笔含-StateRoot的交易回执"><a href="#一笔含-StateRoot的交易回执" class="headerlink" title="一笔含 StateRoot的交易回执"></a>一笔含 StateRoot的交易回执</h3><p>和其他交易回执内容不同，在高度1035301 前的交易并无 status 字段，而是 root 字段。是在后续改进中去除 root 采用 status 的。<img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1057" alt="4070260725da26b8192ffef9d5fa6f2b.png"></p>
+<h3 id="一笔交易失败的交易回执"><a href="#一笔交易失败的交易回执" class="headerlink" title="一笔交易失败的交易回执"></a>一笔交易失败的交易回执</h3><p>如果是失败的交易，则 status为0。<img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1058" alt="6f48e8e2a8c44ab8c5a4ff5238a20e77.png"></p>
+<h1 id="交易池"><a href="#交易池" class="headerlink" title="交易池"></a>交易池</h1><h2 id="关键流程"><a href="#关键流程" class="headerlink" title="关键流程"></a>关键流程</h2><p><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1059" alt="6f08e89d73958dcfbb2eb80499105e1f.png"><br>区分本地交易和远程交易。</p>
+<h2 id="设计"><a href="#设计" class="headerlink" title="设计"></a>设计</h2><p><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1060" alt="beee3c1028c74c403a37bad3a875edc7.png"></p>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><ul>
+<li>Locals: 定义了一组视为local交易的账户地址。任何来自此清单的交易均被视为 local 交易。</li>
+<li>NoLocals: 是否禁止local交易处理。默认为 fasle,允许 local 交易。如果禁止，则来自 local 的交易均视为 remote 交易处理。</li>
+<li>Journal： 存储local交易记录的文件名，默认是 ./transactions.rlp。</li>
+<li>Rejournal：定期将local交易存储文件中的时间间隔。默认为每小时一次。</li>
+<li>PriceLimit： remote交易进入交易池的最低 Price 要求。此设置对 local 交易无效。默认值1。</li>
+<li>PriceBump：替换交易时所要求的价格上调涨幅比例最低要求。任何低于要求的替换交易均被拒绝。</li>
+<li>AccountSlots： 当交易池中可执行交易（是已在等待矿工打包的交易）量超标时，允许每个账户可以保留在交易池最低交易数。默认值是 16 笔。</li>
+<li>GlobalSlots： 交易池中所允许的可执行交易量上限，高于上限时将释放部分交易。默认是 4096 笔交易。</li>
+<li>AccountQueue：交易池中单个账户非可执行交易上限，默认是64笔。</li>
+<li>GlobalQueue： 交易池中所有非可执行交易上限，默认1024 笔。</li>
+<li>Lifetime： 允许 remote 的非可执行交易可在交易池存活的最长时间。交易池每分钟检查一次，一旦发现有超期的remote 账户，则移除该账户下的所有非可执行交易。默认为3小时。</li>
+</ul>
+<h3 id="链状态"><a href="#链状态" class="headerlink" title="链状态"></a>链状态</h3><p>所有进入交易池的交易均需要被校验，最基本的是校验账户余额是否足够支付交易执行。或者 交易 nonce 是否合法。在交易池中维护的最新的区块StateDB。当交易池接收到新区块信号时，将立即重置 statedb。核心是将交易池中已经不符合要求的交易删除并更新整理交易。</p>
+<h3 id="本地交易"><a href="#本地交易" class="headerlink" title="本地交易"></a>本地交易</h3><p>在交易池中将交易标记为 local 的有多种用途：</p>
+<ul>
+<li>在本地磁盘存储已发送的交易。这样，本地交易不会丢失，重启节点时可以重新加载到交易池，实时广播出去。</li>
+<li>可以作为外部程序和以太坊沟通的一个渠道。外部程序只需要监听文件内容变化，则可以获得交易清单。</li>
+<li>local交易可优先于 remote 交易。对交易量的限制等操作，不影响 local 下的账户和交易。</li>
+</ul>
+<p>只有属于 local 账户的交易才会被记录。如果仅仅是这样的话，journal 文件是否会跟随本地交易而无限增长？答案是否定的，虽然无法实时从journal中移除交易。但是支持定期更新journal文件。<br>journal 并不是保存所有的本地交易以及历史，他仅仅是存储当前交易池中存在的本地交易。因此交易池会定期对 journal 文件执行 rotate，将交易池中的本地交易写入journal文件，并丢弃旧数据。</p>
+<h3 id="新交易信号"><a href="#新交易信号" class="headerlink" title="新交易信号"></a>新交易信号</h3><p>交易池支持外部订阅新交易事件信号。任何订阅此事件的子模块，在交易池出现新的可执行交易时，均可实时接受到此事件通知，并获得新交易信息。<br>需要注意的是并非所有进入交易池的交易均被通知外部，而是只有交易从非可执行状态变成可执行状态后才会发送信号。</p>
+<h2 id="交易存储"><a href="#交易存储" class="headerlink" title="交易存储"></a>交易存储</h2><p>下图是交易池对本地待处理交易的磁盘存储管理流程，涉及加载、实时写入和定期更新维护。<br><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1062" alt="93349fcc8c80c02921de276bc62ccec4.png"></p>
+<h3 id="加载已存储交易"><a href="#加载已存储交易" class="headerlink" title="加载已存储交易"></a>加载已存储交易</h3><p>在交易池首次启动 journal 时，将主动将该文件已存储的交易加载到交易池。<br>交易并非单笔直接载入交易池，而是采用批量提交模式，每 1024 笔交易提交一次。</p>
+<h3 id="存储交易"><a href="#存储交易" class="headerlink" title="存储交易"></a>存储交易</h3><p>当交易池新交易来自于本地账户时，如果已开启记录本地交易，则将此交易加入journal。到交易池时，将实时存储到 journal 文件中。<br>而 journal.insert则将交易实时写入文件流中，相当于实时存储到磁盘。而在写入时，是将交易进行RLP编码。</p>
+<h3 id="journal定期更新"><a href="#journal定期更新" class="headerlink" title="journal定期更新"></a>journal定期更新</h3><p>journal 的目的是长期存储本地尚未完成的交易，以便交易不丢失。而文件内容属于交易的RLP编码内容，不便于实时清空已完成或已无效的交易。因此以太坊采取的是定期将交易池待处理交易更新到 journal 文件中。<br>首先，在首次加载文件中的交易到交易池后，利用交易池的检查功能，将已完成或者已完成的交易拒绝在交易池外。在加载完成后，交易池中的交易仅仅是本地账户待处理的交易，因此在加载完成后，立即将交易池中的所有本地交易覆盖journal文件。</p>
+<h2 id="交易入队"><a href="#交易入队" class="headerlink" title="交易入队"></a>交易入队</h2><h3 id="校验交易合法性"><a href="#校验交易合法性" class="headerlink" title="校验交易合法性"></a>校验交易合法性</h3><ul>
+<li>首先是防止DOS攻击，不允许交易数据超过32KB。</li>
+<li>接着不允许交易的转账金额为负数，实际上这次判断难以命中，原因是从外部接收的交易数据属RLP编码，是无法处理负数的。当然这里做一次校验，更加保险。</li>
+<li>区块中的GAS量是每笔交易执行消耗GAS之和，故不可能一笔交易的GAS上限超过区块GAS限制。</li>
+<li>每笔交易都需要携带交易签名信息，并从签名中解析出签名者地址。只有合法的签名才能成功解析出签名者。一旦解析失败拒绝此交易。</li>
+<li>既然知道是交易发送者(签名者)，那么该发送者也可能是来自于交易池所标记的local账户。因此当交易不是local交易时，还进一步检查是否属于local账户。如果不是local交易，那么交易的GasPrice 也必须不小于交易池设定的最低GasPrice。</li>
+<li>交易池中不允许出现交易的Nonce 小于此账户当前Nonce的交易。</li>
+<li>检查该账户余额，只有账户资产充足时，才允许交易继续，否则在虚拟机中执行交易，交易也必将失败。</li>
+<li>检查gasLimit。<h3 id="入队"><a href="#入队" class="headerlink" title="入队"></a>入队</h3>以太坊将交易按状态分为两部分：可执行交易和非可执行交易。分别记录在pending容器中和 queue 容器中。<br><img src="evernotecid://336C97AE-E025-4943-9348-E855206F392C/appyinxiangcom/18710579/ENResource/p1061" alt="9d9a4d4ba6366797ddae340512ff01b0.png"><br>如上图所示，交易池先采用一个 txLookup (内部为map）跟踪所有交易。同时将交易根据本地优先，价格优先原则将交易划分为两部分 queue 和 pending。而这两部交易则按账户分别跟踪。</li>
+</ul>
+<p>在进入交易队列前，将判断所有交易队列 all 是否已经达到上限。如果到了上限，则需要从交易池或者当前交易中移除优先级最低交易。<br>交易是有根据 from 分组管理，且一个 from 由分非可执行交易队列（queue）和可执行交易队列（pending）。新交易默认是要在非可执行队列中等待指示，但是一种情况时，如果该 from 的可执行队列中存在一个相同 nonce 的交易时，需要进一步识别是否能替换。只要价格(gasPrice)高于原交易，则允许替换。一旦可以替换，则替换掉旧交易，移除旧交易，并将交易同步存储到 all 交易内存池中。<br>检查完是否需要替换 pending 交易后，则将交易存入非可执行队列。同样，在进入非可执行队列之前，也要检查是否需要替换掉相同 nonce 的交易。<br>最后，如果交易属于本地交易还需要额外关照。如果交易属于本地交易，但是本地账户集中不存在此 from 时，更新本地账户集，避免交易无法被存储。另外，如果已开启存储本地交易，则实时存储本地交易。</p>
+<h2 id="容量内存限制"><a href="#容量内存限制" class="headerlink" title="容量内存限制"></a>容量内存限制</h2><h3 id="删除旧交易"><a href="#删除旧交易" class="headerlink" title="删除旧交易"></a>删除旧交易</h3><p>当新区块来到时，很有可能包含交易内存池中一些账户的交易。一旦存在，则意味着账户的 nonce 和账户余额被存在变动。而只有高于当前新 nonce 交易才能被执行，且账户余额不足以支撑交易执行时，交易也将执行失败。<br>因此，在新区块来到后，删除所有低于新nonce的交易。 再根据账户可用余额，来移除交易开销（<code>amount+gasLimit*gasPrice</code>）高于此余额的交易。</p>
+<h3 id="转移交易或释放"><a href="#转移交易或释放" class="headerlink" title="转移交易或释放"></a>转移交易或释放</h3><p>在非可执行队列中的交易有哪些可以转移到可执行队列呢？因为交易 nonce 的缘故，如果queue队列中存在低于 pending 队列的最小nonce的交易，则可直接转移到pending中。<br>转移后，该账户的交易可能超过所允许的排队交易笔数，如果超过则直接移除超过上限部分的交易。当然这仅仅针对remote交易。</p>
+<h3 id="检查pending数量"><a href="#检查pending数量" class="headerlink" title="检查pending数量"></a>检查pending数量</h3><p>如果超过上限，则分两种策略移除超限部分。<br>优先从超上限(pool.config.AccountSlots)的账户中移除交易。在移除交易时，并非将某个账户的交易全部删除，而是每个账户轮流删除一笔交易，直到低于交易上限。同时，还存在一个特殊删除策略，并非直接轮流每个账户，而是通过一个动态阀值控制，阀值控制遍历顺序，存在一定的随机性。<br>如果仍然还超限，则继续采用直接遍历方式，删除交易，直到低于限制。</p>
+<h3 id="检查queue数量"><a href="#检查queue数量" class="headerlink" title="检查queue数量"></a>检查queue数量</h3><p>删除交易的策略完成根据每个账户pending交易的时间处理，依次删除长时间存在于pending的账户交易。在交易进入pending 时会更新账户级的心跳时间，代表账户最后pending交易活动时间。时间越晚，说明交易越新。</p>
+<h1 id="交易流程"><a href="#交易流程" class="headerlink" title="交易流程"></a>交易流程</h1><p><a target="_blank" rel="noopener" href="https://learnblockchain.cn/2019/06/03/eth-txpool">以太坊交易流程及交易池 TXpool 分析</a>  </p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/d998082e.html" title="交易">http://munan.tech/blog/d998082e.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/9a0369ec.html" rel="prev" title="布隆过滤器">
+      <i class="fa fa-chevron-left"></i> 布隆过滤器
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/d1b862b8.html" rel="next" title="hash">
+      hash <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">定义</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D"><span class="nav-number">2.</span> <span class="nav-text">签名</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AF%94%E7%89%B9%E5%B8%81%E4%B8%8E%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.1.</span> <span class="nav-text">比特币与以太坊的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%94%E7%89%B9%E5%B8%81"><span class="nav-number">2.1.1.</span> <span class="nav-text">比特币</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E5%A4%AA%E5%9D%8A"><span class="nav-number">2.1.2.</span> <span class="nav-text">以太坊</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D%E6%B5%81%E7%A8%8B"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">签名流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%95%B0%E6%8D%AE%E7%AD%BE%E5%90%8D"><span class="nav-number">2.1.3.</span> <span class="nav-text">交易数据签名</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%A1%E9%AA%8C"><span class="nav-number">2.2.</span> <span class="nav-text">校验</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7receipt"><span class="nav-number">3.</span> <span class="nav-text">交易回执receipt</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7%E5%86%85%E5%AE%B9%E4%BB%8B%E7%BB%8D"><span class="nav-number">3.1.</span> <span class="nav-text">交易回执内容介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7%E5%85%B1%E8%AF%86%E4%BF%A1%E6%81%AF"><span class="nav-number">3.1.1.</span> <span class="nav-text">交易回执共识信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7%E4%BA%A4%E6%98%93%E4%BF%A1%E6%81%AF"><span class="nav-number">3.1.2.</span> <span class="nav-text">交易回执交易信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7%E5%8C%BA%E5%9D%97%E4%BF%A1%E6%81%AF"><span class="nav-number">3.1.3.</span> <span class="nav-text">交易回执区块信息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7%E6%9E%84%E9%80%A0"><span class="nav-number">3.2.</span> <span class="nav-text">交易回执构造</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7%E5%AD%98%E5%82%A8"><span class="nav-number">3.3.</span> <span class="nav-text">交易回执存储</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.4.</span> <span class="nav-text">交易回执示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%AC%94%E5%8C%85%E5%90%AB%E6%97%A5%E5%BF%97%E7%9A%84%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7"><span class="nav-number">3.4.1.</span> <span class="nav-text">一笔包含日志的交易回执</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%AC%94%E6%88%90%E5%8A%9F%E9%83%A8%E7%BD%B2%E5%90%88%E7%BA%A6%E7%9A%84%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7"><span class="nav-number">3.4.2.</span> <span class="nav-text">一笔成功部署合约的交易回执</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%AC%94%E5%90%AB-StateRoot%E7%9A%84%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7"><span class="nav-number">3.4.3.</span> <span class="nav-text">一笔含 StateRoot的交易回执</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E7%AC%94%E4%BA%A4%E6%98%93%E5%A4%B1%E8%B4%A5%E7%9A%84%E4%BA%A4%E6%98%93%E5%9B%9E%E6%89%A7"><span class="nav-number">3.4.4.</span> <span class="nav-text">一笔交易失败的交易回执</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%B1%A0"><span class="nav-number">4.</span> <span class="nav-text">交易池</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E6%B5%81%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">关键流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1"><span class="nav-number">4.2.</span> <span class="nav-text">设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">4.2.1.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%93%BE%E7%8A%B6%E6%80%81"><span class="nav-number">4.2.2.</span> <span class="nav-text">链状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E4%BA%A4%E6%98%93"><span class="nav-number">4.2.3.</span> <span class="nav-text">本地交易</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B0%E4%BA%A4%E6%98%93%E4%BF%A1%E5%8F%B7"><span class="nav-number">4.2.4.</span> <span class="nav-text">新交易信号</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%AD%98%E5%82%A8"><span class="nav-number">4.3.</span> <span class="nav-text">交易存储</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E8%BD%BD%E5%B7%B2%E5%AD%98%E5%82%A8%E4%BA%A4%E6%98%93"><span class="nav-number">4.3.1.</span> <span class="nav-text">加载已存储交易</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E4%BA%A4%E6%98%93"><span class="nav-number">4.3.2.</span> <span class="nav-text">存储交易</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#journal%E5%AE%9A%E6%9C%9F%E6%9B%B4%E6%96%B0"><span class="nav-number">4.3.3.</span> <span class="nav-text">journal定期更新</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E5%85%A5%E9%98%9F"><span class="nav-number">4.4.</span> <span class="nav-text">交易入队</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%A1%E9%AA%8C%E4%BA%A4%E6%98%93%E5%90%88%E6%B3%95%E6%80%A7"><span class="nav-number">4.4.1.</span> <span class="nav-text">校验交易合法性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A5%E9%98%9F"><span class="nav-number">4.4.2.</span> <span class="nav-text">入队</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%B9%E9%87%8F%E5%86%85%E5%AD%98%E9%99%90%E5%88%B6"><span class="nav-number">4.5.</span> <span class="nav-text">容量内存限制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E6%97%A7%E4%BA%A4%E6%98%93"><span class="nav-number">4.5.1.</span> <span class="nav-text">删除旧交易</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AC%E7%A7%BB%E4%BA%A4%E6%98%93%E6%88%96%E9%87%8A%E6%94%BE"><span class="nav-number">4.5.2.</span> <span class="nav-text">转移交易或释放</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5pending%E6%95%B0%E9%87%8F"><span class="nav-number">4.5.3.</span> <span class="nav-text">检查pending数量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5queue%E6%95%B0%E9%87%8F"><span class="nav-number">4.5.4.</span> <span class="nav-text">检查queue数量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%B5%81%E7%A8%8B"><span class="nav-number">5.</span> <span class="nav-text">交易流程</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

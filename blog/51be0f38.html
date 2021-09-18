@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="概述Merkle Patricia Tree（又称为 Merkle Patricia Trie）是一种经过改良的、融合了 Merkle tree 和前缀树两种树结构优点的数据结构，是以太坊中用来组织管理账户数据、生成交易集合哈希的重要数据结构。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MPT">
+<meta property="og:url" content="http://munan.tech/blog/51be0f38.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="概述Merkle Patricia Tree（又称为 Merkle Patricia Trie）是一种经过改良的、融合了 Merkle tree 和前缀树两种树结构优点的数据结构，是以太坊中用来组织管理账户数据、生成交易集合哈希的重要数据结构。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="en-resource://database/3157:1">
+<meta property="og:image" content="en-resource://database/3158:1">
+<meta property="og:image" content="en-resource://database/3159:1">
+<meta property="og:image" content="en-resource://database/3160:1">
+<meta property="og:image" content="en-resource://database/3161:1">
+<meta property="og:image" content="en-resource://database/3162:1">
+<meta property="og:image" content="en-resource://database/3163:1">
+<meta property="og:image" content="en-resource://database/3164:1">
+<meta property="og:image" content="en-resource://database/3165:1">
+<meta property="og:image" content="en-resource://database/3166:1">
+<meta property="og:image" content="en-resource://database/3167:1">
+<meta property="og:image" content="en-resource://database/3168:1">
+<meta property="og:image" content="en-resource://database/3236:1">
+<meta property="article:published_time" content="2020-09-17T06:52:23.000Z">
+<meta property="article:modified_time" content="2020-09-18T15:16:33.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="en-resource://database/3157:1">
+
+<link rel="canonical" href="http://munan.tech/blog/51be0f38.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>MPT | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/51be0f38.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MPT
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-17 14:52:23" itemprop="dateCreated datePublished" datetime="2020-09-17T14:52:23+08:00">2020-09-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-09-18 23:16:33" itemprop="dateModified" datetime="2020-09-18T23:16:33+08:00">2020-09-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/eth/" itemprop="url" rel="index"><span itemprop="name">eth</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/51be0f38.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/51be0f38.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Merkle Patricia Tree（又称为 Merkle Patricia Trie）是一种经过改良的、融合了 Merkle tree 和前缀树两种树结构优点的数据结构，是以太坊中用来组织管理账户数据、生成交易集合哈希的重要数据结构。<br><a id="more"></a><br>MPT 树有以下几个作用：</p>
+<ul>
+<li>存储任意长度的 key-value 键值对数据，符合以太坊的 state 模型；</li>
+<li>提供了一种快速计算所维护数据集哈希标识的机制；</li>
+<li>提供了快速状态回滚的机制；</li>
+<li>提供了一种称为默克尔证明的证明方法，进行轻节点的扩展，实现简单支付验证；</li>
+</ul>
+<p>由于 MPT 结合了 Radix trie 和 Merkle 两种树结构的特点与优势 ，因此在介绍 MPT 之前，我们首先简要地介绍下这两种树结构的特点。</p>
+<h1 id="Radix-trie"><a href="#Radix-trie" class="headerlink" title="Radix trie"></a>Radix trie</h1><p>Trie 树，又称前缀树或字典树，是一种有序树，用于保存关联数组。其中的键通常是字符串。与二叉查找树不同，键不是直接保存在节点中，而是由节点在树中的位置决定 。一个节点的所有子孙都有相同的前缀，也就是这个节点对应的字符串，而根节点对应空字符串。<br>一般情况下，不是所有的节点都有对应的值，只有叶子节点和部分内部节点所对应的键才有相关的值。实际上 trie 每个节点是一个确定长度的数组，数组中每个元素的值是一个指向子节点的指针，最后有个标志域，标识这个位置为止是否是一个完整的字符串。<br>常见的用来存英文单词的 trie 每个节点是一个长度为 27 的指针数组，index0-25 代表 a-z 字符，26 为标志域。如图：<br><img src="en-resource://database/3157:1" alt="07a263568193a61ed457ea441a69513f.jpeg"></p>
+<h2 id="优势"><a href="#优势" class="headerlink" title="优势"></a>优势</h2><p>相比于哈希表，使用前缀树来进行查询拥有共同前缀 key 的数据时十分高效，例如在字典中查找前缀为 pre 的单词，对于哈希表来说，需要遍历整个表，时间效率为 O(n)，然而对于前缀树来说，只需要在树中找到前缀为 pre 的节点，且遍历以这个节点为根节点的子树即可。<br>但是对于最差的情况（前缀为空串)，时间效率为 O(n), 仍然需要遍历整棵树，此时效率与哈希表相同。<br>相比于哈希表，在前缀树不会存在哈希冲突的问题。<br>更新数据非常容易，只需访问局部分支。</p>
+<h2 id="劣势"><a href="#劣势" class="headerlink" title="劣势"></a>劣势</h2><p>直接查找效率低下。前缀树的查找效率是 O(m)，m 为所查找节点的 key 长度，而哈希表的查找效率为 O(1)。且一次查找会有 m 次 IO 开销，相比于直接查找，无论是速率、还是对磁盘的压力都比较大。可能会造成空间浪费 当存在一个节点，其 key 值内容很长（如一串很长的字符串），当树中没有与他相同前缀的分支时，为了存储该节点，需要创建许多非叶子节点来构建根节点到该节点间的路径，造成了存储空间的浪费。</p>
+<h1 id="Patricia-trie"><a href="#Patricia-trie" class="headerlink" title="Patricia trie"></a>Patricia trie</h1><p>他是一种更节省空间的 Trie。对于基数树的每个节点，如果该节点是唯一的儿子的话，就和父节点合并。<br><img src="en-resource://database/3158:1" alt="932c5c442939901fa4259789029eb190.jpeg"><br>Patricia tree适合键值分布比较稀疏的数据，压缩效果比较明显。在以太坊中，为防止碰撞，使用了160bit长的账户，非常稀疏，因此适合使用Patricia tree数据结构。</p>
+<h1 id="Merkle-tree"><a href="#Merkle-tree" class="headerlink" title="Merkle tree"></a>Merkle tree</h1><p>Merkle 树是由计算机科学家 Ralph Merkle 在很多年前提出的，并以他本人的名字来命名, 由于在 Bitcoin 网络中用到了这种数据结构来进行数据正确性的验证，在这里简要地介绍一下 merkle 树的特点及原理。<br>在 Bitcoin 网络中，merkle 树被用来归纳一个区块中的所有交易，同时生成整个交易集合的数字指纹。此外，由于 merkle 树的存在，使得在 Bitcoin 这种公链的场景下，扩展一种 “轻节点” 实现简单支付验证变成可能。</p>
+<h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><ul>
+<li>Merkle tree 是一种树，大多数是二叉树，也可以多叉树，无论是几叉树，它都具有树结构的所有特点；</li>
+<li>Merkle tree 叶子节点的 value 是数据项的内容，或者是数据项的哈希值；</li>
+<li>非叶子节点的 value 根据其孩子节点的信息，然后按照 Hash 算法计算而得出的；</li>
+</ul>
+<p><img src="en-resource://database/3159:1" alt="8804db71163a98e46d2966e998a5a868.jpeg"></p>
+<p>将相邻两个节点的哈希值合并成一个字符串，然后计算这个字符串的哈希，得到的就是这两个节点的父节点的哈希值。<br>如果该层的树节点个数是单数，那么对于最后剩下的树节点，这种情况就直接对它进行哈希运算，其父节点的哈希就是其哈希值的哈希值（对于单数个叶子节点，有着不同的处理方法，也可以采用复制最后一个叶子节点凑齐偶数个叶子节点的方式）。循环重复上述计算过程，最后计算得到最后一个节点的哈希值，将该节点的哈希值作为整棵树的哈希。<br>若两棵树的根哈希一致，则这两棵树的结构、节点的内容必然相同。</p>
+<h2 id="优势-1"><a href="#优势-1" class="headerlink" title="优势"></a>优势</h2><ul>
+<li>快速重哈希<br>Merkle tree 的特点之一就是当树节点内容发生变化时，能够在前一次哈希计算的基础上，仅仅将被修改的树节点进行哈希重计算，便能得到一个新的根哈希用来代表整棵树的状态。</li>
+<li>轻节点扩展<br>采用 Merkle tree，可以在公链环境下扩展一种 “轻节点”。轻节点的特点是对于每个区块，仅仅需要存储约 80 个字节大小的区块头数据，而不存储交易列表，回执列表等数据。然而通过轻节点，可以实现在非信任的公链环境中验证某一笔交易是否被收录在区块链账本的功能。这使得像比特币，以太坊这样的区块链能够运行在个人 PC，智能手机等拥有小存储容量的终端上。<br>对于轻节点来说，验证一条交易只需要验证包含该交易的路径即可，并不需要把所有交易的 Hash 全部重新算一遍。<br><img src="en-resource://database/3160:1" alt="1acfb4f6da08977b33ee75e349f83d88.jpeg"><h2 id="劣势-1"><a href="#劣势-1" class="headerlink" title="劣势"></a>劣势</h2>存储空间开销大<h1 id="MPT"><a href="#MPT" class="headerlink" title="MPT"></a>MPT</h1><h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2>在深入 MPT 数据结构之前，我们先了解一下如下概念：</li>
+<li>世界状态：在以太坊中，所有账户（包括合约账户、普通账户）的状态数据统称为世界状态；</li>
+<li>轻节点：指只存储区块头数据的区块链节点；</li>
+<li>区块链分叉：指向同一个父块的 2 个区块被同时生成的情况，某些部分的矿工看到其中一个区块，其他的矿工则看到另外一个区块。这导致 2 种区块链同时增长；</li>
+<li>区块头：指以太坊区块结构体的一部分，用于存储该区块的头部信息，如父区块哈希、世界状态哈希、交易回执集合哈希等。区块头仅存储一些 “固定” 长度的哈希字段；<h2 id="MPT-树中的节点"><a href="#MPT-树中的节点" class="headerlink" title="MPT 树中的节点"></a>MPT 树中的节点</h2></li>
+<li>空节点 (NULL) - represented as the empty string<br>简单的表示空，在代码中是一个空串。</li>
+<li>叶子节点 (leaf) - a 2-item node [encodedPath, value]<br>表示为 [key,value] 的一个键值对，其中 key 是 key 的一种特殊十六进制编码 (MP 编码)， value 是 value 的 RLP 编码。</li>
+<li>分支节点 (branch) - a 17-item node [v0 … v15, vt]<br>因为 MPT 树中的 key 被编码成一种特殊的 16 进制的表示，再加上最后的 value，所以分支节点是一个 长度为 17 的 list，前 16 个元素对应着 key 中的 16 个可能的十六进制字符，如果有一个 [key,value] 对在这个分支节点终止，最后一个元素代表一个值，即分支节点既可以搜索路径的终止也可以是路径的中间节点。</li>
+<li>扩展节点 (extension) - a 2-item node [encodedPath, key]也是 [key，value] 的一个键值对 ，但是这里的 value 是其他节点的 hash 值 ，这个 hash 可以被用来查询数据库中的节点。也就是说通过 hash 链接到其他节点。<br>因此，有两种 [key,value] 节点(叶节点和扩展节点)<h2 id="以太坊中对-Key-的编码"><a href="#以太坊中对-Key-的编码" class="headerlink" title="以太坊中对 Key 的编码"></a>以太坊中对 Key 的编码</h2>在以太坊中，MPT 树的 key 值共有三种不同的编码方式，以满足不同场景的不同需求。<br>三种编码方式分别为：<br>1.Raw 编码（原生的字符）；<br>2.Hex 编码（扩展的 16 进制编码）；<br>3.Hex-Prefix 编码（16 进制前缀编码）；<h3 id="Raw-编码"><a href="#Raw-编码" class="headerlink" title="Raw 编码"></a>Raw 编码</h3>Raw 编码就是原生的 key 值，不做任何改变。这种编码方式的 key，是 MPT 对外提供接口的默认编码方式。<br>例如一条 key 为 “cat”，value 为“dog” 的数据项，其 key 的 Raw 编码就是[‘c’, ‘a’, ‘t’]，换成 ASCII 表示方式就是[63, 61, 74]（Hex）<h3 id="Hex-编码"><a href="#Hex-编码" class="headerlink" title="Hex 编码"></a>Hex 编码</h3>Hex 编码就是把一个 8 位的字节数据用两个十六进制数展示出来，编码时，将 8 位二进制码重新分组成两个 4 位的字节，其中一个字节的低 4 位是原字节的高四位，另一个字节的低 4 位是原数据的低 4 位，高 4 位都补 0，然后输出这两个字节对应十六进制数字作为编码。Hex 编码后的长度是源数据的 2 倍。<br>例如：<br>ASCII 码：A (65) 二进制码：0100_0001 重新分组：0000_0100 0000_0001 十六进制： 4 1 Hex 编码：41<br>若该 Key 对应的节点存储的是真实的数据项内容（即该节点是叶子节点），则在末位添加一个 ASCII 值为 16 的字符作为 terminator；<br>若该 key 对应的节点存储的是另外一个节点的哈希索引（即该节点是扩展节点），则不加任何字符；<br>[‘c’,’a’,’t’] -&gt; [6,3,6,1,7,4,16]<h2 id="HP-编码"><a href="#HP-编码" class="headerlink" title="HP 编码"></a>HP 编码</h2>目的：</li>
+<li>区分 leaf 和 extension</li>
+<li>把奇数路径变成偶数路径</li>
+</ul>
+<p>步骤：</p>
+<ul>
+<li>如果有 terminator（16）那么就去掉 terminator。根据表格给 key 加上 prefix</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>node type</th>
+<th>path length</th>
+<th>prefix</th>
+<th>hexchar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>extension</td>
+<td>even</td>
+<td>0000</td>
+<td>0x0</td>
+</tr>
+<tr>
+<td>extension</td>
+<td>odd</td>
+<td>0001</td>
+<td>0x1</td>
+</tr>
+<tr>
+<td>leaf</td>
+<td>even</td>
+<td>0010</td>
+<td>0x2</td>
+</tr>
+<tr>
+<td>leaf</td>
+<td>odd</td>
+<td>0011</td>
+<td>0x3</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>如果 prefix 是 0x0 或者 0x2，加一个 padding nibble 0 在 prefix 后面，所以最终应该是 0x00 和 0x20。原因是为了保证 key（path）的长度为偶数。<br>例子： 末尾的字符 “16” 说明该节点为叶子结点，并且加上了 0x20<br>[ 0, f, 1, c, b, 8, 16] -&gt; ‘20 0f 1c b8’</p>
+<h2 id="编码转换关系"><a href="#编码转换关系" class="headerlink" title="编码转换关系"></a>编码转换关系</h2><p>以上三种编码方式的转换关系为：<br>Raw 编码：原生的 key 编码，是 MPT 对外提供接口中使用的编码方式，当数据项被插入到树中时，Raw 编码被转换成 Hex 编码；<br>Hex 编码：16 进制扩展编码，用于对内存中树节点 key 进行编码，当树节点被持久化到数据库时，Hex 编码被转换成 HP 编码；<br>HP 编码：16 进制前缀编码，用于对数据库中树节点 key 进行编码，当树节点被加载到内存时，HP 编码被转换成 Hex 编码；<img src="en-resource://database/3161:1" alt="232537cfac5103618cb9b0b45e9a47e2.jpeg"></p>
+<h2 id="MPT-的结构"><a href="#MPT-的结构" class="headerlink" title="MPT 的结构"></a>MPT 的结构</h2><p>MPT 树的特点如下:</p>
+<ul>
+<li>叶子节点和分支节点可以保存 value, 扩展节点保存 key；</li>
+<li>没有公共的 key 就成为 2 个叶子节点；key1=[1,2,3] key2=[2,2,3]</li>
+<li>有公共的 key 需要提取为一个扩展节点；key1=[1,2,3] key2=[1,3,3] =&gt; ex-node=[1], 下一级分支 node 的 key</li>
+<li>如果公共的 key 也是一个完整的 key，数据保存到下一级的分支节点中；key1=[1,2] key2=[1,2,3] =&gt; ex-node=[1,2], 下一级分支 node 的 key; 下一级分支 =[3], 上一级 key 对应的 value</li>
+</ul>
+<p>简单的结构如下图：<br><img src="en-resource://database/3162:1" alt="e2698781750973ae4a083f3dbe8bb517.jpeg"><br>我们将存入如下 state 数据:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>key</th>
+<th>values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a711355</td>
+<td>45.0 ETH</td>
+</tr>
+<tr>
+<td>a77d337</td>
+<td>1.00 WEI</td>
+</tr>
+<tr>
+<td>a7f9365</td>
+<td>1.1  ETH</td>
+</tr>
+<tr>
+<td>a77d397</td>
+<td>0.12 ETH</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>插入第一个<a711355, 45>，由于只有一个 key, 直接用 leaf node 既可表示<img src="en-resource://database/3163:1" alt="ed1f460bb6353d5817ce4cb24a6d5d3d.jpeg"><br>接着插入 a77d337, 由于和 a711355 共享前缀’a7’, 因而可以创建’a7’扩展节点。<img src="en-resource://database/3164:1" alt="b8117db4cafb85f52e840899ff22241e.jpeg"><br>接着插入 a7f9365, 也是共享’a7’, 只需新增一个 leaf node.<img src="en-resource://database/3165:1" alt="fb9cace75809b83abb90c79957a6d675.jpeg"><br>最后插入 a77d397, 这个 key 和 a77d337 共享’a7’+’d3’, 因而再需要创建一个’d3’扩展节点<img src="en-resource://database/3166:1" alt="4fcf5ab87c1b497a34f9e113a3da5be9.jpeg"><br>将叶子节点和最后的 short node 合并到一个节点了，事实上源码实现需要再深一层，最后一层的叶子节点只有数据<img src="en-resource://database/3167:1" alt="345a4e2896e9605aea982b206dcbd940.jpeg"><br><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// nodeFlag contains caching-related metadata about a node.</span></span><br><span class="line"><span class="keyword">type</span> nodeFlag <span class="keyword">struct</span> &#123;</span><br><span class="line">    hash  hashNode <span class="comment">// cached hash of the node (may be nil)</span></span><br><span class="line">    gen   <span class="keyword">uint16</span>   <span class="comment">// cache generation counter</span></span><br><span class="line">    dirty <span class="keyword">bool</span>     <span class="comment">// whether the node has changes that must be written to the database</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>MPT 节点有个 flag 字，nodeFlag，记录了一些辅助数据：</a711355,></p>
+<ul>
+<li>节点哈希：若该字段不为空，则当需要进行哈希计算时，可以跳过计算过程而直接使用上次计算的结果（当节点变脏时，该字段被置空）；</li>
+<li>诞生标志：当该节点第一次被载入内存中（或被修改时），会被赋予一个计数值作为诞生标志，该标志会被作为节点驱除的依据，清除内存中 “太老” 的未被修改的节点，防止占用的内存空间过多；</li>
+<li>脏标志：当一个节点被修改时，该标志位被置为 1；</li>
+</ul>
+<p>flag.hash 会保存该节点采用 merkle tree 类似算法生成的 hash。同时会将 hash 和源数据以 <hash, node.rlp.rawdata> 方式保存在 leveldb 数据库中。这样后面通过 hash 就可以反推出节点数据。具体结构如下 (蓝色的 hash 部分就是 flag.hash 字段)<br><img src="en-resource://database/3168:1" alt="7d1caad737c77663a8ae43611eff29af.jpeg"></hash,></p>
+<h3 id="核心思想"><a href="#核心思想" class="headerlink" title="核心思想"></a>核心思想</h3><p>hash 可以还原出节点上的数据，这样只需要保存一个 root(hash)，即可还原出完整的树结构，同时还可以按需展开节点数据，比如如果需要访问 <a771355, 45> 这个数据，只需展开 h00, h10, h20, h30 这四个 hash 对应的节点。</a771355,></p>
+<h2 id="出块后的变化"><a href="#出块后的变化" class="headerlink" title="出块后的变化"></a>出块后的变化</h2><p>新发布一个区块的时候，某些账户的状态会发生变化，新区块中会为变化的账户重新建立分支，大部分不变的数据则指向历史区块中的分支，因此区块间会共享大部分不变的状态分支。如下图所示：<img src="en-resource://database/3236:1" alt="df12ba2a0c3a1aaebb7a24d02c730245.png"></p>
+<p>保留历史状态的好处：<br>未胜出的临时性分叉需要回滚才能继续出块，由于智能合约的执行不易反推执行，保留起始与结束的记录，回滚才比较方便。</p>
+<p>账户树中保存全部账户信息的原因：<br>查找某个账户更快速，如果区块内只保存区块内交易的相关账户信息，查询某个很久没有交易的账户就要花费很长时间，最坏的情况是如果转账给一个从未进行交易的账户，就必须追溯到创世区块，最后有可能发现区块内没有该账户的信息。</p>
+<h1 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h1><p>以太坊中的状态树、交易树、收据树都采用MPT。只有状态树会共享分支。</p>
+<h2 id="交易树"><a href="#交易树" class="headerlink" title="交易树"></a>交易树</h2><p>NewBlock函数里包含交易树、收据树的创建以及叔父区块处理。<br>创建交易树的步骤：</p>
+<ul>
+<li>判断交易列表是否为空，如果为空，那么块头的根哈希就是空哈希值</li>
+<li>如果不为空，调用DeriveSha函数得到交易树的根哈希值</li>
+<li>然后创建区块的交易列表<h2 id="收据树"><a href="#收据树" class="headerlink" title="收据树"></a>收据树</h2>创建收据树的步骤：</li>
+<li>判断收据列表是否为空，如果为空，那么根哈希就是空哈希值</li>
+<li>如果不为空，调用DeriveSha函数得到收据树的根哈希值</li>
+<li>然后调用CreateBloom函数创建块头里的bloom filter<h2 id="叔父区块"><a href="#叔父区块" class="headerlink" title="叔父区块"></a>叔父区块</h2>处理叔父区块：</li>
+<li>判断叔父区块列表是否为空，如果为空，那么块头的叔父区块哈希值就是空的哈希值</li>
+<li>如果不为空，调用CalcUncleHash计算哈希值</li>
+<li>通过一个循环构建区块里的叔父数组</li>
+</ul>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a target="_blank" rel="noopener" href="https://learnblockchain.cn/books/geth/part3/mpt.html">MPT</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/51be0f38.html" title="MPT">http://munan.tech/blog/51be0f38.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/5372f47e.html" rel="prev" title="PBFT">
+      <i class="fa fa-chevron-left"></i> PBFT
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/1d646e11.html" rel="next" title="账户模型">
+      账户模型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Radix-trie"><span class="nav-number">2.</span> <span class="nav-text">Radix trie</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%98%E5%8A%BF"><span class="nav-number">2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A3%E5%8A%BF"><span class="nav-number">2.2.</span> <span class="nav-text">劣势</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Patricia-trie"><span class="nav-number">3.</span> <span class="nav-text">Patricia trie</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Merkle-tree"><span class="nav-number">4.</span> <span class="nav-text">Merkle tree</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E7%82%B9"><span class="nav-number">4.1.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%98%E5%8A%BF-1"><span class="nav-number">4.2.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A3%E5%8A%BF-1"><span class="nav-number">4.3.</span> <span class="nav-text">劣势</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MPT"><span class="nav-number">5.</span> <span class="nav-text">MPT</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">5.1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MPT-%E6%A0%91%E4%B8%AD%E7%9A%84%E8%8A%82%E7%82%B9"><span class="nav-number">5.2.</span> <span class="nav-text">MPT 树中的节点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%A4%AA%E5%9D%8A%E4%B8%AD%E5%AF%B9-Key-%E7%9A%84%E7%BC%96%E7%A0%81"><span class="nav-number">5.3.</span> <span class="nav-text">以太坊中对 Key 的编码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Raw-%E7%BC%96%E7%A0%81"><span class="nav-number">5.3.1.</span> <span class="nav-text">Raw 编码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hex-%E7%BC%96%E7%A0%81"><span class="nav-number">5.3.2.</span> <span class="nav-text">Hex 编码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HP-%E7%BC%96%E7%A0%81"><span class="nav-number">5.4.</span> <span class="nav-text">HP 编码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E7%A0%81%E8%BD%AC%E6%8D%A2%E5%85%B3%E7%B3%BB"><span class="nav-number">5.5.</span> <span class="nav-text">编码转换关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MPT-%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">5.6.</span> <span class="nav-text">MPT 的结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3"><span class="nav-number">5.6.1.</span> <span class="nav-text">核心思想</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BA%E5%9D%97%E5%90%8E%E7%9A%84%E5%8F%98%E5%8C%96"><span class="nav-number">5.7.</span> <span class="nav-text">出块后的变化</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8"><span class="nav-number">6.</span> <span class="nav-text">应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E6%A0%91"><span class="nav-number">6.1.</span> <span class="nav-text">交易树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%B6%E6%8D%AE%E6%A0%91"><span class="nav-number">6.2.</span> <span class="nav-text">收据树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%94%E7%88%B6%E5%8C%BA%E5%9D%97"><span class="nav-number">6.3.</span> <span class="nav-text">叔父区块</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

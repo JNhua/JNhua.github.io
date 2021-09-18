@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="编译过程整体流程：[源代码]-&gt;分词-&gt;[Tokens词条流]-&gt;解析-&gt;[AST]-&gt;语法分析，宏扩展→[高级中间语言HIR]-&gt;类型检查-&gt;[中级中间语言MIR]-&gt;转换-&gt;[LLVM IR]-&gt;LLVM-&gt;[目标文件]-&gt;链接-&gt;[可执行程序]">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust之宏入门">
+<meta property="og:url" content="http://munan.tech/blog/bf56e353.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="编译过程整体流程：[源代码]-&gt;分词-&gt;[Tokens词条流]-&gt;解析-&gt;[AST]-&gt;语法分析，宏扩展→[高级中间语言HIR]-&gt;类型检查-&gt;[中级中间语言MIR]-&gt;转换-&gt;[LLVM IR]-&gt;LLVM-&gt;[目标文件]-&gt;链接-&gt;[可执行程序]">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-10T15:51:57.000Z">
+<meta property="article:modified_time" content="2020-11-23T12:01:37.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://munan.tech/blog/bf56e353.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Rust之宏入门 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/bf56e353.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Rust之宏入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-10 23:51:57" itemprop="dateCreated datePublished" datetime="2020-10-10T23:51:57+08:00">2020-10-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-23 20:01:37" itemprop="dateModified" datetime="2020-11-23T20:01:37+08:00">2020-11-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Rust/" itemprop="url" rel="index"><span itemprop="name">Rust</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Rust/Rust%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">Rust基础</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/bf56e353.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/bf56e353.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h1><p>整体流程：[源代码]-&gt;分词-&gt;[Tokens词条流]-&gt;解析-&gt;[AST]-&gt;语法分析，宏扩展→[高级中间语言HIR]-&gt;类型检查-&gt;[中级中间语言MIR]-&gt;转换-&gt;[LLVM IR]-&gt;LLVM-&gt;[目标文件]-&gt;链接-&gt;[可执行程序]<br><a id="more"></a></p>
+<p>详细过程如下：</p>
+<ol>
+<li>解析输入：将<code>.rs</code>文件作为输入并进行解析生成<code>AST</code>(抽象语法树)；</li>
+<li>名称解析，宏扩展和属性配置：解析完毕后处理<code>AST</code>，处理<code>#[cfg]</code>节点解析路径，扩展宏；</li>
+<li>转为HIR：名称解析完毕后将AST转换为<code>HIR</code>(高级中间表示)，HIR比AST处理的更多，但是他不负责解析Rust的语法，例如<code>((1+2)+3)</code>和<code>1+2+3</code>在AST中会保留括号，虽然两者的含义相同但是会被解析成不同的树，但是在HIR中括号节点将会被删除，这两个表达式会以相同的方式表达；</li>
+<li>类型检查以及后续分析：处理HIR的重要步骤就是类型检查，例如使用<code>x.f</code>时如果我们不知道<code>x</code>的类型就无法判断访问的哪个<code>f</code>字段，类型检查会创建<code>TypeckTables</code>其中包括表达式的类型，方法的解析方式；</li>
+<li>转为MIR以及后置处理：完成类型检查后，将HIR转为MIR(中级中间表示)进行借用检查以及优化；</li>
+<li>转为LLVM IR和优化：LLVM进行优化，从而生成许多<code>.o</code>文件；</li>
+<li>链接： 最后将那些<code>.o</code>文件链接在一起。</li>
+</ol>
+<p>Rust在预处理时，会加入以下代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#![feature(prelude_import)]</span></span><br><span class="line"><span class="meta">#[prelude_import]</span></span><br><span class="line"><span class="keyword">use</span> std::prelude::v1::*;</span><br><span class="line"><span class="meta">#[macro_use]</span></span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> std;</span><br></pre></td></tr></table></figure>
+<p>从而自动导入标准库。</p>
+<h1 id="声明宏（Declarative-Macro）"><a href="#声明宏（Declarative-Macro）" class="headerlink" title="声明宏（Declarative Macro）"></a>声明宏（Declarative Macro）</h1><p>宏解析器将宏扩展的时机在解析过程中。</p>
+<p>声明宏中可以捕获的类型：</p>
+<ul>
+<li>item，语言项，比如模块、声明、函数定义、类型定义、结构体定义、impl实现等。</li>
+<li>block，代码块，由花括号限定的代码；</li>
+<li>stmt，语句，一般是指以分号结尾的代码；</li>
+<li>expr，表达式，会生成具体的值；</li>
+<li>pat，模式；</li>
+<li>ty，类型；</li>
+<li>ident，标识符；</li>
+<li>path，路径，比如foo、std::iter等；</li>
+<li>meta，元信息，包含在#[…]或者#![…]属性内的信息；</li>
+<li>tt，TokenTree的缩写，词条树；</li>
+<li>vis，可见性，比如pub；</li>
+<li>lifetime，生命周期参数。</li>
+</ul>
+<p>词法树的范围比表达式的范围广，比如匹配一个语句块时，就必须用tt。</p>
+<p>重复匹配的模式是“$(…) sep rep”，具体的说明如下：</p>
+<ul>
+<li>$(…)，代表要把重复匹配的模式置于其中；</li>
+<li>sep，代表分隔符，常用逗号、分号和=&gt;。这个分隔符可以依据具体的情况忽略。</li>
+<li>rep，代表控制重复次数的标记，目前支持两种：* 和 +，代表“重复零次及以上”和“重复一次及以上”。</li>
+</ul>
+<p>展开宏：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cargo rustc -- -Z unstable-options --pretty=expanded</span><br></pre></td></tr></table></figure>
+<p>或</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rustc -Z unstable-options --pretty=expanded main.rs</span><br></pre></td></tr></table></figure>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[macro_export]</span></span><br><span class="line"><span class="built_in">macro_rules!</span> my_vec &#123; </span><br><span class="line">  <span class="comment">// x 为重复匹配到的表达式，“，”可以根据情况忽略</span></span><br><span class="line">    ($($x: expr), *) =&gt; &#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="keyword">mut</span> temp_vec = <span class="built_in">Vec</span>::new();</span><br><span class="line">          <span class="comment">// 重复匹配到的值在这里访问</span></span><br><span class="line">            $(</span><br><span class="line">                temp_vec.push($x);</span><br><span class="line">            )*</span><br><span class="line">            temp_vec</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="hashmap实现"><a href="#hashmap实现" class="headerlink" title="hashmap实现"></a>hashmap实现</h2><h3 id="递归调用"><a href="#递归调用" class="headerlink" title="递归调用"></a>递归调用</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#![allow(unused)]</span></span><br><span class="line"><span class="built_in">macro_rules!</span> hashmap &#123;</span><br><span class="line">  <span class="comment">// 利用递归调用消去最后键值对的结尾逗号</span></span><br><span class="line">  <span class="comment">// 如果是末尾仍有逗号的，会转换成($($key:expr =&gt; $value:expr),*)</span></span><br><span class="line">    ($($key:expr =&gt; $value:expr,)*) =&gt;</span><br><span class="line">        &#123;  hashmap!($($key =&gt; $value),*) &#125;;</span><br><span class="line">    ($($key:expr =&gt; $value:expr),* ) =&gt; &#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="keyword">mut</span> _map = ::std::collections::HashMap::new();</span><br><span class="line">            $(</span><br><span class="line">                _map.insert($key, $value);</span><br><span class="line">            )*</span><br><span class="line">           _map</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>()&#123;</span><br><span class="line">    <span class="keyword">let</span> map = hashmap!&#123;</span><br><span class="line">        <span class="string">&quot;a&quot;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">        <span class="string">&quot;b&quot;</span> =&gt; <span class="number">2</span>,</span><br><span class="line">        <span class="string">&quot;c&quot;</span> =&gt; <span class="number">3</span>, </span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(map[<span class="string">&quot;a&quot;</span>], <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第一层转换为<code>hashmap ! (&quot;a&quot; =&gt; 1, &quot;b&quot; =&gt; 2, &quot;c&quot; =&gt; 3)</code>。</p>
+<h3 id="重复匹配规则"><a href="#重复匹配规则" class="headerlink" title="重复匹配规则"></a>重复匹配规则</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">macro_rules!</span> hashmap &#123;</span><br><span class="line">    ($($key:expr =&gt; $value:expr),* $(,)*) =&gt; &#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">let</span> <span class="keyword">mut</span> _map = ::std::collections::HashMap::new();</span><br><span class="line">            $(</span><br><span class="line">                _map.insert($key, $value);</span><br><span class="line">            )*</span><br><span class="line">            _map</span><br><span class="line">        &#125;</span><br><span class="line">   &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>()&#123;</span><br><span class="line">    <span class="keyword">let</span> map = hashmap!&#123;</span><br><span class="line">        <span class="string">&quot;a&quot;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">        <span class="string">&quot;b&quot;</span> =&gt; <span class="number">2</span>,</span><br><span class="line">        <span class="string">&quot;c&quot;</span> =&gt; <span class="number">3</span>, </span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(map[<span class="string">&quot;a&quot;</span>], <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="预分配空间"><a href="#预分配空间" class="headerlink" title="预分配空间"></a>预分配空间</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">macro_rules!</span> unit &#123;</span><br><span class="line">    ($($x:tt)*) =&gt; (());</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">macro_rules!</span> count &#123;</span><br><span class="line">    ($($key:expr),*) =&gt; (&lt;[()]&gt;::len(&amp;[$(unit!($key)),*]));</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">macro_rules!</span> hashmap &#123;</span><br><span class="line">    ($($key:expr =&gt; $value:expr),* $(,)*) =&gt; &#123;</span><br><span class="line">        &#123;</span><br><span class="line">           <span class="keyword">let</span> _cap = count!($($key),*);</span><br><span class="line">           <span class="keyword">let</span> <span class="keyword">mut</span> _map </span><br><span class="line">               = ::std::collections::HashMap::with_capacity(_cap);</span><br><span class="line">           $(</span><br><span class="line">               _map.insert($key, $value);</span><br><span class="line">           )*</span><br><span class="line">           _map</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="消除外部宏"><a href="#消除外部宏" class="headerlink" title="消除外部宏"></a>消除外部宏</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#![feature(trace_macros)]</span></span><br><span class="line"><span class="built_in">macro_rules!</span> hashmap &#123;</span><br><span class="line">    (@unit $($x:tt)*) =&gt; (());</span><br><span class="line">    (@count $($rest:expr),*) =&gt; </span><br><span class="line">        (&lt;[()]&gt;::len(&amp;[$(hashmap!(@unit $rest)),*]));</span><br><span class="line">    ($($key:expr =&gt; $value:expr),* $(,)*) =&gt; &#123;</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">let</span> _cap = hashmap!(@count $($key),*);</span><br><span class="line">            <span class="keyword">let</span> <span class="keyword">mut</span> _map = </span><br><span class="line">                ::std::collections::HashMap::with_capacity(_cap);</span><br><span class="line">           $(</span><br><span class="line">               _map.insert($key, $value);</span><br><span class="line">           )*</span><br><span class="line">           _map</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>()&#123;</span><br><span class="line">   trace_macros!(<span class="literal">true</span>);</span><br><span class="line">   <span class="keyword">let</span> map = hashmap!&#123;</span><br><span class="line">       <span class="string">&quot;a&quot;</span> =&gt; <span class="number">1</span>,</span><br><span class="line">       <span class="string">&quot;b&quot;</span> =&gt; <span class="number">2</span>,</span><br><span class="line">       <span class="string">&quot;c&quot;</span> =&gt; <span class="number">3</span>, </span><br><span class="line">   &#125;;</span><br><span class="line">   <span class="built_in">assert_eq!</span>(map[<span class="string">&quot;a&quot;</span>], <span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>#![feature(trace_macros)]</code>在nightly版本下可以跟踪宏展开，在需要展开宏的地方使用<code>trace_macros!(true);</code>打开跟踪。</p>
+<h2 id="导入-导出"><a href="#导入-导出" class="headerlink" title="导入/导出"></a>导入/导出</h2><p><code>#[macro_export]</code>表示下面的宏定义对其他包也是可见的。<code>#[macro_use]</code>可以导入宏。</p>
+<p>在宏定义中使用<code>$crate</code>，可以在被导出时，让编译器根据上下文推断包名，避免依赖问题。</p>
+<h1 id="过程宏"><a href="#过程宏" class="headerlink" title="过程宏"></a>过程宏</h1><p>过程宏的Cargo.toml中，设置lib类型：</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[lib]</span></span><br><span class="line"><span class="attr">proc_macro</span> = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<h2 id="自定义派生属性"><a href="#自定义派生属性" class="headerlink" title="自定义派生属性"></a>自定义派生属性</h2><p>derive属性，自动为结构体或枚举类型进行语法扩展。可以使用TDD（测试驱动开发）的方式来开发。</p>
+<p>包结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">|-Cargo.toml</span><br><span class="line">|-src</span><br><span class="line">   	|- lib.rs</span><br><span class="line">|-tests</span><br><span class="line">	|- test.rs</span><br></pre></td></tr></table></figure>
+<p>先写test.rs</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[macro_use]</span></span><br><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> my_proc_macro;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(A)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">A</span></span>;</span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">test_derive_a</span></span>()&#123;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(<span class="string">&quot;hello from impl A&quot;</span>.to_string(), A.a());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>再写lib.rs</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> proc_macro;</span><br><span class="line"><span class="keyword">use</span> self::proc_macro::TokenStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 自定义派生属性</span></span><br><span class="line"><span class="meta">#[proc_macro_derive(A)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">derive</span></span>(input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    <span class="keyword">let</span> _input = input.to_string();</span><br><span class="line">    <span class="built_in">assert!</span>(_input.contains(<span class="string">&quot;struct A;&quot;</span>));</span><br><span class="line">    r#<span class="string">&quot;</span></span><br><span class="line"><span class="string">        impl A &#123;</span></span><br><span class="line"><span class="string">            fn a(&amp;self) -&gt; String&#123;</span></span><br><span class="line"><span class="string">               format!(&quot;</span>hello from <span class="keyword">impl</span> A<span class="string">&quot;)</span></span><br><span class="line"><span class="string">           &#125;</span></span><br><span class="line"><span class="string">       &#125;</span></span><br><span class="line"><span class="string">   &quot;</span>#.parse().unwrap()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="自定义属性"><a href="#自定义属性" class="headerlink" title="自定义属性"></a>自定义属性</h2><p>可以说自定义派生属性是自定义属性的特例。例如条件编译属性<code>#[cfg()]</code>和测试属性<code>#[test]</code>都是自定义属性。</p>
+<p>test.rs</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> my_proc_macro::attr_with_args;</span><br><span class="line"><span class="meta">#[attr_with_args(<span class="meta-string">&quot;Hello, Rust!&quot;</span>)]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">foo</span></span>()&#123;&#125;</span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">test_foo</span></span>()&#123;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(foo(), <span class="string">&quot;Hello, Rust!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>lib.rs</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> proc_macro;</span><br><span class="line"><span class="keyword">use</span> self::proc_macro::TokenStream;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[proc_macro_attribute]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">attr_with_args</span></span>(args: TokenStream, input: TokenStream)</span><br><span class="line">                      -&gt; TokenStream &#123;</span><br><span class="line">    <span class="keyword">let</span> args = args.to_string();</span><br><span class="line">    <span class="keyword">let</span> _input = input.to_string();</span><br><span class="line">    <span class="built_in">format!</span>(<span class="string">&quot;fn foo() -&gt; &amp;&#x27;static str &#123;% raw %&#125;&#123;&#123; &#123;&#125; &#125;&#125;&#123;% endraw %&#125;&quot;</span>, args)</span><br><span class="line">        .parse().unwrap()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在引号的括号要用<code>{{ {} }}</code>转义，最内部的<code>&#123;&#125;</code>是给<code>args</code>占位的。</p>
+<h2 id="Bang宏-类函数宏"><a href="#Bang宏-类函数宏" class="headerlink" title="Bang宏/类函数宏"></a>Bang宏/类函数宏</h2><p>test.rs</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#![feature(proc_macro_hygiene)]</span></span><br><span class="line"><span class="keyword">use</span> my_proc_macro::hashmap;</span><br><span class="line"><span class="meta">#[test]</span></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">test_hashmap</span></span>()&#123;</span><br><span class="line">    <span class="keyword">let</span> hm = hashmap!&#123; <span class="string">&quot;a&quot;</span>:<span class="number">1</span>,<span class="string">&quot;b&quot;</span>:<span class="number">2</span>,&#125;;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(hm[<span class="string">&quot;a&quot;</span>],<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">let</span> hm = hashmap!&#123;<span class="string">&quot;a&quot;</span>=&gt;<span class="number">1</span>,<span class="string">&quot;b&quot;</span>=&gt;<span class="number">2</span>,<span class="string">&quot;c&quot;</span>=&gt;<span class="number">3</span>&#125;;</span><br><span class="line">    <span class="built_in">assert_eq!</span>(hm[<span class="string">&quot;c&quot;</span>],<span class="number">3</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>lib.rs</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[proc_macro]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">hashmap</span></span>(input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    <span class="comment">// 转换input为字符串</span></span><br><span class="line">    <span class="keyword">let</span> _input = input.to_string();</span><br><span class="line">    <span class="comment">// 将input字符串结尾的逗号去掉，否则在下面迭代中将报错</span></span><br><span class="line">    <span class="keyword">let</span> input = _input.trim_end_matches(<span class="string">&#x27;,&#x27;</span>);</span><br><span class="line">    <span class="comment">// 用split将字符串分割为slice，然后用map去处理</span></span><br><span class="line">    <span class="comment">// 为了支持「&quot;a&quot; : 1」或 「&quot;a&quot; =&gt; 1」这样的语法</span></span><br><span class="line">    <span class="keyword">let</span> input: <span class="built_in">Vec</span>&lt;<span class="built_in">String</span>&gt; = input.split(<span class="string">&quot;,&quot;</span>).map(|n| &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut</span> data = <span class="keyword">if</span> n.contains(<span class="string">&quot;:&quot;</span>) &#123;  n.split(<span class="string">&quot;:&quot;</span>) &#125;</span><br><span class="line">                       <span class="keyword">else</span> &#123; n.split(<span class="string">&quot; =&gt; &quot;</span>) &#125;;</span><br><span class="line">        <span class="keyword">let</span> (key, value) =</span><br><span class="line">           (data.next().unwrap(), data.next().unwrap());</span><br><span class="line">       <span class="built_in">format!</span>(<span class="string">&quot;hm.insert(&#123;&#125;, &#123;&#125;)&quot;</span>, key, value)</span><br><span class="line">    &#125;).collect();</span><br><span class="line">    <span class="keyword">let</span> count: <span class="built_in">usize</span> = input.len();</span><br><span class="line">    <span class="keyword">let</span> tokens = <span class="built_in">format!</span>(<span class="string">&quot;</span></span><br><span class="line"><span class="string">        &#123;% raw %&#125;&#123;&#123;</span></span><br><span class="line"><span class="string">        let mut hm =</span></span><br><span class="line"><span class="string">            ::std::collections::HashMap::with_capacity(&#123;&#125;);</span></span><br><span class="line"><span class="string">            &#123;&#125;</span></span><br><span class="line"><span class="string">            hm</span></span><br><span class="line"><span class="string">        &#125;&#125;&#123;% endraw %&#125;&quot;</span>, count,</span><br><span class="line">        input.iter().map(|n| <span class="built_in">format!</span>(<span class="string">&quot;&#123;&#125;;&quot;</span>, n)).collect::&lt;<span class="built_in">String</span>&gt;()</span><br><span class="line">    );</span><br><span class="line">    <span class="comment">// parse函数会将字符串转为Result&lt;TokenStream&gt;</span></span><br><span class="line">    tokens.parse().unwrap()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="第三方包"><a href="#第三方包" class="headerlink" title="第三方包"></a>第三方包</h2><p>使用<code>syn</code>,<code>quote</code>和<code>proc_macro</code>可以实现自定义派生属性功能。</p>
+<p>以下代码实现了派生属性<code>New</code>。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">crate</span> proc_macro;</span><br><span class="line"><span class="keyword">use</span> &#123;</span><br><span class="line">    syn::&#123;Token, DeriveInput, parse_macro_input&#125;,</span><br><span class="line">    quote::*,</span><br><span class="line">    proc_macro2,</span><br><span class="line">    self::proc_macro::TokenStream,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[proc_macro_derive(New)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">derive</span></span>(input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    <span class="keyword">let</span> ast = parse_macro_input!(input <span class="keyword">as</span> DeriveInput);</span><br><span class="line">    <span class="keyword">let</span> result = <span class="keyword">match</span> ast.data &#123;</span><br><span class="line">        syn::Data::Struct(<span class="keyword">ref</span> s) =&gt; new_for_struct(&amp;ast, &amp;s.fields),</span><br><span class="line">        _ =&gt; <span class="built_in">panic!</span>(<span class="string">&quot;doesn&#x27;t work with unions yet&quot;</span>),</span><br><span class="line">    &#125;;</span><br><span class="line">    result.into()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">new_for_struct</span></span>(ast: &amp;syn::DeriveInput,fields: &amp;syn::Fields) -&gt; proc_macro2::TokenStream</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">match</span> *fields &#123;</span><br><span class="line">        syn::Fields::Named(<span class="keyword">ref</span> fields) =&gt; &#123;</span><br><span class="line">            new_impl(&amp;ast, <span class="literal">Some</span>(&amp;fields.named), <span class="literal">true</span>)</span><br><span class="line">        &#125;,</span><br><span class="line">        syn::Fields::Unit =&gt; &#123;</span><br><span class="line">            new_impl(&amp;ast, <span class="literal">None</span>, <span class="literal">false</span>)</span><br><span class="line">        &#125;,</span><br><span class="line">        syn::Fields::Unnamed(<span class="keyword">ref</span> fields) =&gt; &#123;</span><br><span class="line">            new_impl(&amp;ast, <span class="literal">Some</span>(&amp;fields.unnamed), <span class="literal">false</span>)</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">new_impl</span></span>(ast: &amp;syn::DeriveInput,</span><br><span class="line">            fields: <span class="built_in">Option</span>&lt;&amp;syn::punctuated::Punctuated&lt;syn::Field, Token![,]&gt;&gt;,</span><br><span class="line">            named: <span class="built_in">bool</span>) -&gt; proc_macro2::TokenStream</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">let</span> struct_name = &amp;ast.ident;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> unit = fields.is_none();</span><br><span class="line">    <span class="keyword">let</span> empty = <span class="built_in">Default</span>::default();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> fields: <span class="built_in">Vec</span>&lt;_&gt; = fields.unwrap_or(&amp;empty)</span><br><span class="line">        .iter()</span><br><span class="line">        .enumerate()</span><br><span class="line">        .map(|(i, f)| FieldExt::new(f, i, named)).collect();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> args = fields.iter().map(|f| f.as_arg());</span><br><span class="line">    <span class="keyword">let</span> inits = fields.iter().map(|f| f.as_init());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> inits = <span class="keyword">if</span> unit &#123;</span><br><span class="line">        quote!()</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> named &#123;</span><br><span class="line">        quote![ &#123; #(#inits),* &#125; ]</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        quote![ ( #(#inits),* ) ]</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();</span><br><span class="line">    <span class="keyword">let</span> (new, doc) = (</span><br><span class="line">        syn::Ident::new(<span class="string">&quot;new&quot;</span>, proc_macro2::Span::call_site()),</span><br><span class="line">        <span class="built_in">format!</span>(<span class="string">&quot;Constructs a new `&#123;&#125;`.&quot;</span>, struct_name)</span><br><span class="line">    );</span><br><span class="line">    quote! &#123;</span><br><span class="line">        <span class="keyword">impl</span> #impl_generics #struct_name #ty_generics #where_clause &#123;</span><br><span class="line">            <span class="meta">#[doc = #doc]</span></span><br><span class="line">            <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> #<span class="title">new</span></span>(#(#args),*) -&gt; <span class="keyword">Self</span> &#123;</span><br><span class="line">                #struct_name #inits</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FieldExt</span></span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    ty: &amp;<span class="symbol">&#x27;a</span> syn::Type,</span><br><span class="line">    ident: syn::Ident,</span><br><span class="line">    named: <span class="built_in">bool</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>&gt; FieldExt&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(field: &amp;<span class="symbol">&#x27;a</span> syn::Field, idx: <span class="built_in">usize</span>, named: <span class="built_in">bool</span>) -&gt; FieldExt&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">        FieldExt &#123;</span><br><span class="line">            ty: &amp;field.ty,</span><br><span class="line">            ident: <span class="keyword">if</span> named &#123;</span><br><span class="line">                field.ident.clone().unwrap()</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                syn::Ident::new(&amp;<span class="built_in">format!</span>(<span class="string">&quot;f&#123;&#125;&quot;</span>, idx), proc_macro2::Span::call_site())</span><br><span class="line">            &#125;,</span><br><span class="line">            named: named,</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">as_arg</span></span>(&amp;<span class="keyword">self</span>) -&gt; proc_macro2::TokenStream &#123;</span><br><span class="line">        <span class="keyword">let</span> f_name = &amp;<span class="keyword">self</span>.ident;</span><br><span class="line">        <span class="keyword">let</span> ty = &amp;<span class="keyword">self</span>.ty;</span><br><span class="line">        quote!(#f_name: #ty)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">as_init</span></span>(&amp;<span class="keyword">self</span>) -&gt; proc_macro2::TokenStream &#123;</span><br><span class="line">        <span class="keyword">let</span> f_name = &amp;<span class="keyword">self</span>.ident;</span><br><span class="line">        <span class="keyword">let</span> init =  quote!(#f_name);</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">self</span>.named &#123;</span><br><span class="line">            quote!(#f_name: #init)</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            quote!(#init)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_41698827/article/details/104055493">使用Rust开发编译系统(C以及Rust编译的过程)</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/bf56e353.html" title="Rust之宏入门">http://munan.tech/blog/bf56e353.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/22fa27d4.html" rel="prev" title="Rust之Unsafe">
+      <i class="fa fa-chevron-left"></i> Rust之Unsafe
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/78c491e.html" rel="next" title="Rust之多线程入门">
+      Rust之多线程入门 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">编译过程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A3%B0%E6%98%8E%E5%AE%8F%EF%BC%88Declarative-Macro%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">声明宏（Declarative Macro）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#hashmap%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.1.</span> <span class="nav-text">hashmap实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%92%E5%BD%92%E8%B0%83%E7%94%A8"><span class="nav-number">2.1.1.</span> <span class="nav-text">递归调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E5%A4%8D%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99"><span class="nav-number">2.1.2.</span> <span class="nav-text">重复匹配规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E5%88%86%E9%85%8D%E7%A9%BA%E9%97%B4"><span class="nav-number">2.1.3.</span> <span class="nav-text">预分配空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E9%99%A4%E5%A4%96%E9%83%A8%E5%AE%8F"><span class="nav-number">2.1.4.</span> <span class="nav-text">消除外部宏</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BC%E5%85%A5-%E5%AF%BC%E5%87%BA"><span class="nav-number">2.2.</span> <span class="nav-text">导入&#x2F;导出</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%87%E7%A8%8B%E5%AE%8F"><span class="nav-number">3.</span> <span class="nav-text">过程宏</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B4%BE%E7%94%9F%E5%B1%9E%E6%80%A7"><span class="nav-number">3.1.</span> <span class="nav-text">自定义派生属性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%9E%E6%80%A7"><span class="nav-number">3.2.</span> <span class="nav-text">自定义属性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Bang%E5%AE%8F-%E7%B1%BB%E5%87%BD%E6%95%B0%E5%AE%8F"><span class="nav-number">3.3.</span> <span class="nav-text">Bang宏&#x2F;类函数宏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%96%B9%E5%8C%85"><span class="nav-number">3.4.</span> <span class="nav-text">第三方包</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

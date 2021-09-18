@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="scrpyt算法是由著名的FreeBSD黑客 Colin Percival为他的备份服务 Tarsnap开发的，当初的设计是为了降低CPU负荷，尽量少的依赖cpu计算，利用CPU闲置时间进行计算，因此scrypt不仅计算所需时间长，而且占用的内存也多，使得并行计算多个摘要异常困难，因此利用rainbow table进行暴力攻击更加困难。scrypt没有在生产环境中大规模应用，并且缺乏仔细的审察和广">
+<meta property="og:type" content="article">
+<meta property="og:title" content="KDF之Scrypt">
+<meta property="og:url" content="http://munan.tech/blog/5daaeba7.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="scrpyt算法是由著名的FreeBSD黑客 Colin Percival为他的备份服务 Tarsnap开发的，当初的设计是为了降低CPU负荷，尽量少的依赖cpu计算，利用CPU闲置时间进行计算，因此scrypt不仅计算所需时间长，而且占用的内存也多，使得并行计算多个摘要异常困难，因此利用rainbow table进行暴力攻击更加困难。scrypt没有在生产环境中大规模应用，并且缺乏仔细的审察和广">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-11-23T12:08:03.000Z">
+<meta property="article:modified_time" content="2020-11-23T12:08:56.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://munan.tech/blog/5daaeba7.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>KDF之Scrypt | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/5daaeba7.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          KDF之Scrypt
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-11-23 20:08:03 / 修改时间：20:08:56" itemprop="dateCreated datePublished" datetime="2020-11-23T20:08:03+08:00">2020-11-23</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E5%AF%86%E7%A0%81%E5%AD%A6/" itemprop="url" rel="index"><span itemprop="name">密码学</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/5daaeba7.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/5daaeba7.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>scrpyt算法是由著名的FreeBSD黑客 Colin Percival为他的备份服务 Tarsnap开发的，当初的设计是为了降低CPU负荷，尽量少的依赖cpu计算，利用CPU闲置时间进行计算，因此scrypt不仅计算所需时间长，而且占用的内存也多，使得并行计算多个摘要异常困难，因此利用rainbow table进行暴力攻击更加困难。scrypt没有在生产环境中大规模应用，并且缺乏仔细的审察和广泛的函数库支持。所以scrpyt一直没有推广开，但是由于其内存依赖的设计特别符合当时对抗专业矿机的设计，成为数字货币算法发展的一个主要应用方向。<br><a id="more"></a></p>
+<p>scrypt算法最早被用于的数字货币是Tenebrix，之后被莱特币使用，旨在减少攻击者通过使用定制的并行电路分解（break）基于密码的密钥推导函数而获得的优势，它提高了对内存的依赖性，降低并行运算效率。</p>
+<p>从调用角度，从里到外介绍scrypt算法涉及的相应函数。</p>
+<h1 id="Salsa20-8"><a href="#Salsa20-8" class="headerlink" title="Salsa20/8"></a>Salsa20/8</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> R(a,b) (((a) <span class="meta-string">&lt;&lt; (b)) | ((a) &gt;&gt; (32 - (b))))</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">salsa20_word_specification</span><span class="params">(uint32 out[<span class="number">16</span>],uint32 in[<span class="number">16</span>])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    uint32 x[<span class="number">16</span>];</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>;i &lt; <span class="number">16</span>;++i) x[i] = in[i];</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">8</span>;i &gt; <span class="number">0</span>;i -= <span class="number">2</span>) &#123;</span><br><span class="line">        x[ <span class="number">4</span>] ^= R(x[ <span class="number">0</span>]+x[<span class="number">12</span>], <span class="number">7</span>); x[ <span class="number">8</span>] ^= R(x[ <span class="number">4</span>]+x[ <span class="number">0</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">12</span>] ^= R(x[ <span class="number">8</span>]+x[ <span class="number">4</span>],<span class="number">13</span>); x[ <span class="number">0</span>] ^= R(x[<span class="number">12</span>]+x[ <span class="number">8</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">9</span>] ^= R(x[ <span class="number">5</span>]+x[ <span class="number">1</span>], <span class="number">7</span>); x[<span class="number">13</span>] ^= R(x[ <span class="number">9</span>]+x[ <span class="number">5</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">1</span>] ^= R(x[<span class="number">13</span>]+x[ <span class="number">9</span>],<span class="number">13</span>); x[ <span class="number">5</span>] ^= R(x[ <span class="number">1</span>]+x[<span class="number">13</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">14</span>] ^= R(x[<span class="number">10</span>]+x[ <span class="number">6</span>], <span class="number">7</span>); x[ <span class="number">2</span>] ^= R(x[<span class="number">14</span>]+x[<span class="number">10</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">6</span>] ^= R(x[ <span class="number">2</span>]+x[<span class="number">14</span>],<span class="number">13</span>); x[<span class="number">10</span>] ^= R(x[ <span class="number">6</span>]+x[ <span class="number">2</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">3</span>] ^= R(x[<span class="number">15</span>]+x[<span class="number">11</span>], <span class="number">7</span>); x[ <span class="number">7</span>] ^= R(x[ <span class="number">3</span>]+x[<span class="number">15</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">11</span>] ^= R(x[ <span class="number">7</span>]+x[ <span class="number">3</span>],<span class="number">13</span>); x[<span class="number">15</span>] ^= R(x[<span class="number">11</span>]+x[ <span class="number">7</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">1</span>] ^= R(x[ <span class="number">0</span>]+x[ <span class="number">3</span>], <span class="number">7</span>); x[ <span class="number">2</span>] ^= R(x[ <span class="number">1</span>]+x[ <span class="number">0</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">3</span>] ^= R(x[ <span class="number">2</span>]+x[ <span class="number">1</span>],<span class="number">13</span>); x[ <span class="number">0</span>] ^= R(x[ <span class="number">3</span>]+x[ <span class="number">2</span>],<span class="number">18</span>);</span><br><span class="line">        x[ <span class="number">6</span>] ^= R(x[ <span class="number">5</span>]+x[ <span class="number">4</span>], <span class="number">7</span>); x[ <span class="number">7</span>] ^= R(x[ <span class="number">6</span>]+x[ <span class="number">5</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">4</span>] ^= R(x[ <span class="number">7</span>]+x[ <span class="number">6</span>],<span class="number">13</span>); x[ <span class="number">5</span>] ^= R(x[ <span class="number">4</span>]+x[ <span class="number">7</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">11</span>] ^= R(x[<span class="number">10</span>]+x[ <span class="number">9</span>], <span class="number">7</span>); x[ <span class="number">8</span>] ^= R(x[<span class="number">11</span>]+x[<span class="number">10</span>], <span class="number">9</span>);</span><br><span class="line">        x[ <span class="number">9</span>] ^= R(x[ <span class="number">8</span>]+x[<span class="number">11</span>],<span class="number">13</span>); x[<span class="number">10</span>] ^= R(x[ <span class="number">9</span>]+x[ <span class="number">8</span>],<span class="number">18</span>);</span><br><span class="line">        x[<span class="number">12</span>] ^= R(x[<span class="number">15</span>]+x[<span class="number">14</span>], <span class="number">7</span>); x[<span class="number">13</span>] ^= R(x[<span class="number">12</span>]+x[<span class="number">15</span>], <span class="number">9</span>);</span><br><span class="line">        x[<span class="number">14</span>] ^= R(x[<span class="number">13</span>]+x[<span class="number">12</span>],<span class="number">13</span>); x[<span class="number">15</span>] ^= R(x[<span class="number">14</span>]+x[<span class="number">13</span>],<span class="number">18</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>;i &lt; <span class="number">16</span>;++i) out[i] = x[i] + in[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>Salsa20</strong>是一种<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/流加密">流加密</a>算法，由<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=丹尼尔·J·伯恩斯坦&amp;action=edit&amp;redlink=1">丹尼尔·J·伯恩斯坦</a>提交到<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=ESTREAM&amp;action=edit&amp;redlink=1">eSTREAM</a>。它创建在基于add-rotate-xor（ARX）操作的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/伪随机">伪随机</a>函数之上——32位模加、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/异或">异或</a>（XOR）和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/位操作">循环移位操作</a>。Salsa20映射一个256<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/位元">位</a>密钥、一个64位<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Nonce">nonce</a>以及一个64位流位置到一个512位的输出（也存在一个128位密钥的版本）。这使Salsa20具有了不同寻常的优势，用户可以在恒定时间内寻求输出流中的任何位置。它可以在现代<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/X86">x86</a>处理器中提供约每4–14次循环周期一字节的速度，并具有合理的硬件性能。它没有注册专利，并且Bernstein还撰写了几篇对常见<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/架构">架构</a>优化的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/公有领域">公有领域</a>实现。</p>
+<p>而Salsa20/8是将轮数减少到8轮的Salsa20算法，从64字节的字符串散列到64字节的字符串。注意它不是加密哈希函数，它不能避免冲突。</p>
+<h1 id="scryptBlockMix"><a href="#scryptBlockMix" class="headerlink" title="scryptBlockMix"></a>scryptBlockMix</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">Input:</span><br><span class="line">         B[0] || B[1] || ... || B[2 * r - 1]</span><br><span class="line">                Input octet string (of size 128 * r octets),</span><br><span class="line">                treated as 2 * r 64-octet blocks,</span><br><span class="line">                where each element in B is a 64-octet block.</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         B&#39;[0] || B&#39;[1] || ... || B&#39;[2 * r - 1]</span><br><span class="line">                Output octet string.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line">  1. X &#x3D; B[2 * r - 1]</span><br><span class="line"></span><br><span class="line">  2. for i &#x3D; 0 to 2 * r - 1 do</span><br><span class="line">       T &#x3D; X xor B[i]</span><br><span class="line">       X &#x3D; Salsa (T)</span><br><span class="line">       Y[i] &#x3D; X</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  3. B&#39; &#x3D; (Y[0], Y[2], ..., Y[2 * r - 2],</span><br><span class="line">           Y[1], Y[3], ..., Y[2 * r - 1])</span><br></pre></td></tr></table></figure>
+<p>将块打乱混合，用Salsa20/8作为hash函数。</p>
+<h1 id="scryptROMix"><a href="#scryptROMix" class="headerlink" title="scryptROMix"></a>scryptROMix</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">Input:</span><br><span class="line">         r       Block size parameter.</span><br><span class="line">         B       Input octet vector of length 128 * r octets.</span><br><span class="line">         N       CPU&#x2F;Memory cost parameter, must be larger than 1,</span><br><span class="line">                 a power of 2, and less than 2^(128 * r &#x2F; 8).</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         B&#39;      Output octet vector of length 128 * r octets.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line">  1. X &#x3D; B</span><br><span class="line"></span><br><span class="line">  2. for i &#x3D; 0 to N - 1 do	&#x2F;&#x2F;N次循环  </span><br><span class="line">       V[i] &#x3D; X</span><br><span class="line">       X &#x3D; scryptBlockMix (X)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  3. for i &#x3D; 0 to N - 1 do</span><br><span class="line">       j &#x3D; Integerify (X) mod N</span><br><span class="line">              where Integerify (B[0] ... B[2 * r - 1]) is defined</span><br><span class="line">              as the result of interpreting B[2 * r - 1] as a</span><br><span class="line">              little-endian integer.</span><br><span class="line">       T &#x3D; X xor V[j]</span><br><span class="line">       X &#x3D; scryptBlockMix (T)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line">  4. B&#39; &#x3D; X</span><br></pre></td></tr></table></figure>
+<p>Integerify是一个映射函数，创造伪随机序列。N次循环调用scryptBlockMix进行散列。</p>
+<h1 id="scrypt"><a href="#scrypt" class="headerlink" title="scrypt"></a>scrypt</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">Input:</span><br><span class="line">         P       Passphrase, an octet string.</span><br><span class="line">         S       Salt, an octet string.</span><br><span class="line">         N       CPU&#x2F;Memory cost parameter, must be larger than 1,</span><br><span class="line">                 a power of 2, and less than 2^(128 * r &#x2F; 8).</span><br><span class="line">         r       Block size parameter.</span><br><span class="line">         p       Parallelization parameter, a positive integer</span><br><span class="line">                 less than or equal to ((2^32-1) * hLen) &#x2F; MFLen</span><br><span class="line">                 where hLen is 32 and MFlen is 128 * r.</span><br><span class="line">         dkLen   Intended output length in octets of the derived</span><br><span class="line">                 key; a positive integer less than or equal to</span><br><span class="line">                 (2^32 - 1) * hLen where hLen is 32.</span><br><span class="line"></span><br><span class="line">Output:</span><br><span class="line">         DK      Derived key, of length dkLen octets.</span><br><span class="line"></span><br><span class="line">Steps:</span><br><span class="line"></span><br><span class="line"> 1. Initialize an array B consisting of p blocks of 128 * r octets</span><br><span class="line">    each:</span><br><span class="line">     B[0] || B[1] || ... || B[p - 1] &#x3D; PBKDF2-HMAC-SHA256 (P, S, 1, p * 128 * r)</span><br><span class="line"></span><br><span class="line"> 2. for i &#x3D; 0 to p - 1 do</span><br><span class="line">       B[i] &#x3D; scryptROMix (r, B[i], N)</span><br><span class="line">     end for</span><br><span class="line"></span><br><span class="line"> 3. DK &#x3D; PBKDF2-HMAC-SHA256 (P, B[0] || B[1] || ... || B[p - 1], 1, dkLen)</span><br></pre></td></tr></table></figure>
+<p>PBKDF2简单而言就是将salted hash进行多次重复计算，这个次数是可选择的。如果计算一次所需要的时间是1微秒，那么计算1百万次就需要1秒钟。假如攻击一个密码所需的rainbow table有1千万条，建立所对应的rainbow table所需要的时间就是115天。这个代价足以让大部分的攻击者忘而生畏。</p>
+<p>根据密码和设置的参数用PBKDF2-HMAC-SHA256生成一个itstream，将其用scryptROMix计算得到新的itstream。然后新的itstream和密码再次用PBKDF2-HMAC-SHA256计算得到derived key。</p>
+<h1 id="Refer"><a href="#Refer" class="headerlink" title="Refer"></a>Refer</h1><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/interdrp/p/4935819.html">如何生成安全的密码 Hash：MD5, SHA, PBKDF2, BCrypt 示例</a><br><a target="_blank" rel="noopener" href="https://www.tarsnap.com/scrypt/scrypt-slides.pdf">scrypt - Tarsnap</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/5daaeba7.html" title="KDF之Scrypt">http://munan.tech/blog/5daaeba7.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/5f8d3e42.html" rel="prev" title="Java面向对象">
+      <i class="fa fa-chevron-left"></i> Java面向对象
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/bdd23c8d.html" rel="next" title="Spring_MongDB">
+      Spring_MongDB <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Salsa20-8"><span class="nav-number">1.</span> <span class="nav-text">Salsa20&#x2F;8</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#scryptBlockMix"><span class="nav-number">2.</span> <span class="nav-text">scryptBlockMix</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#scryptROMix"><span class="nav-number">3.</span> <span class="nav-text">scryptROMix</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#scrypt"><span class="nav-number">4.</span> <span class="nav-text">scrypt</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Refer"><span class="nav-number">5.</span> <span class="nav-text">Refer</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

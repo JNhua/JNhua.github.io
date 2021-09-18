@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这篇文章基于Polkadot的6be14014提交（2020&#x2F;12），目的是介绍Polkadot在平行链角度上的系统架构。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="平行链系统架构">
+<meta property="og:url" content="http://munan.tech/blog/8e017055.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="这篇文章基于Polkadot的6be14014提交（2020&#x2F;12），目的是介绍Polkadot在平行链角度上的系统架构。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wiki.polkadot.network/docs/assets/network/one_parachain.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201216170820.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201106103000.png">
+<meta property="article:published_time" content="2020-11-19T03:35:00.000Z">
+<meta property="article:modified_time" content="2021-02-06T09:56:08.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wiki.polkadot.network/docs/assets/network/one_parachain.png">
+
+<link rel="canonical" href="http://munan.tech/blog/8e017055.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>平行链系统架构 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/8e017055.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          平行链系统架构
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-11-19 11:35:00" itemprop="dateCreated datePublished" datetime="2020-11-19T11:35:00+08:00">2020-11-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-02-06 17:56:08" itemprop="dateModified" datetime="2021-02-06T17:56:08+08:00">2021-02-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Polkadot/" itemprop="url" rel="index"><span itemprop="name">Polkadot</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Polkadot/%E5%B9%B3%E8%A1%8C%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">平行链</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/8e017055.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/8e017055.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这篇文章基于Polkadot的6be14014提交（2020/12），目的是介绍Polkadot在平行链角度上的系统架构。<br><a id="more"></a></p>
+<h1 id="角色"><a href="#角色" class="headerlink" title="角色"></a>角色</h1><p><img src="https://wiki.polkadot.network/docs/assets/network/one_parachain.png" alt="架构图"></p>
+<h2 id="链"><a href="#链" class="headerlink" title="链"></a>链</h2><ul>
+<li>Relay chain：中继链，负责平台安全性。</li>
+<li>Parachain：平行链，拥有自己独立的状态与业务逻辑，共享中继链提供的安全性。<h2 id="节点"><a href="#节点" class="headerlink" title="节点"></a>节点</h2></li>
+<li>validator：验证人，负责中继链的出块，同时验证来自收集者的证明，与其他验证人进行共识投票。中继链全节点，需要抵押DOT。</li>
+<li>collator：收集者，为验证人收集平行链的交易和状态转移证明（collation）。平行链全节点，同时内嵌中继链全节点服务，不一定需要抵押DOT，可以由平行链自行激励。注意，平行线程的 collator 需要持有DOT，以便参与出块资格的拍卖。</li>
+<li>fishermen：渔民，监控验证人和收集者，检查无效的候选收据。collator 或者 validator 都可以作为 fishermen，需要抵押DOT。</li>
+</ul>
+<h1 id="平行链节点结构"><a href="#平行链节点结构" class="headerlink" title="平行链节点结构"></a>平行链节点结构</h1><p>平行链节点主要有以下两点变动。</p>
+<h2 id="共识"><a href="#共识" class="headerlink" title="共识"></a>共识</h2><p>collator 在平行链上的角色类似于以往的独立链上的 validator。<br>但是 collator 只提供候选区块，然后交由中继链上的 validator 进行共识。所以，平行链不再需要自己的共识机制。当然，可以保留对 collator 的选择机制。</p>
+<h2 id="双服务"><a href="#双服务" class="headerlink" title="双服务"></a>双服务</h2><p>平行链节点与以往单链节点的不同在于：需要启动一个中继链全节点服务。<br>内嵌的中继链全节点服务中，包含了 overseer （关于 overseer 在“中继链节点结构”部分介绍）与子系统服务，并且将 overseer_handle 共享给 collator，在<code>collator_protocol</code>上注册为 <code>collator_side</code>。因此，collator 能与 validator 通过 overseer 进行消息交互，例如传递候选区块相关消息。<br>另外，平行链全节点还需要通过内嵌的中继链节点来“跟随”中继链的出块。所谓“跟随”，指的是平行链全节点的最佳区块为中继链上最佳区块包含的相应平行链区块，终结区块亦如此。</p>
+<h1 id="中继链节点结构"><a href="#中继链节点结构" class="headerlink" title="中继链节点结构"></a>中继链节点结构</h1><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201216170820.png" alt="relay_chain"></p>
+<p>中继链上除了必须的基础组件外，比较重要的就是<code>overseer</code>与子系统。</p>
+<h2 id="overseer"><a href="#overseer" class="headerlink" title="overseer"></a>overseer</h2><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201106103000.png" alt="overseer"></p>
+<p>Overseer 主要有以下功能：</p>
+<ul>
+<li>启动和关闭一系列子系统；</li>
+<li>作为子系统之间的消息总线，避免消息争用；</li>
+<li>监听外部事件，触发子系统相应任务。</li>
+</ul>
+<h3 id="消息协议"><a href="#消息协议" class="headerlink" title="消息协议"></a>消息协议</h3><p>overseer 向子系统发送两种类型的消息：<code>Communication</code>, <code>Signal</code>。</p>
+<ul>
+<li><code>Communication</code>：子系统之间交互的消息被封装在<code>Communication</code>类型中，根据被封装的消息类型传递到指定的子系统。例如子系统A向子系统B发送一个消息M：1. A向overseer发送<code>AllMessages::B&#123;M&#125;</code>；2. overseer收到后，向B发送<code>FromOverseer::Communication&#123;M&#125;</code>。</li>
+<li><code>Signal</code>：系统消息，例如块导入、块终结、关闭子系统，被封装在<code>Signal</code>中。系统消息会被广播到所有子系统。</li>
+</ul>
+<h2 id="子系统"><a href="#子系统" class="headerlink" title="子系统"></a>子系统</h2><p>目前设计上共有18个子系统。</p>
+<h3 id="Collator相关"><a href="#Collator相关" class="headerlink" title="Collator相关"></a>Collator相关</h3><ul>
+<li><strong>collation_generation_subsystem</strong>：collator在块更新时生成collation</li>
+<li>collator_protocol_subsystem：collation的请求与回应，根据validator/collator的角色执行对应的任务</li>
+</ul>
+<h3 id="候选区块共识"><a href="#候选区块共识" class="headerlink" title="候选区块共识"></a>候选区块共识</h3><ul>
+<li><strong>candidate_selection_subsystem</strong>：触发对collation的请求，收到collation后请求投票</li>
+<li><strong>candidate_backing_subsystem</strong>：对collation投票，签署<code>statement</code></li>
+<li>statement_distribution_subsystem：广播<code>statement</code></li>
+<li>pov_distribution_subsystem：广播<code>PoV</code></li>
+<li>apporoval_subsystems：在finalize前对候选区块的再次检查</li>
+</ul>
+<h3 id="可用性相关"><a href="#可用性相关" class="headerlink" title="可用性相关"></a>可用性相关</h3><ul>
+<li>availability_distribution_subsystem</li>
+<li>bitfield_signing_subsystem</li>
+<li>bitfield_distribution_subsystem</li>
+<li>availability_recovery</li>
+</ul>
+<h3 id="工具类子系统"><a href="#工具类子系统" class="headerlink" title="工具类子系统"></a>工具类子系统</h3><ul>
+<li>candidate_validation_subsystem：验证候选区块</li>
+<li><strong>provisioner_subsystem</strong>：提供平行链相关的出块打包数据</li>
+<li>runtime_api_subsystem：调用runtime api</li>
+<li>availability_store_subsystem：存储可用性数据</li>
+<li>network_bridge_subsystem：与collation相关数据在节点间传递的网桥协议</li>
+<li>chain_api_subsystem</li>
+<li>misbehavior_arbitration</li>
+</ul>
+<h1 id="Collator"><a href="#Collator" class="headerlink" title="Collator"></a>Collator</h1><p>以平行链上的Collator为例，介绍节点如何与子系统协作。</p>
+<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><ul>
+<li>平行链启动时，<code>build_polkadot_full_node</code>启动一个中继链全节点，包含overseer和子系统，并且在 collator_protocol_subsystem 注册为<code>collator_side</code>。如果要以collator的身份启动节点，启动时需要设定<code>--collator</code>，类似于以往独立链设定<code>--validator</code>启动验证人节点。中继链全节点持有平行链的<code>client</code>，即平行链嵌套在中继链全节点中运行。<ul>
+<li><code>start_collator</code>：<code>polkadot_full_node.client.execute_with(StartCollator&#125;</code>，collator和polkadot_full_node共享一个<code>overseer_handler</code>。<ul>
+<li><code>cumulus_consensus::run_parachain_consensus</code>：根据中继链的出块来更新平行链<ul>
+<li><code>follow_new_best</code>：1. 中继链监听到中继链的best区块包含新的平行链区块后，<code>handle_new_best_parachain_head</code>：如果collator已经导入了该区块，就把它当做best并且广播给平行链节点。如果还没有导入，存到<code>unset_best_header</code>中；2. collator导入区块时，优先导入<code>unset_best_header</code>。</li>
+<li><code>follow_finalized_head</code>：中继链监听到中继链的finalize区块包含新的平行链区块后，collator进行<code>finalize_block</code>。</li>
+</ul>
+</li>
+<li>初始化<strong>collation_generation_subsystem</strong>，在此时注册<code>collator.produce_candidate</code>方法，用来生成<code>collation</code>，同时注册para_id，collatorId（公钥）。</li>
+<li>在 collator_protocol_subsystem 上注册 Collator 所在的para_id，在<code>advertise_collation</code>需要用到该id。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="准备候选区块"><a href="#准备候选区块" class="headerlink" title="准备候选区块"></a>准备候选区块</h2><ul>
+<li><strong>collation_generation_subsystem</strong> 启动后会循环<code>handle_incoming</code>。接受到<code>Signal(ActiveLeaves(ActiveLeavesUpdate&#123;..&#125;)</code>后触发<code>handle_new_activations</code>。<ul>
+<li>获取availability_cores：core的数量为max(n_parachains + config.parathread_cores, validators.len() / config.max_validators_per_core)，第i个parachain分配第i个core。调用<code>request_availability_cores_ctx</code> -&gt; <code>runtime_api_impl/v1::availability_cores</code> 得到CoreState。</li>
+<li>仅匹配CoreState::Scheduled；</li>
+<li>检查scheduled_core.para_id；</li>
+<li><code>request_full_validation_data_ctx</code> 会触发中继链调用runtime api获取<code>ValidationData</code>，实际调用<code>make_persisted_validation_data</code>构造辅助验证的数据，最终被打包进平行链的<code>SystemInherentData</code>。这时的<code>ValidationData</code>是平行链父区块所对应的；</li>
+<li><code>task_config.collator</code> -&gt; <code>produce_candidate</code><ul>
+<li>500ms内<code>propose</code>一个候选区块；</li>
+<li><code>build_collation</code>：构建候选区块的<code>Collation</code>；</li>
+<li>开启<code>wait_to_announce</code>任务，注册成为<code>StatementListener</code>。当收到validator发来的<code>Statement::Seconded</code>就广播当前候选区块。</li>
+</ul>
+</li>
+<li><code>collator_signature_payload</code>签名，payload包括：relay_parent，para_id，persisted_validation_data_hash，pov_hash；</li>
+<li><code>erasure_root</code>：将<code>available_data</code>分成chunks，组合成 merkle trie，erasure_root为树根哈希。</li>
+<li>生成<code>CandidateReceipt</code>，发送<code>CollatorProtocolMessage::DistributeCollation(CandidateReceipt, PoV)</code>给 collator_protocol_subsystem。</li>
+</ul>
+</li>
+</ul>
+<h3 id="schedule-core"><a href="#schedule-core" class="headerlink" title="schedule_core"></a>schedule_core</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AvailabilityCores</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">CoreOccupied</span></span> &#123;</span><br><span class="line">	<span class="comment">/// A parathread.</span></span><br><span class="line">	Parathread(ParathreadEntry),</span><br><span class="line">	<span class="comment">/// A parachain.</span></span><br><span class="line">	Parachain,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Scheduled</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">AssignmentKind</span></span> &#123;</span><br><span class="line">	<span class="comment">/// A parachain.</span></span><br><span class="line">	Parachain,</span><br><span class="line">	<span class="comment">/// A parathread.</span></span><br><span class="line">	Parathread(CollatorId, <span class="built_in">u32</span>),</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CoreAssignment</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The core that is assigned.</span></span><br><span class="line">	<span class="keyword">pub</span> core: CoreIndex,</span><br><span class="line">	<span class="comment">/// The unique ID of the para that is assigned to the core.</span></span><br><span class="line">	<span class="keyword">pub</span> para_id: ParaId,</span><br><span class="line">	<span class="comment">/// The kind of the assignment.</span></span><br><span class="line">	<span class="keyword">pub</span> kind: AssignmentKind,</span><br><span class="line">	<span class="comment">/// The index of the validator group assigned to the core.</span></span><br><span class="line">	<span class="keyword">pub</span> group_idx: GroupIndex,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="request-availability-cores"><a href="#request-availability-cores" class="headerlink" title="request_availability_cores"></a>request_availability_cores</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">OccupiedCore</span></span>&lt;H = Hash, N = BlockNumber&gt; &#123;</span><br><span class="line">    <span class="comment">// <span class="doctag">NOTE:</span> this has no ParaId as it can be deduced from the candidate descriptor.</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/// If this core is freed by availability, this is the assignment that is next up on this</span></span><br><span class="line">	<span class="comment">/// core, if any. None if there is nothing queued for this core.</span></span><br><span class="line">	<span class="keyword">pub</span> next_up_on_available: <span class="built_in">Option</span>&lt;ScheduledCore&gt;,</span><br><span class="line">	<span class="comment">/// The relay-chain block number this began occupying the core at.</span></span><br><span class="line">	<span class="keyword">pub</span> occupied_since: N,</span><br><span class="line">	<span class="comment">/// The relay-chain block this will time-out at, if any.</span></span><br><span class="line">	<span class="keyword">pub</span> time_out_at: N,</span><br><span class="line">	<span class="comment">/// If this core is freed by being timed-out, this is the assignment that is next up on this</span></span><br><span class="line">	<span class="comment">/// core. None if there is nothing queued for this core or there is no possibility of timing</span></span><br><span class="line">	<span class="comment">/// out.</span></span><br><span class="line">	<span class="keyword">pub</span> next_up_on_time_out: <span class="built_in">Option</span>&lt;ScheduledCore&gt;,</span><br><span class="line">	<span class="comment">/// A bitfield with 1 bit for each validator in the set. `1` bits mean that the corresponding</span></span><br><span class="line">	<span class="comment">/// validators has attested to availability on-chain. A 2/3+ majority of `1` bits means that</span></span><br><span class="line">	<span class="comment">/// this will be available.</span></span><br><span class="line">	<span class="meta">#[cfg_attr(feature = <span class="meta-string">&quot;std&quot;</span>, ignore_malloc_size_of = <span class="meta-string">&quot;outside type&quot;</span>)]</span></span><br><span class="line">	<span class="keyword">pub</span> availability: BitVec&lt;bitvec::order::Lsb0, <span class="built_in">u8</span>&gt;,</span><br><span class="line">	<span class="comment">/// The group assigned to distribute availability pieces of this candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> group_responsible: GroupIndex,</span><br><span class="line">	<span class="comment">/// The hash of the candidate occupying the core.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate_hash: CandidateHash,</span><br><span class="line">	<span class="comment">/// The descriptor of the candidate occupying the core.</span></span><br><span class="line">	<span class="keyword">pub</span> candidate_descriptor: CandidateDescriptor&lt;H&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ScheduledCore</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The ID of a para scheduled.</span></span><br><span class="line">	<span class="keyword">pub</span> para_id: Id,</span><br><span class="line">	<span class="comment">/// The collator required to author the block, if any.</span></span><br><span class="line">	<span class="keyword">pub</span> collator: <span class="built_in">Option</span>&lt;CollatorId&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">enum</span> <span class="title">CoreState</span></span>&lt;H = Hash, N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// The core is currently occupied.</span></span><br><span class="line">	Occupied(OccupiedCore&lt;H, N&gt;),</span><br><span class="line">	<span class="comment">/// The core is currently free, with a para scheduled and given the opportunity</span></span><br><span class="line">	<span class="comment">/// to occupy.</span></span><br><span class="line">	<span class="comment">/// If a particular Collator is required to author this block, that is also present in this</span></span><br><span class="line">	<span class="comment">/// variant.</span></span><br><span class="line">	Scheduled(ScheduledCore),</span><br><span class="line">	<span class="comment">/// The core is currently free and there is nothing scheduled. This can be the case for parathread</span></span><br><span class="line">	<span class="comment">/// cores when there are no parathread blocks queued. Parachain cores will never be left idle.</span></span><br><span class="line">	Free,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="PersistedValidationData"><a href="#PersistedValidationData" class="headerlink" title="PersistedValidationData"></a>PersistedValidationData</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">PersistedValidationData</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// The parent head-data.</span></span><br><span class="line">	<span class="keyword">pub</span> parent_head: HeadData,</span><br><span class="line">	<span class="comment">/// The relay-chain block number this is in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> block_number: N,</span><br><span class="line">	<span class="comment">/// The relay-chain block storage root this is in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> relay_storage_root: Hash,</span><br><span class="line">	<span class="comment">/// The list of MQC heads for the inbound channels paired with the sender para ids. This</span></span><br><span class="line">	<span class="comment">/// vector is sorted ascending by the para id and doesn&#x27;t contain multiple entries with the same</span></span><br><span class="line">	<span class="comment">/// sender.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_mqc_heads: <span class="built_in">Vec</span>&lt;(Id, Hash)&gt;,</span><br><span class="line">	<span class="comment">/// The MQC head for the DMQ.</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// The DMQ MQC head will be used by the validation function to authorize the downward messages</span></span><br><span class="line">	<span class="comment">/// passed by the collator.</span></span><br><span class="line">	<span class="keyword">pub</span> dmq_mqc_head: Hash,</span><br><span class="line">	<span class="comment">/// The maximum legal size of a POV block, in bytes.</span></span><br><span class="line">	<span class="keyword">pub</span> max_pov_size: <span class="built_in">u32</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="平行链的SystemInherentData"><a href="#平行链的SystemInherentData" class="headerlink" title="平行链的SystemInherentData"></a>平行链的SystemInherentData</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">/// The payload that system inherent carries.</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">SystemInherentData</span></span> &#123;</span><br><span class="line">	<span class="keyword">pub</span> validation_data: crate::PersistedValidationData,</span><br><span class="line">	<span class="comment">/// A storage proof of a predefined set of keys from the relay-chain.</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// Specifically this witness contains the data for:</span></span><br><span class="line">	<span class="comment">///</span></span><br><span class="line">	<span class="comment">/// - active host configuration as per the relay parent,</span></span><br><span class="line">	<span class="comment">/// - the relay dispatch queue sizes</span></span><br><span class="line">	<span class="comment">/// - the list of egress HRMP channels (in the list of recipients form)</span></span><br><span class="line">	<span class="comment">/// - the metadata for the egress HRMP channels</span></span><br><span class="line">	<span class="keyword">pub</span> relay_chain_state: sp_trie::StorageProof,</span><br><span class="line">	<span class="comment">/// Downward messages in the order they were sent.</span></span><br><span class="line">	<span class="keyword">pub</span> downward_messages: <span class="built_in">Vec</span>&lt;InboundDownwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// HRMP messages grouped by channels. The messages in the inner vec must be in order they</span></span><br><span class="line">	<span class="comment">/// were sent. In combination with the rule of no more than one message in a channel per block,</span></span><br><span class="line">	<span class="comment">/// this means `sent_at` is **strictly** greater than the previous one (if any).</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: BTreeMap&lt;ParaId, <span class="built_in">Vec</span>&lt;InboundHrmpMessage&gt;&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对SystemInherentData创建的Inherent交易为<code>set_validation_data</code>：可更新parachain的runtime wasm，更新[存储中的PersistedValidationData，RelevantMessagingState，HostConfiguration，processed_downward_messages，hrmp_watermark]，处理数据[<code>on_validation_data</code>，<code>DownwardMessageHandlers::handle_downward_message</code>，<code>HrmpMessageHandlers::handle_hrmp_message</code>]</p>
+<h3 id="Collation"><a href="#Collation" class="headerlink" title="Collation"></a>Collation</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Collation</span></span>&lt;BlockNumber = polkadot_primitives::v1::BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// Messages destined to be interpreted by the Relay chain itself.</span></span><br><span class="line">	<span class="keyword">pub</span> upward_messages: <span class="built_in">Vec</span>&lt;UpwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// The horizontal messages sent by the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: <span class="built_in">Vec</span>&lt;OutboundHrmpMessage&lt;ParaId&gt;&gt;,</span><br><span class="line">	<span class="comment">/// New validation code. Used by upgrade</span></span><br><span class="line">	<span class="keyword">pub</span> new_validation_code: <span class="built_in">Option</span>&lt;ValidationCode&gt;,</span><br><span class="line">	<span class="comment">/// The head-data produced as a result of execution.</span></span><br><span class="line">    <span class="comment">// HeadData(ParachainBlockData.header.encode())</span></span><br><span class="line">	<span class="keyword">pub</span> head_data: HeadData,</span><br><span class="line">	<span class="comment">/// Proof to verify the state transition of the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> proof_of_validity: PoV,</span><br><span class="line">	<span class="comment">/// The number of messages processed from the DMQ.</span></span><br><span class="line">	<span class="keyword">pub</span> processed_downward_messages: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The mark which specifies the block number up to which all inbound HRMP messages are processed.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_watermark: BlockNumber,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">PoV</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The block witness data.</span></span><br><span class="line">	<span class="keyword">pub</span> block_data: BlockData,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// PoV = BlockData(ParachainBlockData.encode())</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ParachainBlockData</span></span>&lt;B: BlockT&gt; &#123;</span><br><span class="line">	<span class="comment">/// The header of the parachain block.</span></span><br><span class="line">	header: &lt;B <span class="keyword">as</span> BlockT&gt;::Header,</span><br><span class="line">	<span class="comment">/// The extrinsics of the parachain block without the `PolkadotInherent`.</span></span><br><span class="line">	extrinsics: <span class="built_in">Vec</span>&lt;&lt;B <span class="keyword">as</span> BlockT&gt;::Extrinsic&gt;,</span><br><span class="line">	<span class="comment">/// The data that is required to emulate the storage accesses executed by all extrinsics.</span></span><br><span class="line">	storage_proof: StorageProof,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">StorageProof</span></span> &#123;</span><br><span class="line">	trie_nodes: <span class="built_in">Vec</span>&lt;<span class="built_in">Vec</span>&lt;<span class="built_in">u8</span>&gt;&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Ensure-Code的available-data"><a href="#Ensure-Code的available-data" class="headerlink" title="Ensure Code的available_data"></a>Ensure Code的available_data</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">AvailableData</span></span> &#123;</span><br><span class="line">	<span class="comment">/// The Proof-of-Validation of the candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> pov: std::sync::Arc&lt;PoV&gt;,</span><br><span class="line">	<span class="comment">/// The persisted validation data needed for secondary checks.</span></span><br><span class="line">	<span class="keyword">pub</span> validation_data: PersistedValidationData,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="连接并通知validator"><a href="#连接并通知validator" class="headerlink" title="连接并通知validator"></a>连接并通知validator</h2><ul>
+<li>collator_protocol_subsystem 监听Communication(CollatorProtocolMessage)，<code>process_msg</code>处理消息。收到<code>DistributeCollation</code>后，检查para_id，然后<code>distribute_collation</code>向validator广播。<ul>
+<li><code>distribute_collation</code>：要求collation在active-leaves上，collation未被发送<ul>
+<li><code>determine_core</code>：计算当前平行链分配到的core</li>
+<li><code>determine_our_validators</code>：计算分配到该平行链的validator集合，包括当前集合和下一次分配的集合。每个session会依据<code>n_cores</code>和<code>validators.len()</code>重新排列ValidatorGroups，但是不一定是一个session才更换分配给平行链的group。</li>
+<li><code>connect_to_validators</code>：同时连接当前validators和下一组validators。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>连接上新的validator后，在collator protocol子系统中<code>handle_validator_connected</code><ul>
+<li>发送一个<code>CollatorProtocolMessage::Declare(CollatorId)</code>给validator，注册collator</li>
+<li>如果validator是属于该平行链的验证人集合，那么<code>add_peer_id_for_validator</code>记录validators的peer_id，<code>advertise_collation</code>，向validator 发送<code>CollatorProtocolMessage::AdvertiseCollation(relay_parent, collating_on)</code> ，通知validator准备发送collation了。</li>
+</ul>
+</li>
+</ul>
+<h3 id="Candidate"><a href="#Candidate" class="headerlink" title="Candidate"></a>Candidate</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateReceipt</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The descriptor of the candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> descriptor: CandidateDescriptor&lt;H&gt;,</span><br><span class="line">	<span class="comment">/// The hash of the encoded commitments made as a result of candidate execution.</span></span><br><span class="line">	<span class="keyword">pub</span> commitments_hash: Hash,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateDescriptor</span></span>&lt;H = Hash&gt; &#123;</span><br><span class="line">	<span class="comment">/// The ID of the para this is a candidate for.</span></span><br><span class="line">	<span class="keyword">pub</span> para_id: Id,</span><br><span class="line">	<span class="comment">/// The hash of the relay-chain block this is executed in the context of.</span></span><br><span class="line">	<span class="keyword">pub</span> relay_parent: H,</span><br><span class="line">	<span class="comment">/// The collator&#x27;s sr25519 public key.</span></span><br><span class="line">	<span class="keyword">pub</span> collator: CollatorId,</span><br><span class="line">	<span class="comment">/// The blake2-256 hash of the persisted validation data. This is extra data derived from</span></span><br><span class="line">	<span class="comment">/// relay-chain state which may vary based on bitfields included before the candidate.</span></span><br><span class="line">	<span class="comment">/// Thus it cannot be derived entirely from the relay-parent.</span></span><br><span class="line">	<span class="keyword">pub</span> persisted_validation_data_hash: Hash,</span><br><span class="line">	<span class="comment">/// The blake2-256 hash of the pov.</span></span><br><span class="line">	<span class="keyword">pub</span> pov_hash: Hash,</span><br><span class="line">	<span class="comment">/// The root of a block&#x27;s erasure encoding Merkle tree.</span></span><br><span class="line">	<span class="keyword">pub</span> erasure_root: Hash,</span><br><span class="line">	<span class="comment">/// Signature on blake2-256 of components of this receipt:</span></span><br><span class="line">	<span class="comment">/// The parachain index, the relay parent, the validation data hash, and the pov_hash.</span></span><br><span class="line">	<span class="keyword">pub</span> signature: CollatorSignature,</span><br><span class="line">	<span class="comment">/// Hash of the para header that is being generated by this candidate.</span></span><br><span class="line">	<span class="keyword">pub</span> para_head: Hash,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// CandidateCommitments = Collation - PoV</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">CandidateCommitments</span></span>&lt;N = BlockNumber&gt; &#123;</span><br><span class="line">	<span class="comment">/// Messages destined to be interpreted by the Relay chain itself.</span></span><br><span class="line">	<span class="keyword">pub</span> upward_messages: <span class="built_in">Vec</span>&lt;UpwardMessage&gt;,</span><br><span class="line">	<span class="comment">/// Horizontal messages sent by the parachain.</span></span><br><span class="line">	<span class="keyword">pub</span> horizontal_messages: <span class="built_in">Vec</span>&lt;OutboundHrmpMessage&lt;Id&gt;&gt;,</span><br><span class="line">	<span class="comment">/// New validation code.</span></span><br><span class="line">	<span class="keyword">pub</span> new_validation_code: <span class="built_in">Option</span>&lt;ValidationCode&gt;,</span><br><span class="line">	<span class="comment">/// The head-data produced as a result of execution.</span></span><br><span class="line">	<span class="keyword">pub</span> head_data: HeadData,</span><br><span class="line">	<span class="comment">/// The number of messages processed from the DMQ.</span></span><br><span class="line">	<span class="keyword">pub</span> processed_downward_messages: <span class="built_in">u32</span>,</span><br><span class="line">	<span class="comment">/// The mark which specifies the block number up to which all inbound HRMP messages are processed.</span></span><br><span class="line">	<span class="keyword">pub</span> hrmp_watermark: N,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="回应validator的请求"><a href="#回应validator的请求" class="headerlink" title="回应validator的请求"></a>回应validator的请求</h2><ul>
+<li>收到validator消息<code>CollatorProtocolMessage::RequestCollation</code><ul>
+<li><code>send_collation</code>：回应validtor，发送<code>CollatorProtocolMessage::Collation(request_id,receipt,pov)</code>给validator。对PoV进行<code>compress</code>再发送，减少通信压力。CandidateReceipt中只存储commitments_hash，validator在验证时从PoV中重新组装出commitments，最后验证hash是否一致。<br>由于这是节点间通信，overseer的中继只能作用于节点内的子系统之间，所以这个消息是被封装在<code>NetworkBridgeMessage::SendCollationMessage</code>中的，通过 network_bridge_subsystem 向validator转发消息（一对一，非广播）。</li>
+</ul>
+</li>
+</ul>
+<h2 id="出块"><a href="#出块" class="headerlink" title="出块"></a>出块</h2><ul>
+<li>当中继链上statement被checked后（状态为seconded），collator在平行链上<code>announce_block</code>，此时为暂时同步。</li>
+<li>最佳区块和终结区块跟随中继链的出块。</li>
+</ul>
+<h1 id="More"><a href="#More" class="headerlink" title="More"></a>More</h1><p>实际上，以上所描述的Collator与子系统的交互也可以说是以Collator角度的平行链出块流程。关于以Validator角度的平行链出块流程将在《平行链节点的出块流程》中介绍。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/8e017055.html" title="平行链系统架构">http://munan.tech/blog/8e017055.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/494d34b2.html" rel="prev" title="平行链节点的出块流程">
+      <i class="fa fa-chevron-left"></i> 平行链节点的出块流程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/cdadaa64.html" rel="next" title="虚拟机网络设置">
+      虚拟机网络设置 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A7%92%E8%89%B2"><span class="nav-number">1.</span> <span class="nav-text">角色</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%93%BE"><span class="nav-number">1.1.</span> <span class="nav-text">链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">节点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B3%E8%A1%8C%E9%93%BE%E8%8A%82%E7%82%B9%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">平行链节点结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B1%E8%AF%86"><span class="nav-number">2.1.</span> <span class="nav-text">共识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%8C%E6%9C%8D%E5%8A%A1"><span class="nav-number">2.2.</span> <span class="nav-text">双服务</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%AD%E7%BB%A7%E9%93%BE%E8%8A%82%E7%82%B9%E7%BB%93%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">中继链节点结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#overseer"><span class="nav-number">3.1.</span> <span class="nav-text">overseer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.1.</span> <span class="nav-text">消息协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AD%90%E7%B3%BB%E7%BB%9F"><span class="nav-number">3.2.</span> <span class="nav-text">子系统</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Collator%E7%9B%B8%E5%85%B3"><span class="nav-number">3.2.1.</span> <span class="nav-text">Collator相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%80%99%E9%80%89%E5%8C%BA%E5%9D%97%E5%85%B1%E8%AF%86"><span class="nav-number">3.2.2.</span> <span class="nav-text">候选区块共识</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E7%94%A8%E6%80%A7%E7%9B%B8%E5%85%B3"><span class="nav-number">3.2.3.</span> <span class="nav-text">可用性相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E7%B1%BB%E5%AD%90%E7%B3%BB%E7%BB%9F"><span class="nav-number">3.2.4.</span> <span class="nav-text">工具类子系统</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Collator"><span class="nav-number">4.</span> <span class="nav-text">Collator</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8"><span class="nav-number">4.1.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%80%99%E9%80%89%E5%8C%BA%E5%9D%97"><span class="nav-number">4.2.</span> <span class="nav-text">准备候选区块</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#schedule-core"><span class="nav-number">4.2.1.</span> <span class="nav-text">schedule_core</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#request-availability-cores"><span class="nav-number">4.2.2.</span> <span class="nav-text">request_availability_cores</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PersistedValidationData"><span class="nav-number">4.2.3.</span> <span class="nav-text">PersistedValidationData</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B9%B3%E8%A1%8C%E9%93%BE%E7%9A%84SystemInherentData"><span class="nav-number">4.2.4.</span> <span class="nav-text">平行链的SystemInherentData</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Collation"><span class="nav-number">4.2.5.</span> <span class="nav-text">Collation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Ensure-Code%E7%9A%84available-data"><span class="nav-number">4.2.6.</span> <span class="nav-text">Ensure Code的available_data</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E5%B9%B6%E9%80%9A%E7%9F%A5validator"><span class="nav-number">4.3.</span> <span class="nav-text">连接并通知validator</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Candidate"><span class="nav-number">4.3.1.</span> <span class="nav-text">Candidate</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9E%E5%BA%94validator%E7%9A%84%E8%AF%B7%E6%B1%82"><span class="nav-number">4.4.</span> <span class="nav-text">回应validator的请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BA%E5%9D%97"><span class="nav-number">4.5.</span> <span class="nav-text">出块</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#More"><span class="nav-number">5.</span> <span class="nav-text">More</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

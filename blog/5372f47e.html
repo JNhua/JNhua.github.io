@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="PBFT、DBFT在联盟链中使用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PBFT">
+<meta property="og:url" content="http://munan.tech/blog/5372f47e.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="PBFT、DBFT在联盟链中使用。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110336.jpg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110343.jpg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110349.jpg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110358.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110405.jpg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110421.png">
+<meta property="article:published_time" content="2020-09-12T14:28:04.000Z">
+<meta property="article:modified_time" content="2020-11-23T11:58:16.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110336.jpg">
+
+<link rel="canonical" href="http://munan.tech/blog/5372f47e.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>PBFT | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/5372f47e.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          PBFT
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-12 22:28:04" itemprop="dateCreated datePublished" datetime="2020-09-12T22:28:04+08:00">2020-09-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-23 19:58:16" itemprop="dateModified" datetime="2020-11-23T19:58:16+08:00">2020-11-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E5%85%B1%E8%AF%86%E5%8D%8F%E8%AE%AE/" itemprop="url" rel="index"><span itemprop="name">共识协议</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/5372f47e.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/5372f47e.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>PBFT、DBFT在联盟链中使用。<br><a id="more"></a></p>
+<h1 id="最大容错数量"><a href="#最大容错数量" class="headerlink" title="最大容错数量"></a>最大容错数量</h1><p>因为 pbft 算法的除了需要支持容错故障节点之外，还需要支持容错作恶节点。假设集群节点数为 N，有问题的节点为 f。有问题的节点中，可以既是故障节点，也可以是作恶节点，或者只是故障节点或者只是作恶节点。那么会产生以下两种极端情况：</p>
+<ol>
+<li>第一种情况，f 个有问题节点既是故障节点，又是作恶节点，那么根据小数服从多数的原则，集群里正常节点只需要比f个节点再多一个节点，即 f+1 个节点，确节点的数量就会比故障节点数量多，那么集群就能达成共识。也就是说这种情况支持的最大容错节点数量是 （n-1）/2。</li>
+<li>第二种情况，故障节点和作恶节点都是不同的节点。那么就会有 f 个问题节点和 f 个故障节点，当发现节点是问题节点后，会被集群排除在外，剩下 f 个故障节点，那么根据小数服从多数的原则，集群里正常节点只需要比f个节点再多一个节点，即 f+1 个节点，确节点的数量就会比故障节点数量多，那么集群就能达成共识。</li>
+</ol>
+<p>所以，所有类型的节点数量加起来就是 f+1 个正确节点，f个故障节点和f个问题节点，即 3f+1=n。结合上述两种情况，因此 pbft 算法支持的最大容错节点数量是（n-1）/3。</p>
+<h1 id="算法核心三阶段流程"><a href="#算法核心三阶段流程" class="headerlink" title="算法核心三阶段流程"></a>算法核心三阶段流程</h1><p>下面介绍 pbft 算法的核心三阶段流程，如下图所示：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110336.jpg" alt="4B547A79-AB87-4B17-AD0B-5C126FF53CE1"></p>
+<p>算法的核心三个阶段分别是 pre-prepare 阶段（预准备阶段），prepare 阶段（准备阶段）， commit 阶段（提交阶段）。图中的C代表客户端，0，1，2，3 代表节点的编号，打叉的3代表可能是故障节点或者是问题节点，这里表现的行为就是对其它节点的请求无响应。0 是主节点。整个过程大致是如下：</p>
+<h2 id="request"><a href="#request" class="headerlink" title="request"></a>request</h2><p>首先，客户端向主节点发起请求，主节点 0 收到客户端请求，会向其它节点发送 pre-prepare 消息，其它节点就收到了pre-prepare 消息，就开始了这个核心三阶段共识过程了。<br>Pre-prepare 阶段：节点收到 pre-prepare 消息后，会有两种选择，一种是接受，一种是不接受。什么时候才不接受主节点发来的 pre-prepare 消息呢？一种典型的情况就是如果一个节点接受到了一条 pre-pre 消息，消息里的 v 和 n 在之前收到里的消息是曾经出现过的，但是 d 和 m 却和之前的消息不一致，或者请求编号不在高低水位之间（高低水位的概念在下文会进行解释），这时候就会拒绝请求。拒绝的逻辑就是主节点不会发送两条具有相同的 v 和 n ，但 d 和 m 却不同的消息。</p>
+<h2 id="Prepare-阶段"><a href="#Prepare-阶段" class="headerlink" title="Prepare 阶段"></a>Prepare 阶段</h2><p>节点同意请求后会向其它节点发送 prepare 消息。这里要注意一点，同一时刻不是只有一个节点在进行这个过程，可能有 n 个节点也在进行这个过程。因此节点是有可能收到其它节点发送的 prepare 消息的。在一定时间范围内，如果收到超过 2f 个不同节点的 prepare 消息，就代表 prepare 阶段已经完成。进入commit阶段。</p>
+<h2 id="Commit-阶段"><a href="#Commit-阶段" class="headerlink" title="Commit 阶段"></a>Commit 阶段</h2><p>向其它节点广播 commit 消息，同理，这个过程可能是有 n 个节点也在进行的。因此可能会收到其它节点发过来的 commit 消息，当收到 2f+1 个 commit 消息后（包括自己），代表大多数节点已经进入 commit 阶段，这一阶段已经达成共识，于是节点就会执行请求，写入数据。处理完毕后，节点会返回消息给客户端，</p>
+<p>这就是 pbft 算法的全部流程。为了更清晰的展现 这个过程和一些细节，下面以流程图来表示这个过程：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110343.jpg" alt="D4262F5D-AC6C-4739-B927-37AB53B56D41"></p>
+<blockquote>
+<p>注解：<br>V：当前视图的编号。视图的编号是什么意思呢？比如当前主节点为 A，视图编号为 1，如果主节点换成 B，那么视图编号就为 2，这个概念和 raft 的 term 任期是很类似的。<br>N：当前请求的编号。主节点收到客户端的每个请求都以一个编号来标记。<br>M：消息的内容<br>d或D（m）：消息内容的摘要<br>i： 节点的编号</p>
+</blockquote>
+<h1 id="checkpoint-、stable-checkpoint和高低水位"><a href="#checkpoint-、stable-checkpoint和高低水位" class="headerlink" title="checkpoint 、stable checkpoint和高低水位"></a>checkpoint 、stable checkpoint和高低水位</h1><h2 id="checkpoint"><a href="#checkpoint" class="headerlink" title="checkpoint"></a>checkpoint</h2><p>checkpoint 就是当前节点处理的最新请求序号。前文已经提到主节点收到请求是会给请求记录编号的。比如一个节点正在共识的一个请求编号是101，那么对于这个节点，它的 checkpoint 就是101。</p>
+<h2 id="stable-checkpoint-（稳定检查点）"><a href="#stable-checkpoint-（稳定检查点）" class="headerlink" title="stable checkpoint （稳定检查点）"></a>stable checkpoint （稳定检查点）</h2><p>stable checkpoint 就是大部分节点 （2f+1） 已经共识完成的最大请求序号。比如系统有 4 个节点，三个节点都已经共识完了的请求编号是 213 ，那么这个 213 就是 stable checkpoint 了。那设置这个 stable checkpoint 有什么作用呢？最大的目的就是减少内存的占用。因为每个节点应该记录下之前曾经共识过什么请求，但如果一直记录下去，数据会越来越大，所以应该有一个机制来实现对数据的删除。那怎么删呢？很简单，比如现在的稳定检查点是 213 ，那么代表 213 号之前的记录已经共识过的了，所以之前的记录就可以删掉了。</p>
+<h2 id="高低水位"><a href="#高低水位" class="headerlink" title="高低水位"></a>高低水位</h2><p>下面以一个示意图来进行解释：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110349.jpg" alt="D39949FE-A730-4854-AA41-1187A8060FF7"></p>
+<p>图中A节点的当前请求编号是 1039，即checkpoint为1039，B节点的 checkpoint 为1133。当前系统 stable checkpoint 为 1034 。那么1034这个编号就是低水位，而高水位 H=低水位 h+L ，其中L是可以设定的数值。因此图中系统的高水位为 1034+100=1134。举个例子：如果 B 当前的 checkpoint 已经为 1133，而A的 checkpoint 还是 1039 ，假如有新请求给 B 处理时，B会选择等待（checkpoint最大为高水位-1），等到 A 节点也处理到和 B 差不多的请求编号时，比如 A 也处理到 1112 了，这时会有一个机制更新所有节点的 stabel checkpoint ，比如可以把 stabel checkpoint 设置成 1100（此时高水位为1200，B的checkpoint最大可以到1199） ，于是 B 又可以处理新的请求了。</p>
+<h1 id="ViewChange（视图更改）事件"><a href="#ViewChange（视图更改）事件" class="headerlink" title="ViewChange（视图更改）事件"></a>ViewChange（视图更改）事件</h1><p>当主节点挂了（超时无响应）或者从节点集体认为主节点是问题节点时，就会触发 ViewChange 事件， ViewChange 完成后，视图编号将会加 1 。下图展示 ViewChange 的三个阶段流程：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110358.png" alt="E43015AE-5197-4BAE-838C-3CC8A65689E3"></p>
+<p>如图所示， viewchange 会有三个阶段，分别是 view-change ， view-change-ack 和 new-view 阶段。从节点认为主节点有问题时，会向其它节点发送 view-change 消息，当前存活的节点编号最小的节点将成为新的主节点。当新的主节点收到 2f 个其它节点的 view-change 消息，则证明有足够多人的节点认为主节点有问题，于是就会向其它节点广播 New-view 消息。注意：从节点不会发起 new-view 事件。对于主节点，发送 new-view 消息后会继续执行上个视图未处理完的请求，从 pre-prepare 阶段开始。其它节点验证 new-view 消息通过后，就会处理主节点发来的 pre-prepare 消息，这时执行的过程就是前面描述的 pbft 过程。到这时，正式进入 v+1 （视图编号加1）的时代了。<br>为了更清晰的展现 ViewChange 这个过程和一些细节，下面以流程图来表示这个过程：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110405.jpg" alt="410651B8-D182-4658-8B27-5081C5954E9A"></p>
+<p>上图里红色字体部分的 O 集合会包含哪些 pre-prepare 消息呢？假设 O 集合里消息的编号范围：（min～max），则 Min 为 V 集合最小的 stable checkpoint ， Max 为 V 集合中最大序号的 prepare 消息。最后一步执行 O 集合里的 pre-preapare 消息，每条消息会有两种情况: 如果 max-min &gt; 0，则产生消息 <pre-prepare,v+1,n,d> ；如果 max-min=0，则产生消息 <pre-prepare,v+1,n,d(null)>。</pre-prepare,v+1,n,d(null)></pre-prepare,v+1,n,d></p>
+<h1 id="与Raft比较"><a href="#与Raft比较" class="headerlink" title="与Raft比较"></a>与Raft比较</h1><div class="table-container">
+<table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>Raft</th>
+<th>PBFT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>时间复杂度</td>
+<td>O(n)</td>
+<td>O(n^2)</td>
+</tr>
+<tr>
+<td>最大容错/故障节点数量</td>
+<td>2f+1&lt;=N</td>
+<td>3f+1&lt;=N</td>
+</tr>
+<tr>
+<td>流程对比</td>
+<td>谁快谁当leader</td>
+<td>按编号依次做主节点</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>而对于算法通信复杂度，为什么 raft 是 o（n），而 pbft 是 o（n^2）呢？这里主要考虑算法的共识过程。<br>对于 raft 算法，核心共识过程是日志复制这个过程，这个过程分两个阶段，一个是日志记录，一个是提交数据。两个过程都只需要领导者发送消息给跟随者节点，跟随者节点返回消息给领导者节点即可完成，跟随者节点之间是无需沟通的。所以如果集群总节点数为 n，对于日志记录阶段，通信次数为 n-1，对于提交数据阶段，通信次数也为 n-1，总通信次数为 2n-2，因此raft算法复杂度为O（n）。<br>对于 pbft 算法，核心过程有三个阶段，分别是 pre-prepare （预准备）阶段，prepare （准备）阶段和 commit （提交）阶段。对于 pre-prepare 阶段，主节点广播 pre-prepare 消息给其它节点即可，因此通信次数为 n-1 ；对于 prepare 阶段，每个节点如果同意请求后，都需要向其它节点再 广播 parepare 消息，所以总的通信次数为 n<em>(n-1），即 n^2-n ；对于 commit 阶段，每个节点如果达到 prepared 状态后，都需要向其它节点广播 commit 消息，所以总的通信次数也为 n</em>(n-1） ，即 n^2-n 。所以总通信次数为 （n-1）+（n^2-n）+（n^2-n） ，即 2n^2-n-1 ，因此pbft算法复杂度为 O（n^2） 。</p>
+<h1 id="思考问题"><a href="#思考问题" class="headerlink" title="思考问题"></a>思考问题</h1><h2 id="为什么需要3阶段"><a href="#为什么需要3阶段" class="headerlink" title="为什么需要3阶段"></a>为什么需要3阶段</h2><h3 id="为什么不能只有前2个阶段消息"><a href="#为什么不能只有前2个阶段消息" class="headerlink" title="为什么不能只有前2个阶段消息"></a>为什么不能只有前2个阶段消息</h3><p>这个问题的等价问题是：为什么Pre-prepare和Prepare消息，不能让非拜占庭节点达成一致？</p>
+<p>Pre-prepare消息的目的是，主节点为请求m，分配了视图v和序号n，让至少f+1个非拜占庭节点对这个分配组合<code>&lt;m, v, n&gt;</code>达成一致，并且不存在<code>&lt;m&#39;, v, n&gt;</code>，即不存在有2个消息使用同一个v和n的情况。</p>
+<p><strong>Prepared状态可以证明非拜占庭节点在只有请求m使用<code>&lt;v, n&gt;</code>上达成一致</strong>。主节点本身是认可<code>&lt;m, v, n&gt;</code>的，所以副本只需要收集2f个Prepare消息，而不是2f+1个Prepare消息，就可以计算出至少f个副本节点是非拜占庭节点，它们认可m使用<code>&lt;v, n&gt;</code>，并且没有另外1个消息可以使用<code>&lt;v, n&gt;</code>。</p>
+<p>既然1个<code>&lt;v, n&gt;</code>只能对应1个请求m了，达到Prepared状态后，副本i执行请求m，不就达成一致了么？</p>
+<p>并不能。<strong>Prepared是一个局部视角，不是全局一致</strong>，即副本i看到了非拜占庭节点认可了<code>&lt;m, v, n&gt;</code>，但整个系统包含3f+1个节点，异步的系统中，存在丢包、延时、拜占庭节点故意向部分节点发送Prepare等拜占庭行文，<strong>副本i无法确定，其他副本也达到Prepared状态。如果少于f个副本成为Prepared状态，然后执行了请求m，系统就出现了不一致。</strong></p>
+<p>所以，前2个阶段的消息，并不能让非拜占庭节点达成一致。</p>
+<p>如果你了解2PC或者Paxos，我相信可以更容易理解上面的描述。2PC或Paxos，第一步只是用来锁定资源，第2步才是真正去Do Action。把Pre-prepare和Prepare理解为第一步，资源是<code>&lt;v, n&gt;</code>，只有第一步是达不成一致性的。</p>
+<h3 id="2个不变性"><a href="#2个不变性" class="headerlink" title="2个不变性"></a>2个不变性</h3><p>PBFT的论文提到了2个不变性，这2个不变性，<strong>用来证明PBFT如何让非拜占庭节点达成一致性</strong>。</p>
+<p><strong>第1个不变性</strong>，它是由Pre-prepare和Prepare消息所共同确保的不变性：非拜占庭节点在同一个view内对请求的序号达成共识。关于这个不变性，已经在“为什么不能只有前2个阶段消息”中论述过。</p>
+<p>介绍第2个不变性之前，需要介绍几个定义。</p>
+<ul>
+<li>Prepared状态：副本i有Pre-prepare消息（与主节点通信），且收到2f个有效的Prepare消息。副本i达到Prepared状态，可以发送Commit消息，Commit消息的内容和Prepare消息内容相同，但消息类型和数字签名是不同的，所以可以区分。</li>
+<li>committed-local：副本i已经是Prepared状态，并且收到了2f+1个Commit消息。</li>
+<li>committed：至少f+1个非拜占庭节点已经是Prepared状态。</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029110421.png" alt="img"></p>
+<p><strong>第2个不变性</strong>，如果副本i是committed-local，那么一定存在committed。</p>
+<p>2f+1个Commit消息，去掉最多f个拜占庭节点伪造的消息，得出至少f+1个非拜占庭节点发送了Commit消息，即至少f+1个非拜占庭节点是Prepared状态。所以第2个不变性成立。</p>
+<h3 id="为什么3个阶段消息可以达成一致性"><a href="#为什么3个阶段消息可以达成一致性" class="headerlink" title="为什么3个阶段消息可以达成一致性"></a>为什么3个阶段消息可以达成一致性</h3><p>committed意味着有f+1个非拜占庭节点可以执行请求，而committed-local意味着，副本i看到了有f+1个非拜占庭节点可以执行请求，f+1个非拜占庭节点执行请求，也就达成了，让非拜占庭节点一致。</p>
+<p>虽然我前面使用了2PC和Paxos做类比，但不意味着PBFT的Commit阶段就相当于，2PC和Paxos的第2步。因为2PC和Paxos处理的CFT场景，不存在拜占庭节点，它们的主节点充当了统计功能，统计有多少节点完成了第一步。PBFT中节点是存在拜占庭节点的，主节点并不是可靠(信)的，不能依赖主节点统计是否有f+1个非拜占庭节点达成了Prepared，而是每个节点各自统计，committed-local让节点看到了，系统一定可以达成一致，才去执行请求。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/35847127">共识算法之pbft与raft</a></p>
+<p><a target="_blank" rel="noopener" href="https://lessisbetter.site/2020/03/15/why-pbft-needs-3-phase-message/">为什么PBFT需要3个阶段消息</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/5372f47e.html" title="PBFT">http://munan.tech/blog/5372f47e.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/c20c6b6.html" rel="prev" title="Paxos">
+      <i class="fa fa-chevron-left"></i> Paxos
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/51be0f38.html" rel="next" title="MPT">
+      MPT <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%A4%A7%E5%AE%B9%E9%94%99%E6%95%B0%E9%87%8F"><span class="nav-number">1.</span> <span class="nav-text">最大容错数量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E6%A0%B8%E5%BF%83%E4%B8%89%E9%98%B6%E6%AE%B5%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">算法核心三阶段流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#request"><span class="nav-number">2.1.</span> <span class="nav-text">request</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Prepare-%E9%98%B6%E6%AE%B5"><span class="nav-number">2.2.</span> <span class="nav-text">Prepare 阶段</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Commit-%E9%98%B6%E6%AE%B5"><span class="nav-number">2.3.</span> <span class="nav-text">Commit 阶段</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#checkpoint-%E3%80%81stable-checkpoint%E5%92%8C%E9%AB%98%E4%BD%8E%E6%B0%B4%E4%BD%8D"><span class="nav-number">3.</span> <span class="nav-text">checkpoint 、stable checkpoint和高低水位</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#checkpoint"><span class="nav-number">3.1.</span> <span class="nav-text">checkpoint</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#stable-checkpoint-%EF%BC%88%E7%A8%B3%E5%AE%9A%E6%A3%80%E6%9F%A5%E7%82%B9%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">stable checkpoint （稳定检查点）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AB%98%E4%BD%8E%E6%B0%B4%E4%BD%8D"><span class="nav-number">3.3.</span> <span class="nav-text">高低水位</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ViewChange%EF%BC%88%E8%A7%86%E5%9B%BE%E6%9B%B4%E6%94%B9%EF%BC%89%E4%BA%8B%E4%BB%B6"><span class="nav-number">4.</span> <span class="nav-text">ViewChange（视图更改）事件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%8ERaft%E6%AF%94%E8%BE%83"><span class="nav-number">5.</span> <span class="nav-text">与Raft比较</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%9D%E8%80%83%E9%97%AE%E9%A2%98"><span class="nav-number">6.</span> <span class="nav-text">思考问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%813%E9%98%B6%E6%AE%B5"><span class="nav-number">6.1.</span> <span class="nav-text">为什么需要3阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E5%8F%AA%E6%9C%89%E5%89%8D2%E4%B8%AA%E9%98%B6%E6%AE%B5%E6%B6%88%E6%81%AF"><span class="nav-number">6.1.1.</span> <span class="nav-text">为什么不能只有前2个阶段消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2%E4%B8%AA%E4%B8%8D%E5%8F%98%E6%80%A7"><span class="nav-number">6.1.2.</span> <span class="nav-text">2个不变性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%883%E4%B8%AA%E9%98%B6%E6%AE%B5%E6%B6%88%E6%81%AF%E5%8F%AF%E4%BB%A5%E8%BE%BE%E6%88%90%E4%B8%80%E8%87%B4%E6%80%A7"><span class="nav-number">6.1.3.</span> <span class="nav-text">为什么3个阶段消息可以达成一致性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

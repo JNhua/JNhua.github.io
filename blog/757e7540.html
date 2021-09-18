@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="异步入门为什么需要异步？异步操作是在非阻塞方案中执行的操作，允许主程序流继续处理。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust异步入门">
+<meta property="og:url" content="http://munan.tech/blog/757e7540.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="异步入门为什么需要异步？异步操作是在非阻塞方案中执行的操作，允许主程序流继续处理。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-10T15:45:51.000Z">
+<meta property="article:modified_time" content="2020-11-23T12:00:41.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://munan.tech/blog/757e7540.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Rust异步入门 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/757e7540.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Rust异步入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-10 23:45:51" itemprop="dateCreated datePublished" datetime="2020-10-10T23:45:51+08:00">2020-10-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-23 20:00:41" itemprop="dateModified" datetime="2020-11-23T20:00:41+08:00">2020-11-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Rust/" itemprop="url" rel="index"><span itemprop="name">Rust</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Rust/%E5%BC%82%E6%AD%A5/" itemprop="url" rel="index"><span itemprop="name">异步</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/757e7540.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/757e7540.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="异步入门"><a href="#异步入门" class="headerlink" title="异步入门"></a>异步入门</h1><h2 id="为什么需要异步？"><a href="#为什么需要异步？" class="headerlink" title="为什么需要异步？"></a>为什么需要异步？</h2><p><em>异步</em>操作是在非阻塞方案中执行的操作，允许主程序流继续处理。<br><a id="more"></a><br>假设需求场景为客户端从多个服务器下载多个文件。</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">下载方式</th>
+<th style="text-align:left">缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">依次按照顺序</td>
+<td style="text-align:left">必须等待前一个完成</td>
+</tr>
+<tr>
+<td style="text-align:left">多线程</td>
+<td style="text-align:left">为每一个下载任务创建线程，导致内存占满</td>
+</tr>
+<tr>
+<td style="text-align:left">线程池</td>
+<td style="text-align:left">发起下载请求后，需要等待服务端的响应，当前线程会阻塞</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>注意：多线程和线程池都可以是异步的一种实现方式。异步是和同步相对的概念。</p>
+<h2 id="异步的优缺点"><a href="#异步的优缺点" class="headerlink" title="异步的优缺点"></a>异步的优缺点</h2><p>因为异步操作无须额外的线程负担，并且使用回调的方式进行处理，在设计良好的情况下，处理函数可以不必使用共享变量（即使无法完全不用，最起码可以减少共享变量的数量），减少了死锁的可能。当然异步操作也并非完美无暇。编写异步操作的复杂程度较高，程序主要使用回调方式进行处理，与普通人的思维方式有些初入，而且难以调试。</p>
+<h2 id="简单使用"><a href="#简单使用" class="headerlink" title="简单使用"></a>简单使用</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> async_std::task;</span><br><span class="line"><span class="comment">// use std::thread::sleep;</span></span><br><span class="line"><span class="keyword">use</span> std::time::Duration;</span><br><span class="line"><span class="keyword">use</span> futures::&#123; executor&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">learn_song</span></span>() &#123;</span><br><span class="line">    <span class="comment">//sleep(Duration::from_secs(5));</span></span><br><span class="line">    task::sleep(Duration::from_secs(<span class="number">1</span>)).<span class="keyword">await</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;learn song&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">sing_song</span></span>() &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;sing song&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">dance</span></span>() &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;dance&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">learn_and_sing_song</span></span>() &#123;</span><br><span class="line">    learn_song().<span class="keyword">await</span>;</span><br><span class="line">    sing_song().<span class="keyword">await</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">async_main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> f1 = learn_and_sing_song();</span><br><span class="line">    <span class="keyword">let</span> f2 = dance();</span><br><span class="line">    futures::join!(f1, f2);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    executor::block_on(async_main());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dance</span><br><span class="line">learn song</span><br><span class="line">sing song</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<ol>
+<li>如果使用<code>sleep(Duration::from_secs(5))</code>，结果会是按照顺序执行。因为外部的阻塞不能主动唤醒异步内部的线程，所以直接在外部进行阻塞。如果使用异步的<code>sleep</code>，<code>learn song</code>会让出资源；</li>
+<li>通过join，能等待多个Future完成，并发执行；</li>
+<li><code>.await</code>是在代码块中按顺序执行，会阻塞后面的代码，但是此时会让出线程；<code>block_on</code>会阻塞直到Future执行完成。</li>
+</ol>
+<h1 id="Future"><a href="#Future" class="headerlink" title="Future"></a>Future</h1><h2 id="标准库定义"><a href="#标准库定义" class="headerlink" title="标准库定义"></a>标准库定义</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> crate::marker::Unpin;</span><br><span class="line"><span class="keyword">use</span> crate::ops;</span><br><span class="line"><span class="keyword">use</span> crate::pin::Pin;</span><br><span class="line"><span class="keyword">use</span> crate::task::&#123;Context, Poll&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">trait</span> <span class="title">Future</span></span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">type</span> <span class="title">Output</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">poll</span></span>(<span class="keyword">self</span>: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">Self</span>&gt;, cx: &amp;<span class="keyword">mut</span> Context&lt;<span class="symbol">&#x27;_</span>&gt;) -&gt; Poll&lt;Self::Output&gt;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;F: ?<span class="built_in">Sized</span> + Future + Unpin&gt; Future <span class="keyword">for</span> &amp;<span class="keyword">mut</span> F &#123; <span class="comment">// F 的可变引用实现 Future</span></span><br><span class="line">    <span class="class"><span class="keyword">type</span> <span class="title">Output</span></span> = F::Output;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">poll</span></span>(<span class="keyword">mut</span> <span class="keyword">self</span>: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">Self</span>&gt;, cx: &amp;<span class="keyword">mut</span> Context&lt;<span class="symbol">&#x27;_</span>&gt;) -&gt; Poll&lt;Self::Output&gt; &#123;</span><br><span class="line">        F::poll(Pin::new(&amp;<span class="keyword">mut</span> **<span class="keyword">self</span>), cx)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span>&lt;P&gt; Future <span class="keyword">for</span> Pin&lt;P&gt; <span class="comment">// 为 Pin&lt;P=Unpin + ops::DerefMut&lt;Target: Future&gt;&gt; 实现Future</span></span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">    P: Unpin + ops::DerefMut&lt;Target: Future&gt;,</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">type</span> <span class="title">Output</span></span> = &lt;&lt;P <span class="keyword">as</span> ops::Deref&gt;::Target <span class="keyword">as</span> Future&gt;::Output;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">poll</span></span>(<span class="keyword">self</span>: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">Self</span>&gt;, cx: &amp;<span class="keyword">mut</span> Context&lt;<span class="symbol">&#x27;_</span>&gt;) -&gt; Poll&lt;Self::Output&gt; &#123;</span><br><span class="line">        Pin::get_mut(<span class="keyword">self</span>).as_mut().poll(cx)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>poll</code>函数传递一个 <code>&amp;mut Context&lt;&#39;_&gt;</code> 类型参数， 返回一个 <code>Poll</code> 类型参数：</p>
+<ul>
+<li><p>Context 主要包含一个 <code>Waker</code> 对象，由执行器提供，用于告诉执行器，重新执行当前 <code>poll</code> 函数</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[stable(feature = <span class="meta-string">&quot;futures_api&quot;</span>, since = <span class="meta-string">&quot;1.36.0&quot;</span>)]</span></span><br><span class="line"> <span class="comment">// Context的生命周期不会比它包含的waker引用更久</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Context</span></span>&lt;<span class="symbol">&#x27;a</span>&gt; &#123;</span><br><span class="line">    waker: &amp;<span class="symbol">&#x27;a</span> Waker,</span><br><span class="line">    <span class="comment">// Ensure we future-proof against variance changes by forcing</span></span><br><span class="line">    <span class="comment">// the lifetime to be invariant (argument-position lifetimes</span></span><br><span class="line">    <span class="comment">// are contravariant while return-position lifetimes are</span></span><br><span class="line">    <span class="comment">// covariant).</span></span><br><span class="line">    _marker: PhantomData&lt;<span class="function"><span class="keyword">fn</span></span>(&amp;<span class="symbol">&#x27;a</span> ()) -&gt; &amp;<span class="symbol">&#x27;a</span> ()&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Poll 是一个枚举类型包含两个枚举</p>
+<ul>
+<li><code>Ready&lt;Output&gt;</code> 当任务已经就绪，返回该对象</li>
+<li><code>Pending</code> 任务没有就绪时返回该对象，此Future将让出CPU，直到在其他线程或者任务执行调用<code>Waker</code>为止</li>
+</ul>
+</li>
+<li><p>实现者需要保证 poll 是非阻塞，如果是阻塞的话会导致循环进行不下去</p>
+</li>
+</ul>
+<p>实现一个 Future 类型的方式</p>
+<ul>
+<li>方式1：使用 <code>async fn</code>，编译器会自动生成实现 Future Trait的类型</li>
+<li>方式2：自定义结构体，并实现 Future Trait</li>
+</ul>
+<h1 id="Pin"><a href="#Pin" class="headerlink" title="Pin"></a>Pin</h1><p>默认情况下，Rust中所有类型都是可以 <code>move</code> 的，Rust允许按值传递所有类型，并且像 <code>Box&lt;T&gt;</code> 、<code>&amp;mut T</code> 之类的智能指针或者引用允许你通过 <code>mem::swap</code> 进行拷贝交换（移动），这样，如果存在结构体存在自引用，将导致引用失效。</p>
+<p>而 async 编译后的结构可能就会出现一种自引用的结构，如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> x = [<span class="number">0</span>; <span class="number">128</span>];</span><br><span class="line">    <span class="keyword">let</span> read_into_buf_fut = read_into_buf(&amp;<span class="keyword">mut</span> x);</span><br><span class="line">    read_into_buf_fut.<span class="keyword">await</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;:?&#125;&quot;</span>, x);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 编译后的伪代码如下</span></span><br><span class="line"><span class="comment">// 这是 最外层的 async &#123;&#125;</span></span><br><span class="line"><span class="comment">// struct AsyncFuture &#123;</span></span><br><span class="line"><span class="comment">//    x: [u8; 128],</span></span><br><span class="line"><span class="comment">//    read_into_buf_fut: ReadIntoBuf&lt;&#x27;what_lifetime?&gt;,</span></span><br><span class="line"><span class="comment">// &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 这是 read_into_buf_fut 的Future</span></span><br><span class="line"><span class="comment">// struct ReadIntoBuf&lt;&#x27;a&gt; &#123;</span></span><br><span class="line"><span class="comment">//    buf: &amp;&#x27;a mut [u8], // points to `x` below</span></span><br><span class="line"><span class="comment">// &#125;</span></span><br></pre></td></tr></table></figure>
+<p>这样 AsyncFuture 构造出来后，就存在自引用（<code>AsyncFuture.read_into_buf_fut.buf</code> 指向 <code>AsyncFuture.x</code>）。但是如果AsyncFuture发生移动，x肯定也会发生移动，如果<code>read_into_buf_fut.buf</code>还是指向原来的值的话，则会变成无效。而Pin就是为了解决此问题的。</p>
+<p>Pin 类型包着指针类型，保证指针背后的值将不被移动。例如 <code>Pin&lt;&amp;mut T&gt;</code>，<code>Pin&lt;&amp;T&gt;</code>， <code>Pin&lt;Box&lt;T&gt;&gt;</code> 都保证 <code>T</code> 不会移动（move）。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">Pin</span></span>&lt;P&gt; &#123;</span><br><span class="line">    pointer: P,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>首先 <code>Pin&lt;T&gt;</code> 和 <code>Box&lt;T&gt;</code> 类似都是一种智能指针。不同点在于<code>Pin&lt;&amp;mut T&gt;</code>不能通过safe代码拿到<code>&amp;mut T</code>，因此保证<code>mem::swap</code>无法调用，也就是<code>P</code>所指向的<code>T</code>在内存中固定住，不能移动。</p>
+<ul>
+<li><p><code>Pin::as_mut</code> 返回的仍是 <code>Pin&lt;T&gt;</code></p>
+</li>
+<li><p>只有 <code>Pin&lt;DerefMut&lt;T: Unpin&gt;&gt;</code> 或者 <code>Pin&lt;Deref&lt;T: Unpin&gt;&gt;</code> 或者 <code>Pin&lt;T: Unpin&gt;</code> 可以通过 <code>get_mut</code> 或者 <code>get_ref</code> 拿到 <code>T</code> 的引用</p>
+</li>
+<li><p><code>Pin::new</code> 只能是针对实现了 <code>Unpin</code> 的类型（重要）</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;P: Deref&lt;Target: Unpin&gt;&gt; Pin&lt;P&gt; &#123;</span><br><span class="line">    <span class="comment">/// Construct a new `Pin&lt;P&gt;` around a pointer to some data of a type that</span></span><br><span class="line">    <span class="comment">/// implements [`Unpin`].</span></span><br><span class="line">    <span class="comment">///</span></span><br><span class="line">    <span class="comment">/// Unlike `Pin::new_unchecked`, this method is safe because the pointer</span></span><br><span class="line">    <span class="comment">/// `P` dereferences to an [`Unpin`] type, which cancels the pinning guarantees.</span></span><br><span class="line">    <span class="meta">#[stable(feature = <span class="meta-string">&quot;pin&quot;</span>, since = <span class="meta-string">&quot;1.33.0&quot;</span>)]</span></span><br><span class="line">    <span class="meta">#[inline(always)]</span></span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(pointer: P) -&gt; Pin&lt;P&gt; &#123;</span><br><span class="line">        <span class="comment">// Safety: the value pointed to is `Unpin`, and so has no requirements</span></span><br><span class="line">        <span class="comment">// around pinning.</span></span><br><span class="line">        <span class="keyword">unsafe</span> &#123; Pin::new_unchecked(pointer) &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Unwraps this `Pin&lt;P&gt;` returning the underlying pointer.</span></span><br><span class="line">    <span class="comment">///</span></span><br><span class="line">    <span class="comment">/// This requires that the data inside this `Pin` is [`Unpin`] so that we</span></span><br><span class="line">    <span class="comment">/// can ignore the pinning invariants when unwrapping it.</span></span><br><span class="line">    <span class="meta">#[stable(feature = <span class="meta-string">&quot;pin_into_inner&quot;</span>, since = <span class="meta-string">&quot;1.39.0&quot;</span>)]</span></span><br><span class="line">    <span class="meta">#[inline(always)]</span></span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">into_inner</span></span>(pin: Pin&lt;P&gt;) -&gt; P &#123;</span><br><span class="line">        pin.pointer</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>只有<code>P&lt;T&gt;</code>的<code>T: Unpin</code>，才可以new出一个<code>Pin&lt;P&lt;T&gt;&gt;</code>。这里的T就是应该被pin的实例，可是由于<code>T: Unpin</code>实际上T的实例并不会被pin。</p>
+</li>
+<li><p>如果要创建不实现<code>Unpin</code>的<code>Pin&lt;P&lt;T&gt;&gt;</code>，可以使用<code>unsafe&#123; Pin::new_unchecked(&amp;mut t) &#125;</code>。</p>
+</li>
+</ul>
+</li>
+<li><p>本质上实现不移动就是加了一层指针，并未违反任意值都是可以移动的规则。</p>
+<ul>
+<li>比如 <code>Pin&lt;T&gt;</code> 发生移动时，仅仅是 <code>Pin</code> 这个结构发生了移动，但是 <code>T</code> 对象并没有移动</li>
+</ul>
+</li>
+</ul>
+<h2 id="Unpin"><a href="#Unpin" class="headerlink" title="Unpin"></a>Unpin</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> auto <span class="class"><span class="keyword">trait</span> <span class="title">Unpin</span></span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>定义在<code>std::marker</code>中，如果<code>T: Unpin</code>，那么<code>T</code>在<code>pin</code>后可以安全地移动，可以拿到<code>&amp;mut T</code>。<code>Unpin</code>只对<code>Pin&lt;P&lt;T&gt;&gt;</code>的<code>T</code>起作用，不对<code>P</code>本身起效，例如对<code>Pin&lt;Box&lt;T&gt;&gt;</code>的<code>Box&lt;T&gt;</code>是无效的。</p>
+<p>默认为以下类型实现了<code>Unpin</code>：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>, T: ?<span class="built_in">Sized</span> + <span class="symbol">&#x27;a</span>&gt; Unpin <span class="keyword">for</span> &amp;<span class="symbol">&#x27;a</span> T &#123;&#125;</span><br><span class="line"><span class="keyword">impl</span>&lt;<span class="symbol">&#x27;a</span>, T: ?<span class="built_in">Sized</span> + <span class="symbol">&#x27;a</span>&gt; Unpin <span class="keyword">for</span> &amp;<span class="symbol">&#x27;a</span> <span class="keyword">mut</span> T &#123;&#125;</span><br><span class="line"><span class="keyword">impl</span>&lt;T: ?<span class="built_in">Sized</span>&gt; Unpin <span class="keyword">for</span> *<span class="keyword">const</span> T &#123;&#125;</span><br><span class="line"><span class="keyword">impl</span>&lt;T: ?<span class="built_in">Sized</span>&gt; Unpin <span class="keyword">for</span> *<span class="keyword">mut</span> T &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p><code>async</code>生成的匿名结构体（<code>impl Future&lt;Output=()&gt;</code>）没有实现<code>Unpin</code>。</p>
+<h3 id="Unpin-1"><a href="#Unpin-1" class="headerlink" title="!Unpin"></a>!Unpin</h3><p>对Unpin取反，!Unpin的双重否定就是pin。如果一个类型中包含了PhantomPinned，那么这个类型就是!Unpin。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">PhantomPinned</span></span>;</span><br><span class="line"><span class="keyword">impl</span> !Unpin <span class="keyword">for</span> PhantomPinned &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>一般在结构体中使用<code>_marker: PhantomPinned</code>来实现<code>!Unpin</code>。</p>
+<h2 id="完整示例"><a href="#完整示例" class="headerlink" title="完整示例"></a>完整示例</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::pin::Pin;</span><br><span class="line"><span class="keyword">use</span> std::marker::PhantomPinned;</span><br><span class="line"><span class="keyword">use</span> std::mem;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(Debug)]</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Test</span></span> &#123;</span><br><span class="line">    a: <span class="built_in">String</span>,</span><br><span class="line">    b: *<span class="keyword">const</span> <span class="built_in">String</span>,</span><br><span class="line">    _marker: PhantomPinned</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Test &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(txt: &amp;<span class="built_in">str</span>) -&gt; <span class="keyword">Self</span> &#123;</span><br><span class="line">        <span class="comment">//此指针指向栈对象， 必须慎重考虑其生命长短，避免出现`悬指针`。</span></span><br><span class="line">        Test &#123;</span><br><span class="line">            a: <span class="built_in">String</span>::from(txt),</span><br><span class="line">            b: std::ptr::null(),</span><br><span class="line">            _marker: PhantomPinned</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">init</span></span>&lt;<span class="symbol">&#x27;a</span>&gt;(<span class="keyword">self</span>: Pin&lt;&amp;<span class="symbol">&#x27;a</span> <span class="keyword">mut</span> <span class="keyword">Self</span>&gt;) &#123;</span><br><span class="line">        <span class="keyword">let</span> self_ptr: *<span class="keyword">const</span> <span class="built_in">String</span> = &amp;<span class="keyword">self</span>.a;</span><br><span class="line">        <span class="keyword">let</span> this = <span class="keyword">unsafe</span> &#123; <span class="keyword">self</span>.get_unchecked_mut() &#125;;</span><br><span class="line">        this.b = self_ptr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">a</span></span>&lt;<span class="symbol">&#x27;a</span>&gt;(<span class="keyword">self</span>: Pin&lt;&amp;<span class="symbol">&#x27;a</span> <span class="keyword">Self</span>&gt;) -&gt; &amp;<span class="symbol">&#x27;a</span> <span class="built_in">str</span> &#123;</span><br><span class="line">        &amp;<span class="keyword">self</span>.get_ref().a</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">b</span></span>&lt;<span class="symbol">&#x27;a</span>&gt;(<span class="keyword">self</span>: Pin&lt;&amp;<span class="symbol">&#x27;a</span> <span class="keyword">Self</span>&gt;) -&gt; &amp;<span class="symbol">&#x27;a</span> <span class="built_in">String</span> &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123; &amp;*(<span class="keyword">self</span>.b) &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line"><span class="comment">// test1 is safe to move before we initialize it</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test1 = Test::new(<span class="string">&quot;test1&quot;</span>);</span><br><span class="line"><span class="comment">// Notice how we shadow `test1` to prevent it from being accessed again</span></span><br><span class="line"><span class="comment">//同名的新指针变量屏蔽了原来的test1, 以此确保只能通过Pin来访问到Test.</span></span><br><span class="line"><span class="comment">//这样确保不可能再访问到旧test1指针！</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test1 = <span class="keyword">unsafe</span> &#123; Pin::new_unchecked(&amp;<span class="keyword">mut</span> test1) &#125;;</span><br><span class="line">    Test::init(test1.as_mut());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test2 = Test::new(<span class="string">&quot;test2&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test2 = <span class="keyword">unsafe</span> &#123; Pin::new_unchecked(&amp;<span class="keyword">mut</span> test2) &#125;;</span><br><span class="line">    Test::init(test2.as_mut());</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>, Test::a(test1.as_ref()), Test::b(test1.as_ref()));</span><br><span class="line"></span><br><span class="line"><span class="comment">//swap导致编译错误， 因为Pin实质上就是禁止获得&amp;mut T引用(指针) ，</span></span><br><span class="line"><span class="comment">//无法获得&amp;mut T指针，则无法Move , 比如：swap等。</span></span><br><span class="line"><span class="comment">//之所以用Pin 包裹原来的裸指针，目的就是禁止获取到：&amp;mut T.</span></span><br><span class="line"><span class="comment">//     std::mem::swap(test1.get_mut(), test2.get_mut());</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>, Test::a(test2.as_ref()), Test::b(test2.as_ref()));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 结果</span></span><br><span class="line"><span class="comment">// a: test1, b: test1</span></span><br><span class="line"><span class="comment">// a: test2, b: test2</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test1 = Test::new(<span class="string">&quot;test1&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test1_pin = <span class="keyword">unsafe</span> &#123; Pin::new_unchecked(&amp;<span class="keyword">mut</span> test1) &#125;;</span><br><span class="line">    Test::init(test1_pin.as_mut());</span><br><span class="line">    <span class="built_in">drop</span>(test1_pin); <span class="comment">//Pin指针被提前drop , 因为test1未被遮蔽， 后面代码仍然可以访问到， 但是test1已被析构</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test2 = Test::new(<span class="string">&quot;test2&quot;</span>);</span><br><span class="line">    mem::swap(&amp;<span class="keyword">mut</span> test1, &amp;<span class="keyword">mut</span> test2);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Not self referential anymore: &#123;:?&#125;&quot;</span>, test1.b); <span class="comment">//test1.b == 0x00 ， Pin析构时析构了test1 所指的Test Struct, 其内部指针归0，</span></span><br><span class="line"><span class="comment">//所以说不再是自引用。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果使用<code>Box::pin(t)</code>创建<code>Pin&lt;Box&lt;T&gt;&gt;</code>，则会将数据固定到堆上。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">impl</span> Test &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(txt: &amp;<span class="built_in">str</span>) -&gt; Pin&lt;<span class="built_in">Box</span>&lt;<span class="keyword">Self</span>&gt;&gt; &#123;</span><br><span class="line">     <span class="keyword">let</span> t = Test &#123;</span><br><span class="line">         a: <span class="built_in">String</span>::from(txt),</span><br><span class="line">         b: std::ptr::null(),</span><br><span class="line">         _marker: PhantomPinned,</span><br><span class="line">     &#125;;</span><br><span class="line">     <span class="comment">//Constructs a new Pin&lt;Box&lt;T&gt;&gt;. If T does not implement Unpin, then x will be pinned in memory and unable to be moved.</span></span><br><span class="line">     <span class="keyword">let</span> <span class="keyword">mut</span> boxed = <span class="built_in">Box</span>::pin(t);</span><br><span class="line">     <span class="keyword">let</span> self_ptr: *<span class="keyword">const</span> <span class="built_in">String</span> = &amp;boxed.as_ref().a;</span><br><span class="line">      <span class="comment">// boxed.as_mut() -&gt; Pin&lt;&amp;mut Test&gt;</span></span><br><span class="line">      <span class="comment">// boxed.as_mut().get_unchecked_mut() -&gt; &amp;mut Test</span></span><br><span class="line">     <span class="keyword">unsafe</span> &#123; boxed.as_mut().get_unchecked_mut().b = self_ptr &#125;;</span><br><span class="line">     boxed</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test1 = Test::new(<span class="string">&quot;test1&quot;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> test2 = Test::new(<span class="string">&quot;test2&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>, test1.as_ref().a(), test1.as_ref().b());</span><br><span class="line">    std::mem::swap(&amp;<span class="keyword">mut</span> test1, &amp;<span class="keyword">mut</span> test2);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;a: &#123;&#125;, b: &#123;&#125;&quot;</span>, test2.as_ref().a(), test2.as_ref().b()); </span><br><span class="line">  <span class="comment">// 结果</span></span><br><span class="line">  <span class="comment">// a: test1, b: test1</span></span><br><span class="line">	<span class="comment">// a: test1, b: test1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>为什么堆上的<code>pin</code>对象可以进行<code>swap</code>？</p>
+<p><code>boxed</code>只是一个栈变量，所指的对象在堆上。通过<code>swap</code>仅仅<code>bitcopy and swap</code>两个栈变量<code>test1</code>和<code>test2</code>，相当于两者交换了所有权，交换了指向，而堆上的数据不受影响。<code>T</code>类型对象内存位置固定，所有没有违反<code>Pin</code>的语义要求。</p>
+<h1 id="async-await"><a href="#async-await" class="headerlink" title="async/await"></a>async/await</h1><p>async转化的Future对象和其它Future一样是具有惰性的，即在运行之前什么也不做。运行Future最常见的方式是<code>.await</code>。</p>
+<h2 id="async"><a href="#async" class="headerlink" title="async"></a>async</h2><p>有如下代码：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">async_main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> f1 = async_function1();</span><br><span class="line">    <span class="keyword">let</span> f2 = async_function2();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> f = <span class="keyword">async</span> <span class="keyword">move</span> &#123;</span><br><span class="line">        f1.<span class="keyword">await</span>;</span><br><span class="line">        f2.<span class="keyword">await</span>;</span><br><span class="line">    &#125;;</span><br><span class="line">    f.<span class="keyword">await</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么实际上会生成一个匿名的<code>Future trait object</code>，包裹一个 <code>Generator</code>。也就是一个实现了 <code>Future</code> 的 <code>Generator</code>。<code>Generator</code>实际上是一个状态机，配合<code>.await</code>当每次<code>async</code> 代码块中任何返回 <code>Poll::Pending</code>则即调用<code>generator yeild</code>，让出执行权，一旦恢复执行，<code>generator resume</code> 继续执行剩余流程。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pub</span> <span class="keyword">const</span> <span class="function"><span class="keyword">fn</span> <span class="title">from_generator</span></span>&lt;T&gt;(gen: T) -&gt; <span class="keyword">impl</span> Future&lt;Output = T::Return&gt;</span><br><span class="line"><span class="keyword">where</span></span><br><span class="line">    T: Generator&lt;ResumeTy, Yield = ()&gt;,</span><br><span class="line">&#123;</span><br><span class="line">    <span class="meta">#[rustc_diagnostic_item = <span class="meta-string">&quot;gen_future&quot;</span>]</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">GenFuture</span></span>&lt;T: Generator&lt;ResumeTy, Yield = ()&gt;&gt;(T);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// We rely on the fact that async/await futures are immovable in order to create</span></span><br><span class="line">    <span class="comment">// self-referential borrows in the underlying generator.</span></span><br><span class="line">    <span class="keyword">impl</span>&lt;T: Generator&lt;ResumeTy, Yield = ()&gt;&gt; !Unpin <span class="keyword">for</span> GenFuture&lt;T&gt; &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">impl</span>&lt;T: Generator&lt;ResumeTy, Yield = ()&gt;&gt; Future <span class="keyword">for</span> GenFuture&lt;T&gt; &#123;</span><br><span class="line">        <span class="class"><span class="keyword">type</span> <span class="title">Output</span></span> = T::Return;</span><br><span class="line">        <span class="function"><span class="keyword">fn</span> <span class="title">poll</span></span>(<span class="keyword">self</span>: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">Self</span>&gt;, cx: &amp;<span class="keyword">mut</span> Context&lt;<span class="symbol">&#x27;_</span>&gt;) -&gt; Poll&lt;Self::Output&gt; &#123;</span><br><span class="line">            <span class="comment">// Safety: Safe because we&#x27;re !Unpin + !Drop, and this is just a field projection.</span></span><br><span class="line">            <span class="keyword">let</span> gen = <span class="keyword">unsafe</span> &#123; Pin::map_unchecked_mut(<span class="keyword">self</span>, |s| &amp;<span class="keyword">mut</span> s.<span class="number">0</span>) &#125;;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// Resume the generator, turning the `&amp;mut Context` into a `NonNull` raw pointer. The</span></span><br><span class="line">            <span class="comment">// `.await` lowering will safely cast that back to a `&amp;mut Context`.</span></span><br><span class="line">            <span class="keyword">match</span> gen.resume(ResumeTy(NonNull::from(cx).cast::&lt;Context&lt;<span class="symbol">&#x27;static</span>&gt;&gt;())) &#123;</span><br><span class="line">                GeneratorState::Yielded(()) =&gt; Poll::Pending,</span><br><span class="line">                GeneratorState::Complete(x) =&gt; Poll::Ready(x),</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    GenFuture(gen)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>每一次<code>gen.resume(）</code>会顺序执行<code>async block</code>中代码直到遇到<code>yield</code>。<code>async block</code>中的<code>.await</code>语句在无法立即完成时会调用<code>yield</code>交出控制权等待下一次<code>resume</code>。而当所有代码执行完，也就是状态机入<code>Complete</code>，<code>async block</code>返回<code>Poll::Ready</code>，代表<code>Future</code>执行完毕。</p>
+<p>生成的匿名对象类似如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">AsyncFuture</span></span> &#123;</span><br><span class="line">    fut_one: FutFunction1,</span><br><span class="line">    fut_two: FutFunction2,</span><br><span class="line">    state: State,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//state的定义可能如下</span></span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">State</span></span> &#123;</span><br><span class="line">    AwaitingFutFunction1,</span><br><span class="line">    AwaitingFutFunction2,</span><br><span class="line">    Done,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>poll</code>进行轮询每个<code>Future</code>的状态，如果<code>Poll::Ready()</code>则进入下一个<code>State</code>，直到<code>Done</code>。</p>
+<h2 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">foo</span></span>(x: &amp;<span class="built_in">u8</span>) -&gt; <span class="built_in">u8</span> &#123; *x &#125;</span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">good</span></span>() -&gt; <span class="keyword">impl</span> Future&lt;Output = ()&gt; &#123;</span><br><span class="line">    <span class="keyword">async</span> &#123;</span><br><span class="line">        <span class="keyword">let</span> x = <span class="number">5</span>;</span><br><span class="line">        foo(&amp;x).<span class="keyword">await</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过将<code>x</code>移动到<code>async</code>中，延长<code>x</code>的生命周期和<code>foo</code>返回的Future生命周期一致。</p>
+<h2 id="move"><a href="#move" class="headerlink" title="move"></a>move</h2><p>async 块和闭包允许 move 关键字，就像普通的闭包一样。一个 async move 块将获取它引用变量的所有权，允许它活得比目前的范围长，但放弃了与其它代码分享那些变量的能力。</p>
+<h2 id="线程间移动"><a href="#线程间移动" class="headerlink" title="线程间移动"></a>线程间移动</h2><p>在使用多线程Future的excutor时，Future可能在线程之间移动，因此在async主体中使用的任何变量都必须能够在线程之间传输，因为任何.await变量都可能导致切换到新线程。</p>
+<p>async fn Future是否为Send的取决于是否在.await点上保留非Send类型。编译器尽其所能地估计值在.await点上的保存时间。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">foo</span></span>() &#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> x = Rc&lt;()&gt;; <span class="comment">// Rc&lt;T&gt;不可Send</span></span><br><span class="line">    &#125;</span><br><span class="line">    bar().<span class="keyword">await</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果<code>x</code>不在<code>await</code>前drop，那么该Future是非Send的。而Future的异步特性要求需要有<code>Send</code>约束。</p>
+<h1 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h1><p><code>Stream</code>是由一系列的<code>Future</code>组成，我们可以从<code>Stream</code>读取各个<code>Future</code>的结果，直到<code>Stream</code>结束。</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">Stream</span></span> &#123;</span><br><span class="line">    <span class="class"><span class="keyword">type</span> <span class="title">Item</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">poll_next</span></span>(<span class="keyword">self</span>: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">Self</span>&gt;, lw: &amp;LocalWaker)</span><br><span class="line">        -&gt; Poll&lt;<span class="built_in">Option</span>&lt;Self::Item&gt;&gt;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>poll_next</code>函数有三种可能的返回值，分别如下：</p>
+<ul>
+<li><code>Poll::Pending</code> 说明下一个值还没有就绪，仍然需要等待。</li>
+<li><code>Poll::Ready(Some(val))</code> 已经就绪，成功返回一个值，程序可以通过调用<code>poll_next</code>再获取下一个值。</li>
+<li><code>Poll::Ready(None)</code> 表示<code>Stream</code>已经结束，不应该在调用<code>poll_next</code>。</li>
+</ul>
+<h2 id="迭代"><a href="#迭代" class="headerlink" title="迭代"></a>迭代</h2><p><code>Stream</code>不支持使用<code>for</code>，而<code>while let</code>和 <code>next/try_next</code>则是允许的。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">sum_with_next</span></span>(<span class="keyword">mut</span> stream: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">dyn</span> Stream&lt;Item = <span class="built_in">i32</span>&gt;&gt;) -&gt; <span class="built_in">i32</span> &#123;</span><br><span class="line">    <span class="keyword">use</span> futures::stream::StreamExt; <span class="comment">// for `next`</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> sum = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">let</span> <span class="literal">Some</span>(item) = stream.next().<span class="keyword">await</span> &#123;</span><br><span class="line">        sum += item;</span><br><span class="line">    &#125;</span><br><span class="line">    sum</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">sum_with_try_next</span></span>(<span class="keyword">mut</span> stream: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">dyn</span> Stream&lt;Item = <span class="built_in">Result</span>&lt;<span class="built_in">i32</span>, io::Error&gt;&gt;&gt;</span><br><span class="line">) -&gt; <span class="built_in">Result</span>&lt;<span class="built_in">i32</span>, io::Error&gt; &#123;</span><br><span class="line">    <span class="keyword">use</span> futures::stream::TryStreamExt; <span class="comment">// for `try_next`</span></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> sum = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> <span class="keyword">let</span> <span class="literal">Some</span>(item) = stream.try_next().<span class="keyword">await</span>? &#123;</span><br><span class="line">        sum += item;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="literal">Ok</span>(sum)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">jump_around</span></span>(</span><br><span class="line">    <span class="keyword">mut</span> stream: Pin&lt;&amp;<span class="keyword">mut</span> <span class="keyword">dyn</span> Stream&lt;Item = <span class="built_in">Result</span>&lt;<span class="built_in">u8</span>, io::Error&gt;&gt;&gt;,</span><br><span class="line">) -&gt; <span class="built_in">Result</span>&lt;(), io::Error&gt; &#123;</span><br><span class="line">    <span class="keyword">use</span> futures::stream::TryStreamExt; <span class="comment">// for `try_for_each_concurrent`</span></span><br><span class="line">    <span class="keyword">const</span> MAX_CONCURRENT_JUMPERS: <span class="built_in">usize</span> = <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">    stream.try_for_each_concurrent(MAX_CONCURRENT_JUMPERS, |num| <span class="keyword">async</span> <span class="keyword">move</span> &#123;</span><br><span class="line">        jump_n_times(num).<span class="keyword">await</span>?;</span><br><span class="line">        report_n_jumps(num).<span class="keyword">await</span>?;</span><br><span class="line">        <span class="literal">Ok</span>(())</span><br><span class="line">    &#125;).<span class="keyword">await</span>?;</span><br><span class="line"></span><br><span class="line">    <span class="literal">Ok</span>(())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="Select"><a href="#Select" class="headerlink" title="Select"></a>Select</h1><p>select宏也允许并发的执行Future，但是和join、try_join不同的是，select宏只要有一个Future返回，就会返回。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> futures::&#123;select, future::FutureExt, pin_mut&#125;;</span><br><span class="line"><span class="keyword">use</span> tokio::runtime::Runtime;</span><br><span class="line"><span class="keyword">use</span> std::io::<span class="built_in">Result</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">function1</span></span>() -&gt; <span class="built_in">Result</span>&lt;()&gt; &#123;</span><br><span class="line">    tokio::time::delay_for(tokio::time::Duration::from_secs(<span class="number">10</span>)).<span class="keyword">await</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;function1 ++++ &quot;</span>);</span><br><span class="line">    <span class="literal">Ok</span>(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">function2</span></span>() -&gt; <span class="built_in">Result</span>&lt;()&gt; &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;function2 ++++ &quot;</span>);</span><br><span class="line">    <span class="literal">Ok</span>(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">fn</span> <span class="title">async_main</span></span>() &#123;</span><br><span class="line">  <span class="comment">// Fuse：基础迭代器一次返回None后，就一直返回None</span></span><br><span class="line">    <span class="keyword">let</span> f1 = function1().fuse();</span><br><span class="line">    <span class="keyword">let</span> f2 = function2().fuse();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 在栈上pin</span></span><br><span class="line">    pin_mut!(f1, f2);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">select!</span> &#123;</span><br><span class="line">        _ = f1 =&gt; <span class="built_in">println!</span>(<span class="string">&quot;task one completed first&quot;</span>),</span><br><span class="line">        _ = f2 =&gt; <span class="built_in">println!</span>(<span class="string">&quot;task two completed first&quot;</span>),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> runtime = Runtime::new().unwrap();</span><br><span class="line">    runtime.block_on(async_main());</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Hello, world!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="BoxFuture"><a href="#BoxFuture" class="headerlink" title="BoxFuture"></a>BoxFuture</h1><p>一个拥有的动态类型[‘ Future ‘]，在不是静态输入或需要添加一些间接类型的情况下使用。</p>
+<p>比如在递归使用Future时：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> futures::future::&#123;BoxFuture, FutureExt&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">re</span></span>() -&gt; BoxFuture&lt;<span class="symbol">&#x27;static</span>, ()&gt; &#123;</span><br><span class="line">	<span class="keyword">async</span> <span class="keyword">move</span>&#123;</span><br><span class="line">		re().<span class="keyword">await</span>;</span><br><span class="line">		re().<span class="keyword">await</span>;</span><br><span class="line">	&#125;.boxed()</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">	re();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">boxed</span></span>&lt;<span class="symbol">&#x27;a</span>&gt;(<span class="keyword">self</span>) -&gt; BoxFuture&lt;<span class="symbol">&#x27;a</span>, Self::Output&gt;</span><br><span class="line">    <span class="keyword">where</span> <span class="keyword">Self</span>: <span class="built_in">Sized</span> + <span class="built_in">Send</span> + <span class="symbol">&#x27;a</span>,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">Box</span>::pin(<span class="keyword">self</span>)</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ol>
+<li><a target="_blank" rel="noopener" href="https://www.rectcircle.cn/posts/rust%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B">Rust异步编程</a></li>
+<li><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/157348723">Rust 异步编程，Pin 介绍</a></li>
+<li><a target="_blank" rel="noopener" href="https://rustcc.cn/article?id=1d0a46fa-da56-40ae-bb4e-fe1b85f68751">Pin Unpin学习笔记</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/757e7540.html" title="Rust异步入门">http://munan.tech/blog/757e7540.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/484acaf.html" rel="prev" title="Rust包管理">
+      <i class="fa fa-chevron-left"></i> Rust包管理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/3164e534.html" rel="next" title="Rust模式">
+      Rust模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E5%85%A5%E9%97%A8"><span class="nav-number">1.</span> <span class="nav-text">异步入门</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%BC%82%E6%AD%A5%EF%BC%9F"><span class="nav-number">1.1.</span> <span class="nav-text">为什么需要异步？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">异步的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">简单使用</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Future"><span class="nav-number">2.</span> <span class="nav-text">Future</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%87%E5%87%86%E5%BA%93%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">标准库定义</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Pin"><span class="nav-number">3.</span> <span class="nav-text">Pin</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">3.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unpin"><span class="nav-number">3.2.</span> <span class="nav-text">Unpin</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Unpin-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">!Unpin</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.3.</span> <span class="nav-text">完整示例</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#async-await"><span class="nav-number">4.</span> <span class="nav-text">async&#x2F;await</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#async"><span class="nav-number">4.1.</span> <span class="nav-text">async</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">4.2.</span> <span class="nav-text">生命周期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#move"><span class="nav-number">4.3.</span> <span class="nav-text">move</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E9%97%B4%E7%A7%BB%E5%8A%A8"><span class="nav-number">4.4.</span> <span class="nav-text">线程间移动</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Stream"><span class="nav-number">5.</span> <span class="nav-text">Stream</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">5.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%AD%E4%BB%A3"><span class="nav-number">5.2.</span> <span class="nav-text">迭代</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E5%8F%91"><span class="nav-number">5.3.</span> <span class="nav-text">并发</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Select"><span class="nav-number">6.</span> <span class="nav-text">Select</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#BoxFuture"><span class="nav-number">7.</span> <span class="nav-text">BoxFuture</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">8.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

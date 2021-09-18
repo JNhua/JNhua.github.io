@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="hash以SHA256算法为例。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="hash">
+<meta property="og:url" content="http://munan.tech/blog/d1b862b8.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="hash以SHA256算法为例。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2442">
+<meta property="og:image" content="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=6c08ee2b2b16c69cf6e75e98b61ea1df">
+<meta property="og:image" content="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=25ec4d1e8c4301a43e1960501075bb9b">
+<meta property="og:image" content="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=1a0df915b0c4d9439a5265c0fd59d242">
+<meta property="og:image" content="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2450">
+<meta property="og:image" content="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=2b6b5ad6ec73e40907818601a7ee9a13">
+<meta property="article:published_time" content="2020-09-18T07:01:45.000Z">
+<meta property="article:modified_time" content="2020-09-18T13:12:16.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2442">
+
+<link rel="canonical" href="http://munan.tech/blog/d1b862b8.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>hash | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/d1b862b8.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          hash
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-09-18 15:01:45 / 修改时间：21:12:16" itemprop="dateCreated datePublished" datetime="2020-09-18T15:01:45+08:00">2020-09-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/%E5%AF%86%E7%A0%81%E5%AD%A6/" itemprop="url" rel="index"><span itemprop="name">密码学</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/d1b862b8.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/d1b862b8.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="hash"><a href="#hash" class="headerlink" title="hash"></a>hash</h1><p>以SHA256算法为例。<br><a id="more"></a><br>SHA256是SHA-2下细分出的一种算法。<br>SHA-2，名称来自于安全散列算法2（英语：Secure Hash Algorithm 2）的缩写，一种密码散列函数算法标准，由美国国家安全局研发，属于SHA算法之一，是SHA-1的后继者。<br>对于任意长度的消息，SHA256都会产生一个256bit长的哈希值，称作消息摘要。这个摘要相当于是个长度为32个字节的数组，通常用一个长度为64的十六进制字符串来表示。</p>
+<h2 id="信息预处理"><a href="#信息预处理" class="headerlink" title="信息预处理"></a>信息预处理</h2><h3 id="STEP1：附加填充比特"><a href="#STEP1：附加填充比特" class="headerlink" title="STEP1：附加填充比特"></a>STEP1：附加填充比特</h3><p>在报文末尾进行填充，使报文长度在对512取模以后的余数是448<br>填充是这样进行的：先补第一个比特为1，然后都补0，直到长度满足对512取模后余数是448。<br>需要注意的是，信息必须进行填充，也就是说，即使长度已经满足对512取模后余数是448，补位也必须要进行，这时要填充512个比特。<br>因此，填充是至少补一位，最多补512位。<br>例：以信息“abc”为例显示补位的过程。<br>a,b,c对应的ASCII码分别是97,98,99<br>于是原始信息的二进制编码为：01100001 01100010 01100011<br>补位第一步，首先补一个“1” ： 0110000101100010 01100011 1<br>补位第二步,补423个“0”：01100001 01100010 01100011 10000000 00000000 … 00000000</p>
+<blockquote>
+<p>为什么是448?<br>因为在第一步的预处理后，第二步会再附加上一个64bit的数据，用来表示原始报文的长度信息。而448+64=512，正好拼成了一个完整的结构。</p>
+</blockquote>
+<h3 id="STEP2：附加长度值"><a href="#STEP2：附加长度值" class="headerlink" title="STEP2：附加长度值"></a>STEP2：附加长度值</h3><p>附加长度值就是将原始数据（第一步填充前的消息）的长度信息补到已经进行了填充操作的消息后面。<br>SHA256用一个64位的数据来表示原始消息的长度。<br>因此，通过SHA256计算的消息长度必须要小于2^64，当然绝大多数情况这足够大了。<br>长度信息的编码方式为64-bit big-endian integer。<br>回到刚刚的例子，消息“abc”，3个字符，占用24个bit，末尾加上00000000 00000018。</p>
+<h2 id="逻辑运算"><a href="#逻辑运算" class="headerlink" title="逻辑运算"></a>逻辑运算</h2><p>逻辑位运算。<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2442" alt="4c945b7bf1b7ec1e62acbaa9112c32d3.png"></p>
+<h2 id="计算消息摘要"><a href="#计算消息摘要" class="headerlink" title="计算消息摘要"></a>计算消息摘要</h2><p>首先：将消息分解成512-bit大小的块(break message into 512-bit chunks)<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=6c08ee2b2b16c69cf6e75e98b61ea1df" alt="6c08ee2b2b16c69cf6e75e98b61ea1df.png"><br>假设消息M可以被分解为n个块，于是整个算法需要做的就是完成n次迭代，n次迭代的结果就是最终的哈希值，即256bit的数字摘要。<br>一个256-bit的摘要的初始值H0，经过第一个数据块进行运算，得到H1，即完成了第一次迭代。<br>H1经过第二个数据块得到H2，……，依次处理，最后得到Hn，Hn即为最终的256-bit消息摘要。<br>将每次迭代进行的映射用$ Map(H<em>{i-1}) = H</em>{i} $表示，于是迭代可以更形象的展示为：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=25ec4d1e8c4301a43e1960501075bb9b" alt="25ec4d1e8c4301a43e1960501075bb9b.png"></p>
+<blockquote>
+<p>8个哈希初值：这些初值是对自然数中前8个质数（2,3,5,7,11,13,17,19）的平方根的小数部分取前32bit而来。<br>64个常量：和8个哈希初值类似，这些常量是对自然数中前64个质数(2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97…)的立方根的小数部分取前32bit而来。</p>
+</blockquote>
+<p>图中256-bit的Hi被描述8个小块，这是因为SHA256算法中的最小运算单元称为“字”（Word），一个字是32位。<br>此外，第一次迭代中，映射的初值设置为前面介绍的8个哈希初值，如下图所示：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=1a0df915b0c4d9439a5265c0fd59d242" alt="1a0df915b0c4d9439a5265c0fd59d242.png"></p>
+<h3 id="迭代"><a href="#迭代" class="headerlink" title="迭代"></a>迭代</h3><h4 id="STEP1：构造64个字（word）"><a href="#STEP1：构造64个字（word）" class="headerlink" title="STEP1：构造64个字（word）"></a>STEP1：构造64个字（word）</h4><p>break chunk into sixteen 32-bit big-endian words w[0], …, w[15]<br>对于每一块，将块分解为16个32-bit的big-endian的字，记为w[0], …, w[15]<br>也就是说，前16个字直接由消息的第i个块分解得到<br>其余的字由如下迭代公式得到：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENResource/p2450" alt="f2098805de36b73a980268f69a5a3462.png"></p>
+<h4 id="STEP2：进行64次循环"><a href="#STEP2：进行64次循环" class="headerlink" title="STEP2：进行64次循环"></a>STEP2：进行64次循环</h4><p>映射 $ Map(H<em>{i-1}) = H</em>{i} $ 包含了64次加密循环<br>即进行64次加密循环即可完成一次迭代<br>每次加密循环可以由下图描述：<br><img src="evernotecid://09243391-321F-42E2-BB9A-CDBE8BED8C36/appyinxiangcom/18710579/ENNote/p472?hash=2b6b5ad6ec73e40907818601a7ee9a13" alt="2b6b5ad6ec73e40907818601a7ee9a13.png"><br>图中，ABCDEFGH这8个字（word）在按照一定的规则进行更新，其中<br>深蓝色方块是事先定义好的非线性逻辑函数，上文已经做过铺垫<br>红色田字方块代表 mod $ 2^{32} $ addition，即将两个数字加在一起，如果结果大于$ 2^{32}$ ，你必须除以 $ 2^{32} $并找到余数。<br>ABCDEFGH一开始的初始值分别为$ H<em>{i-1}(0),H</em>{i-1}(1),…,H<em>{i-1}(7) $<br>Kt是第t个密钥，对应我们上文提到的64个常量。<br>Wt是本区块产生第t个word。原消息被切成固定长度512-bit的区块，对每一个区块，产生64个word，通过重复运行循环n次对ABCDEFGH这八个字循环加密。<br>最后一次循环所产生的八个字合起来即是第i个块对应到的散列字符串$ H</em>{i} $</p>
+<h1 id="伪代码"><a href="#伪代码" class="headerlink" title="伪代码"></a>伪代码</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line">Note: All variables are unsigned 32 bits and wrap modulo 232 when calculating</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Initialize variables</span><br><span class="line">(first 32 bits of the fractional parts of the square roots of the first 8 primes 2..19):</span><br><span class="line">h0 := 0x6a09e667</span><br><span class="line">h1 := 0xbb67ae85</span><br><span class="line">h2 := 0x3c6ef372</span><br><span class="line">h3 := 0xa54ff53a</span><br><span class="line">h4 := 0x510e527f</span><br><span class="line">h5 := 0x9b05688c</span><br><span class="line">h6 := 0x1f83d9ab</span><br><span class="line">h7 := 0x5be0cd19</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Initialize table of round constants</span><br><span class="line">(first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311):</span><br><span class="line">k[0..63] :=</span><br><span class="line">   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,</span><br><span class="line">   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,</span><br><span class="line">   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,</span><br><span class="line">   0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,</span><br><span class="line">   0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,</span><br><span class="line">   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,</span><br><span class="line">   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,</span><br><span class="line">   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Pre-processing:</span><br><span class="line">append the bit <span class="string">&#x27;1&#x27;</span> to the message</span><br><span class="line">append k bits <span class="string">&#x27;0&#x27;</span>, <span class="built_in">where</span> k is the minimum number &gt;= 0 such that the resulting message</span><br><span class="line">    length (<span class="keyword">in</span> bits) is congruent to 448(mod 512)</span><br><span class="line">append length of message (before pre-processing), <span class="keyword">in</span> bits, as 64-bit big-endian <span class="built_in">integer</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Process the message <span class="keyword">in</span> successive 512-bit chunks:</span><br><span class="line"><span class="built_in">break</span> message into 512-bit chunks</span><br><span class="line"><span class="keyword">for</span> each chunk</span><br><span class="line">    <span class="built_in">break</span> chunk into sixteen 32-bit big-endian words w[0..15]</span><br><span class="line"></span><br><span class="line">    Extend the sixteen 32-bit words into sixty-four 32-bit words:</span><br><span class="line">    <span class="keyword">for</span> i from 16 to 63</span><br><span class="line">        s0 := (w[i-15] rightrotate 7) xor (w[i-15] rightrotate 18) xor(w[i-15] rightshift 3)</span><br><span class="line">        s1 := (w[i-2] rightrotate 17) xor (w[i-2] rightrotate 19) xor(w[i-2] rightshift 10)</span><br><span class="line">        w[i] := w[i-16] + s0 + w[i-7] + s1</span><br><span class="line"></span><br><span class="line">    Initialize <span class="built_in">hash</span> value <span class="keyword">for</span> this chunk:</span><br><span class="line">    a := h0</span><br><span class="line">    b := h1</span><br><span class="line">    c := h2</span><br><span class="line">    d := h3</span><br><span class="line">    e := h4</span><br><span class="line">    f := h5</span><br><span class="line">    g := h6</span><br><span class="line">    h := h7</span><br><span class="line"></span><br><span class="line">    Main loop:</span><br><span class="line">    <span class="keyword">for</span> i from 0 to 63</span><br><span class="line">        s0 := (a rightrotate 2) xor (a rightrotate 13) xor(a rightrotate 22)</span><br><span class="line">        maj := (a and b) xor (a and c) xor(b and c)</span><br><span class="line">        t2 := s0 + maj</span><br><span class="line">        s1 := (e rightrotate 6) xor (e rightrotate 11) xor(e rightrotate 25)</span><br><span class="line">        ch := (e and f) xor ((not e) and g)</span><br><span class="line">        t1 := h + s1 + ch + k[i] + w[i]</span><br><span class="line">        h := g</span><br><span class="line">        g := f</span><br><span class="line">        f := e</span><br><span class="line">        e := d + t1</span><br><span class="line">        d := c</span><br><span class="line">        c := b</span><br><span class="line">        b := a</span><br><span class="line">        a := t1 + t2</span><br><span class="line"></span><br><span class="line">    Add this chunk<span class="string">&#x27;s hash to result so far:</span></span><br><span class="line"><span class="string">    h0 := h0 + a</span></span><br><span class="line"><span class="string">    h1 := h1 + b</span></span><br><span class="line"><span class="string">    h2 := h2 + c</span></span><br><span class="line"><span class="string">    h3 := h3 + d</span></span><br><span class="line"><span class="string">    h4 := h4 + e</span></span><br><span class="line"><span class="string">    h5 := h5 + f</span></span><br><span class="line"><span class="string">    h6 := h6 + g</span></span><br><span class="line"><span class="string">    h7 := h7 + h</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Produce the final hash value (big-endian):</span></span><br><span class="line"><span class="string">digest = hash = h0 append h1 append h2 append h3 append h4 append h5 append h6 append h7</span></span><br></pre></td></tr></table></figure>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u011583927/article/details/80905740">SHA256算法原理详解</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/d1b862b8.html" title="hash">http://munan.tech/blog/d1b862b8.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/d998082e.html" rel="prev" title="交易">
+      <i class="fa fa-chevron-left"></i> 交易
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/a277e67b.html" rel="next" title="数字签名">
+      数字签名 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#hash"><span class="nav-number">1.</span> <span class="nav-text">hash</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BF%A1%E6%81%AF%E9%A2%84%E5%A4%84%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">信息预处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#STEP1%EF%BC%9A%E9%99%84%E5%8A%A0%E5%A1%AB%E5%85%85%E6%AF%94%E7%89%B9"><span class="nav-number">1.1.1.</span> <span class="nav-text">STEP1：附加填充比特</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#STEP2%EF%BC%9A%E9%99%84%E5%8A%A0%E9%95%BF%E5%BA%A6%E5%80%BC"><span class="nav-number">1.1.2.</span> <span class="nav-text">STEP2：附加长度值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E8%BF%90%E7%AE%97"><span class="nav-number">1.2.</span> <span class="nav-text">逻辑运算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E6%B6%88%E6%81%AF%E6%91%98%E8%A6%81"><span class="nav-number">1.3.</span> <span class="nav-text">计算消息摘要</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%AD%E4%BB%A3"><span class="nav-number">1.3.1.</span> <span class="nav-text">迭代</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#STEP1%EF%BC%9A%E6%9E%84%E9%80%A064%E4%B8%AA%E5%AD%97%EF%BC%88word%EF%BC%89"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">STEP1：构造64个字（word）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#STEP2%EF%BC%9A%E8%BF%9B%E8%A1%8C64%E6%AC%A1%E5%BE%AA%E7%8E%AF"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">STEP2：进行64次循环</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BC%AA%E4%BB%A3%E7%A0%81"><span class="nav-number">2.</span> <span class="nav-text">伪代码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

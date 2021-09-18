@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="交易记账比特币未花费的交易输出。翻译成大白话就是我花的钱都是别人给我的钱，而且花的时候必须花完。比如我有一个2 BTC（比特币） 的UTXO，我想给你1 BTC，我就必须把这个 2BTC的UTXO 花掉，然后生成两个UTXO，一个 1BTC 的UTXO给你，一个UTXO（小于1 BTC，差值为交易费）给我自己。想看余额怎么办，就查一下这个地址里有多少UTXO，把里面的BTC加起来就是余额。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="比特币与以太坊">
+<meta property="og:url" content="http://munan.tech/blog/f98f8a09.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="交易记账比特币未花费的交易输出。翻译成大白话就是我花的钱都是别人给我的钱，而且花的时候必须花完。比如我有一个2 BTC（比特币） 的UTXO，我想给你1 BTC，我就必须把这个 2BTC的UTXO 花掉，然后生成两个UTXO，一个 1BTC 的UTXO给你，一个UTXO（小于1 BTC，差值为交易费）给我自己。想看余额怎么办，就查一下这个地址里有多少UTXO，把里面的BTC加起来就是余额。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104521.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104357.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104503.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104627.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104642.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201028203438.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105249.png">
+<meta property="article:published_time" content="2020-09-01T03:06:57.000Z">
+<meta property="article:modified_time" content="2020-11-23T11:38:33.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104521.png">
+
+<link rel="canonical" href="http://munan.tech/blog/f98f8a09.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>比特币与以太坊 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/f98f8a09.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          比特币与以太坊
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-01 11:06:57" itemprop="dateCreated datePublished" datetime="2020-09-01T11:06:57+08:00">2020-09-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-23 19:38:33" itemprop="dateModified" datetime="2020-11-23T19:38:33+08:00">2020-11-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/bitcoin/" itemprop="url" rel="index"><span itemprop="name">bitcoin</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/f98f8a09.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/f98f8a09.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="交易"><a href="#交易" class="headerlink" title="交易"></a>交易</h1><h2 id="记账"><a href="#记账" class="headerlink" title="记账"></a>记账</h2><h3 id="比特币"><a href="#比特币" class="headerlink" title="比特币"></a>比特币</h3><p>未花费的交易输出。翻译成大白话就是我花的钱都是别人给我的钱，而且花的时候必须花完。比如我有一个2 BTC（比特币） 的UTXO，我想给你1 BTC，我就必须把这个 2BTC的UTXO 花掉，然后生成两个UTXO，一个 1BTC 的UTXO给你，一个UTXO（小于1 BTC，差值为交易费）给我自己。想看余额怎么办，就查一下这个地址里有多少UTXO，把里面的BTC加起来就是余额。<br><a id="more"></a></p>
+<h3 id="以太坊"><a href="#以太坊" class="headerlink" title="以太坊"></a>以太坊</h3><p>以太坊有两种账户：<br>外部账户（externally owned accounts），由密钥控制。<br>合约账户（contract accounts），由智能合约的代码控制。<br>以太坊的账户包括四个字段：一个随机数、账户的余额、合约代码（如果有的话）、存储（通常为空）。<br>只有合约账户才有代码，其中存储的是 codeHash（这个账户的以太坊虚拟机代码的哈希值）。这个字段在生成后是不可修改的，这意味着智能合约代码是不可修改的。<br>外部账户可以触发交易，而合约账户不能主动发起交易，只能在被触发后按预先编写的智能合约代码执行。<br>合约账户可以设置多重签名（multisign），比如一个简单示例是：现有一个合约账户，它要求一个转账由发起转账的人（Alice）和另一个人（Charles）签名均可。因此，当 Alice 通过这个合约向 Bob 转账 20 个 ETH 时，合约会通知 Charles 签名，在他签名后，Bob 才可以收到这 20 个 ETH。</p>
+<h2 id="交易结构"><a href="#交易结构" class="headerlink" title="交易结构"></a>交易结构</h2><h3 id="比特币-1"><a href="#比特币-1" class="headerlink" title="比特币"></a>比特币</h3><p>交易结构：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104521.png" alt="交易结构"></p>
+<p>交易输入结构：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104357.png" alt="交易输入"></p>
+<p>交易输出结构：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104503.png" alt="交易输出"></p>
+<h3 id="以太坊-1"><a href="#以太坊-1" class="headerlink" title="以太坊"></a>以太坊</h3><p>和比特币一样，以太坊的区块中存储的也是交易（transaction），它包括的字段主要有：接受者（接受的账户）、发送者的签名、发送者发给接受者的以太币金额等。<br>与比特币的区块中存储的是交易不同，以太坊的区块中以梅克尔帕特里夏树（Merkle Patricia Tree,MPT）形式存储的是相应的以太坊账户的状态。<br>以太坊的交易是所谓的状态转换函数，一个交易触发它的执行，它将相应的账户从一个状态转变成新状态，然后新状态被存储在区块链的数据区块中。<br>外部账户可以创建交易,用自己的私钥进行签名之发送消息给另一个外部账户或合约账户。两个外部账户之间传送的消息即为转账操作。从外部账户到合约账户的消息会激活合约账户的代码，执行各种操作，也就是我们常说的调用智能合约。可以通过向0地址发起交易来创建合约账户。交易包含以下主要字段：</p>
+<ul>
+<li>Type：交易的类型，ContractCreation（创建合约）还是MessageCall（调用合约或转账）</li>
+<li>Nonce: 发送地址的交易计数</li>
+<li>Value: 向目标账户发送的金额</li>
+<li>ReceiveAddress：接受方地址</li>
+<li>GasPrice:为交易付出的Gas价格</li>
+<li>Gas:为交易付出的Gas</li>
+<li>Data：交易的附加数据</li>
+<li>VRS:交易签名结构体</li>
+</ul>
+<p>收据(Receipt)<br>账户创建交易并向其它节点广播后，会被其它节点执行并放入准备打包的区块。在这个过程中会生成一个收据。收据的主要字段有：</p>
+<ul>
+<li>blockHash: 交易所在块的哈希值</li>
+<li>blockNumber: 交易在块的序号</li>
+<li>transactionHash: 交易的哈希值</li>
+<li>transactionIndex: 交易在块中的序号</li>
+<li>cumulativeGasUsed: 执行完此交易时候，块内消耗的总的gas值</li>
+<li>gasUsed:本交易所消耗的gas</li>
+<li>contractAddress: 当此交易为创建合约时，表示所创建合约的地址，否则为空</li>
+<li>logs: 此交易的日志</li>
+</ul>
+<p>需要注意的是，在不同的节点之间并不会发送状态和收据，后两者在可以通过交易计算得到。</p>
+<h2 id="交易验证"><a href="#交易验证" class="headerlink" title="交易验证"></a>交易验证</h2><h3 id="比特币-2"><a href="#比特币-2" class="headerlink" title="比特币"></a>比特币</h3><p>比特币交易是首先要提供一个用于解锁 UTXO（用私钥去匹配锁定脚本）的脚本（常称为解锁脚本：Signature script)，这也叫交易输入，交易的输出则是指向一个脚本（称为锁定脚本：PubKey script），这个脚本表达了：谁的签名（签名是常见形式，并不一定必须是签名）能匹配这个输出地址，钱就支付给谁。</p>
+<p>每一个比特币节点会通过同时执行这解锁和锁定脚本（不是当前的锁定脚本，是指上一个交易的锁定脚本）来验证一笔交易，脚本组合结果为真，则为有效交易。</p>
+<h4 id="签名流程"><a href="#签名流程" class="headerlink" title="签名流程"></a>签名流程</h4><p>1.查找该笔交易对应的UTXO<br>2.获得该UTXO对应的锁定脚本<br>3.复制该交易对象，并在复制副本中将该Input的解锁脚本字段的值设置为<em>之前</em>  交易输出部分的锁定脚本的字段<br>4.清除其他Input的解锁脚本字段<br>5.对这个改造后的交易对象计算Hash<br>6.使用私钥对Hash进行签名<br>7.将签名结果<code>sig</code>和签名人的地址<code>PubK</code>放入input的解锁脚本中<br>8.构成输入部分</p>
+<h4 id="验证流程"><a href="#验证流程" class="headerlink" title="验证流程"></a>验证流程</h4><p>解锁脚本先进行入栈，然后锁定脚本入栈计算。<br>如最为常见类型的比特币交易脚本（支付到公钥哈希：P2PKH（Pay-to-Public-Key-Hash））组合是这样：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104627.png" alt="脚本"></p>
+<p>验证解锁脚本中的<code>PubK</code>（验证<code>PubKHash</code>）与<code>sig</code>（公钥验证）与锁定脚本的计算结果是否一致。</p>
+<h3 id="以太坊-2"><a href="#以太坊-2" class="headerlink" title="以太坊"></a>以太坊</h3><h4 id="验证交易的有效性"><a href="#验证交易的有效性" class="headerlink" title="验证交易的有效性"></a>验证交易的有效性</h4><ul>
+<li>数据量必须&lt;32KB</li>
+<li>交易金额必须非负（&gt;=0）</li>
+<li>交易的gas limit必须低于block的gas limit</li>
+<li>签名数据必须有效，能够解析出发送者地址</li>
+<li>交易的gas price必须高于pool设定的最低gas price（除非是本地交易）</li>
+<li>交易的nonce值必须高于当前链上该账户的nonce值（低于则说明这笔交易已经被打包过了）</li>
+<li>当前账户余额必须大于“交易金额 + gasprice * gaslimit”</li>
+<li>交易的gas limit必须大于对应数据量所需的最低gas水平</li>
+</ul>
+<h4 id="验证签名"><a href="#验证签名" class="headerlink" title="验证签名"></a>验证签名</h4><p>用消息和签名推导出对方的公钥。再通过公钥，签名，消息的哈希值计算出一个叫 r 的值，这个 r 是签名的一部分，校验签名就是拿计算出来的 r 和签名中携带的 r 经行对比，如果一致就校验通过。</p>
+<p>交易验证后，提交到txPool中，还需要广播出去，一方面通知EVM执行该交易，另一方面要把交易信息广播给其他结点。</p>
+<h1 id="区块"><a href="#区块" class="headerlink" title="区块"></a>区块</h1><h2 id="区块结构"><a href="#区块结构" class="headerlink" title="区块结构"></a>区块结构</h2><h3 id="比特币-3"><a href="#比特币-3" class="headerlink" title="比特币"></a>比特币</h3><p><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029104642.png" alt="区块信息"><br>区块结构<br><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201028203438.png" alt="区块"><br>区块头<br><img src="https://cdn.jsdelivr.net/gh/JNhua/blog_images@master/img/20201029105249.png" alt="区块头"></p>
+<h3 id="以太坊-3"><a href="#以太坊-3" class="headerlink" title="以太坊"></a>以太坊</h3><ul>
+<li>ParentHash:父块的哈希值</li>
+<li>Number:块编号</li>
+<li>Timestamp:块产生的时间戳</li>
+<li>GasUsed:交易消耗的Gas</li>
+<li>GasLimit:Gas限制</li>
+<li>Difficulty:POW的难度值</li>
+<li>Beneficiary：块打包手续费的受益人，也称矿工</li>
+<li>Nonce：一个随机数，使得块头哈希满足POW需求</li>
+<li>StateRoot：状态树的根哈希值</li>
+<li>TransactionsRoot：交易树的根哈希值</li>
+<li>ReceiptsRoot：收据树的根哈希值</li>
+</ul>
+<p>每个矿工在把交易打包成块的时候，会组织三颗树：</p>
+<ul>
+<li>交易树，树叶里是交易</li>
+<li>收据树，树叶里是交易生成的收据</li>
+<li>状态树，树叶里是交易影响到（节省空间）的账户状态</li>
+</ul>
+<p>三棵树求取根哈希，可以得到区块头中的StateRoot,TransactionsRoot,ReceiptsRoot三个字段。这样就建立了交易和区块头字段的映射。当其他用户收到块，根据块里的交易可以计算出收据和状态，计算三个根哈希后和区块头的三个字段进行验证，判断这是否为合法的块。</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a target="_blank" rel="noopener" href="https://learnblockchain.cn/2017/11/10/bitcoin-script/">比特币脚本及交易分析</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/f98f8a09.html" title="比特币与以太坊">http://munan.tech/blog/f98f8a09.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/6d9ac026.html" rel="prev" title="Raft">
+      <i class="fa fa-chevron-left"></i> Raft
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/c20c6b6.html" rel="next" title="Paxos">
+      Paxos <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%A4%E6%98%93"><span class="nav-number">1.</span> <span class="nav-text">交易</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%B0%E8%B4%A6"><span class="nav-number">1.1.</span> <span class="nav-text">记账</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%94%E7%89%B9%E5%B8%81"><span class="nav-number">1.1.1.</span> <span class="nav-text">比特币</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E5%A4%AA%E5%9D%8A"><span class="nav-number">1.1.2.</span> <span class="nav-text">以太坊</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E7%BB%93%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">交易结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%94%E7%89%B9%E5%B8%81-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">比特币</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E5%A4%AA%E5%9D%8A-1"><span class="nav-number">1.2.2.</span> <span class="nav-text">以太坊</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A4%E6%98%93%E9%AA%8C%E8%AF%81"><span class="nav-number">1.3.</span> <span class="nav-text">交易验证</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%94%E7%89%B9%E5%B8%81-2"><span class="nav-number">1.3.1.</span> <span class="nav-text">比特币</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D%E6%B5%81%E7%A8%8B"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">签名流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E6%B5%81%E7%A8%8B"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">验证流程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E5%A4%AA%E5%9D%8A-2"><span class="nav-number">1.3.2.</span> <span class="nav-text">以太坊</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E4%BA%A4%E6%98%93%E7%9A%84%E6%9C%89%E6%95%88%E6%80%A7"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">验证交易的有效性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E7%AD%BE%E5%90%8D"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">验证签名</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97"><span class="nav-number">2.</span> <span class="nav-text">区块</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E7%BB%93%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">区块结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%94%E7%89%B9%E5%B8%81-3"><span class="nav-number">2.1.1.</span> <span class="nav-text">比特币</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A5%E5%A4%AA%E5%9D%8A-3"><span class="nav-number">2.1.2.</span> <span class="nav-text">以太坊</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>

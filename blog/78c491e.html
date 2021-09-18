@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/blog_icon_32.png">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="线程基本使用创建线程thread::spawn，thread::Builder::spawn">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rust之多线程入门">
+<meta property="og:url" content="http://munan.tech/blog/78c491e.html">
+<meta property="og:site_name" content="Jenner&#39;s Blog">
+<meta property="og:description" content="线程基本使用创建线程thread::spawn，thread::Builder::spawn">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-11T05:53:33.000Z">
+<meta property="article:modified_time" content="2020-11-23T12:07:29.000Z">
+<meta property="article:author" content="Jenner">
+<meta property="article:tag" content="Rust,区块链">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://munan.tech/blog/78c491e.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Rust之多线程入门 | Jenner's Blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?d4cbb87c6c53e0060fed433f599be5a0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Jenner's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">不变秃，也要变强！</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/78c491e.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Jenner">
+      <meta itemprop="description" content="区块链相关">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jenner's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Rust之多线程入门
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-10-11 13:53:33" itemprop="dateCreated datePublished" datetime="2020-10-11T13:53:33+08:00">2020-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-23 20:07:29" itemprop="dateModified" datetime="2020-11-23T20:07:29+08:00">2020-11-23</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Rust/" itemprop="url" rel="index"><span itemprop="name">Rust</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Rust/Rust%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">Rust基础</span></a>
+                </span>
+            </span>
+
+          
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/blog/78c491e.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/78c491e.html" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="线程基本使用"><a href="#线程基本使用" class="headerlink" title="线程基本使用"></a>线程基本使用</h1><h2 id="创建线程"><a href="#创建线程" class="headerlink" title="创建线程"></a>创建线程</h2><p><code>thread::spawn</code>，<code>thread::Builder::spawn</code><br><a id="more"></a><br><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> handle = thread::spawn(|| &#123;</span><br><span class="line">       <span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..<span class="number">10</span> &#123;</span><br><span class="line">           <span class="built_in">println!</span>(<span class="string">&quot;number &#123;&#125; in spawn thread!&quot;</span>, i);</span><br><span class="line">           thread::sleep(Duration::from_millis(<span class="number">1</span>));</span><br><span class="line">       &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="keyword">let</span> builder = Builder::new().name(thread_name).stack_size(size);</span><br><span class="line"><span class="keyword">let</span> child = builder.spawn(<span class="keyword">move</span> || &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;in child:&#123;&#125;&quot;</span>, current().name().unwrap());</span><br><span class="line">&#125;).unwrap();</span><br></pre></td></tr></table></figure></p>
+<h2 id="等待线程"><a href="#等待线程" class="headerlink" title="等待线程"></a>等待线程</h2><p><code>JoinHandler&lt;()&gt;.join().unwrap()</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">handle.join().unwrap();</span><br></pre></td></tr></table></figure>
+<h2 id="move闭包"><a href="#move闭包" class="headerlink" title="move闭包"></a>move闭包</h2><p>以下情况需要使用<code>move</code>：不能判断子线程执行时间，而在子线程中引用了主线程变量。</p>
+<h1 id="Send-Sync"><a href="#Send-Sync" class="headerlink" title="Send,Sync"></a>Send,Sync</h1><ul>
+<li>Send：实现Send的类型可以安全的在线程间传递所有权。</li>
+<li>Sync：实现Sync的类型可以安全的在线程间传递不可变借用。</li>
+</ul>
+<p><code>spawn</code>函数的源码</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[stable(feature = <span class="meta-string">&quot;rust1&quot;</span>, since = <span class="meta-string">&quot;1.0.0&quot;</span>)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">spawn</span></span>&lt;F, T&gt;(f: F) -&gt; JoinHandle&lt;T&gt; <span class="keyword">where</span></span><br><span class="line">    F: <span class="built_in">FnOnce</span>() -&gt; T, F: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>, T: <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span></span><br><span class="line">&#123;</span><br><span class="line">    Builder::new().spawn(f).expect(<span class="string">&quot;failed to spawn thread&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其参数F和返回值类型T都加上了<code>Send + &#39;static</code>限定，Send表示闭包必须实现Send，这样才可以在线程间传递。而<code>&#39;static</code>表示T只能是非引用类型，因为使用引用类型则无法保证生命周期。</p>
+<h1 id="消息传递"><a href="#消息传递" class="headerlink" title="消息传递"></a>消息传递</h1><h2 id="通道"><a href="#通道" class="headerlink" title="通道"></a>通道</h2><h3 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h3><p>Rust中一个实现消息传递并发的主要工具是通道。通道由两部分组成，一个是发送端，一个是接收端，发送端用来发送消息，接收端用来接收消息。发送者或者接收者任一被丢弃时就可以认为通道被关闭了。</p>
+<p>通道介绍<br>（1）通过<code>mpsc::channel</code>，创建通道，<code>mpsc</code>是多个生产者，单个消费者；mpsc：Multi-producer, single-consumer FIFO queue communication primitives.<br>（2）通过<code>spmc::channel</code>，创建通道，spmc是一个生产者，多个消费者；<br>（3）创建通道后返回的是发送者和消费者，示例：<br><code>let (tx, rx) = mpsc::channel();     let (tx, rx) = spmc::channel();</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> (tx, rx) = mpsc::channel();</span><br><span class="line"></span><br><span class="line">    thread::spawn(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="keyword">let</span> val = <span class="built_in">String</span>::from(<span class="string">&quot;hi&quot;</span>);</span><br><span class="line">        tx.send(val).unwrap();</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> received = rx.recv().unwrap();</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Got: &#123;&#125;&quot;</span>, received);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>1、发送者的send方法返回的是一个<code>Result&lt;T,E&gt;</code>，如果接收端已经被丢弃了，将没有发送值的目标，此时发送会返回错误。<code>send</code>会发生<code>move</code>。<br>2、接受者的recv返回值也是一个Result类型，当通道发送端关闭时，返回一个错误值。<br>3、接收端这里使用的recv方法，会阻塞到有一个消息到来。我们也可以使用try_recv()，不会阻塞，会立即返回。</p>
+<h3 id="发送多个消息"><a href="#发送多个消息" class="headerlink" title="发送多个消息"></a>发送多个消息</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> (tx, rx) = mpsc::channel();</span><br><span class="line">    thread::spawn(<span class="keyword">move</span> || &#123;</span><br><span class="line">        <span class="keyword">let</span> vals = <span class="built_in">vec!</span>[</span><br><span class="line">            <span class="built_in">String</span>::from(<span class="string">&quot;hi&quot;</span>),</span><br><span class="line">            <span class="built_in">String</span>::from(<span class="string">&quot;from&quot;</span>),</span><br><span class="line">        ];</span><br><span class="line">        <span class="keyword">for</span> val <span class="keyword">in</span> vals &#123;</span><br><span class="line">            tx.send(val).unwrap();</span><br><span class="line">            thread::sleep(Duration::from_secs(<span class="number">1</span>));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">for</span> recv <span class="keyword">in</span> rx &#123;</span><br><span class="line">        <span class="built_in">println!</span>(<span class="string">&quot;Got: &#123;&#125;&quot;</span>, recv);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="多个生产者"><a href="#多个生产者" class="headerlink" title="多个生产者"></a>多个生产者</h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">let</span> (tx, rx) = mpsc::channel();</span><br><span class="line"><span class="keyword">let</span> tx1 = mpsc::Sender::clone(&amp;tx);</span><br><span class="line"><span class="keyword">let</span> tx2 = mpsc::Sender::clone(&amp;tx);</span><br><span class="line"><span class="comment">// ... 分别在各自线程中进行发送</span></span><br><span class="line"><span class="comment">// 接受</span></span><br><span class="line"><span class="keyword">for</span> rec <span class="keyword">in</span> rx &#123;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;Got: &#123;&#125;&quot;</span>, rec);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h2><h3 id="互斥锁Mutex-lt-T-gt"><a href="#互斥锁Mutex-lt-T-gt" class="headerlink" title="互斥锁Mutex&lt;T&gt;"></a>互斥锁<code>Mutex&lt;T&gt;</code></h3><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> m = Mutex::new(<span class="number">5</span>);</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut</span> num = m.lock().unwrap();</span><br><span class="line">        *num = <span class="number">6</span>;</span><br><span class="line">    &#125;<span class="comment">//离开作用域时，自动释放</span></span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;m = &#123;:?&#125;&quot;</span>, m);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>（1）<code>Mutex&lt;T&gt;</code>是一个智能指针，更准确的说，<code>lock</code>调用返回一个叫做<code>MutexGuard</code>的智能指针；</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[stable(feature = <span class="meta-string">&quot;rust1&quot;</span>, since = <span class="meta-string">&quot;1.0.0&quot;</span>)]</span></span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">lock</span></span>(&amp;<span class="keyword">self</span>) -&gt; LockResult&lt;MutexGuard&lt;<span class="symbol">&#x27;_</span>, T&gt;&gt; &#123;</span><br><span class="line">        <span class="keyword">unsafe</span> &#123;</span><br><span class="line">            <span class="keyword">self</span>.inner.raw_lock();</span><br><span class="line">            MutexGuard::new(<span class="keyword">self</span>)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>（2）内部提供了<code>Drop</code>方法，实现当<code>MutexGuard</code>离开作用域时自动释放锁。</p>
+<h3 id="Arc-lt-T-gt"><a href="#Arc-lt-T-gt" class="headerlink" title="Arc&lt;T&gt;"></a><code>Arc&lt;T&gt;</code></h3><p><code>Arc&lt;T&gt;</code>是一个类似于<code>Rc&lt;T&gt;</code>，但是可以安全的用于并发环境的类型。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// let counter = Mutex::new(0);  // 所有权被移动到线程闭包中，只可用一次</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Arc&lt;Mutex&lt;T&gt;&gt;可以组合成内部可变的线程安全指针</span></span><br><span class="line"><span class="keyword">let</span> counter = Arc::new(Mutex::new(<span class="number">0</span>));	<span class="comment">// 多线程共享</span></span><br></pre></td></tr></table></figure>
+<h1 id="简单的WebServer"><a href="#简单的WebServer" class="headerlink" title="简单的WebServer"></a>简单的WebServer</h1><h2 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> std::sync::mpsc;</span><br><span class="line"><span class="keyword">use</span> std::sync::Arc;</span><br><span class="line"><span class="keyword">use</span> std::sync::Mutex;</span><br><span class="line"><span class="keyword">use</span> std::thread;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Worker</span></span> &#123;</span><br><span class="line">    id: <span class="built_in">usize</span>,</span><br><span class="line">    thread: <span class="built_in">Option</span>&lt;thread::JoinHandle&lt;()&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> Worker &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(id: <span class="built_in">usize</span>, receiver: Arc&lt;Mutex&lt;mpsc::Receiver&lt;Message&gt;&gt;&gt;) -&gt; Worker &#123;</span><br><span class="line">        <span class="keyword">let</span> thread = thread::spawn(<span class="keyword">move</span> || <span class="keyword">loop</span> &#123;</span><br><span class="line">            <span class="keyword">let</span> message = receiver.lock().unwrap().recv().unwrap();</span><br><span class="line">            <span class="keyword">match</span> message &#123;</span><br><span class="line">                Message::NewJob(job) =&gt; &#123;</span><br><span class="line">                    <span class="built_in">println!</span>(<span class="string">&quot;worker &#123;&#125; receive a job&quot;</span>, id);</span><br><span class="line">                    job();</span><br><span class="line">                &#125;,</span><br><span class="line">                Message::Terminate =&gt; &#123;</span><br><span class="line">                    <span class="built_in">println!</span>(<span class="string">&quot;Worker &#123;&#125; receive terminate&quot;</span>, id);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;,</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        Worker &#123; </span><br><span class="line">            id, </span><br><span class="line">            thread: <span class="literal">Some</span>(thread), </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="class"><span class="keyword">struct</span> <span class="title">ThreadPool</span></span> &#123;</span><br><span class="line">    workers: <span class="built_in">Vec</span>&lt;Worker&gt;,</span><br><span class="line">    sender: mpsc::Sender&lt;Message&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">type</span> <span class="title">Job</span></span> = <span class="built_in">Box</span>&lt;<span class="keyword">dyn</span> <span class="built_in">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>&gt;;</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">Message</span></span> &#123;</span><br><span class="line">    NewJob(Job),</span><br><span class="line">    Terminate,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> ThreadPool &#123;</span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">new</span></span>(size: <span class="built_in">usize</span>) -&gt; ThreadPool &#123;</span><br><span class="line">        <span class="built_in">assert!</span>(size &gt; <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut</span> workers = <span class="built_in">Vec</span>::with_capacity(size);</span><br><span class="line">        <span class="keyword">let</span> (sender, receiver) = mpsc::channel();</span><br><span class="line">        <span class="keyword">let</span> receiver = Arc::new(Mutex::new(receiver)); <span class="comment">//线程安全</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> id <span class="keyword">in</span> <span class="number">0</span>..size &#123;</span><br><span class="line">            workers.push(Worker::new(id, Arc::clone(&amp;receiver)));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        ThreadPool &#123; workers, sender &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> <span class="function"><span class="keyword">fn</span> <span class="title">execute</span></span>&lt;F&gt;(&amp;<span class="keyword">self</span>, f: F)</span><br><span class="line">    <span class="keyword">where</span></span><br><span class="line">        F: <span class="built_in">FnOnce</span>() + <span class="built_in">Send</span> + <span class="symbol">&#x27;static</span>,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">let</span> job = <span class="built_in">Box</span>::new(f);</span><br><span class="line">        <span class="keyword">self</span>.sender.send(Message::NewJob(job)).unwrap();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="built_in">Drop</span> <span class="keyword">for</span> ThreadPool &#123;</span><br><span class="line">    <span class="function"><span class="keyword">fn</span> <span class="title">drop</span></span>(&amp;<span class="keyword">mut</span> <span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="comment">//send terminate message to all workers</span></span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> &amp;<span class="keyword">mut</span> <span class="keyword">self</span>.workers &#123;</span><br><span class="line">            <span class="keyword">self</span>.sender.send(Message::Terminate).unwrap();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//wait all workers terminate</span></span><br><span class="line">        <span class="keyword">for</span> worker <span class="keyword">in</span> &amp;<span class="keyword">mut</span> <span class="keyword">self</span>.workers &#123;</span><br><span class="line">            <span class="comment">//wait for worker thread terminate </span></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">let</span> <span class="literal">Some</span>(thread) = worker.thread.take() &#123;</span><br><span class="line">                thread.join().unwrap();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h2><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> mylib::ThreadPool;</span><br><span class="line"><span class="keyword">use</span> std::fs;</span><br><span class="line"><span class="keyword">use</span> std::io::&#123;Read, Write&#125;;</span><br><span class="line"><span class="keyword">use</span> std::net::&#123;TcpListener, TcpStream&#125;;</span><br><span class="line"><span class="keyword">use</span> std::&#123;thread, time&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">handle_client</span></span>(<span class="keyword">mut</span> stream: TcpStream) &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut</span> buffer = [<span class="number">0</span>; <span class="number">512</span>];</span><br><span class="line">    stream.read(&amp;<span class="keyword">mut</span> buffer).unwrap();</span><br><span class="line">    <span class="keyword">let</span> get = <span class="string">b&quot;GET / HTTP/1.1\r\n&quot;</span>;</span><br><span class="line">    <span class="keyword">let</span> (status_line, filename) = <span class="keyword">if</span> buffer.starts_with(get) &#123;</span><br><span class="line">        (<span class="string">&quot;HTTP/1.1 200 OK\r\n\r\n&quot;</span>, <span class="string">&quot;main.html&quot;</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        (<span class="string">&quot;HTTP/1.1 404 NOT FOUND\r\n\r\n&quot;</span>, <span class="string">&quot;404.html&quot;</span>)</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> contents = fs::read_to_string(filename).unwrap();</span><br><span class="line">    <span class="keyword">let</span> response = <span class="built_in">format!</span>(<span class="string">&quot;&#123;&#125;&#123;&#125;&quot;</span>, status_line, contents);</span><br><span class="line"></span><br><span class="line">    stream.write(response.as_bytes()).unwrap();</span><br><span class="line">    stream.flush().unwrap();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> te = time::Duration::from_millis(<span class="number">10000</span>);</span><br><span class="line">    thread::sleep(te); <span class="comment">//睡眠一段时间，模拟处理时间很长</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">fn</span> <span class="title">main</span></span>() -&gt; std::io::<span class="built_in">Result</span>&lt;()&gt; &#123;</span><br><span class="line">    <span class="keyword">let</span> listener = TcpListener::bind(<span class="string">&quot;127.0.0.1:8080&quot;</span>)?;</span><br><span class="line">    <span class="keyword">let</span> pool = ThreadPool::new(<span class="number">4</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> stream <span class="keyword">in</span> listener.incoming().take(<span class="number">2</span>) &#123;</span><br><span class="line">        <span class="keyword">let</span> stream = stream.unwrap();</span><br><span class="line">        <span class="comment">//thread pool</span></span><br><span class="line">        pool.execute(|| handle_client(stream));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="literal">Ok</span>(())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>点击下方打赏按钮，获得支付宝二维码</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="Jenner 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Jenner
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://munan.tech/blog/78c491e.html" title="Rust之多线程入门">http://munan.tech/blog/78c491e.html</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/blog/bf56e353.html" rel="prev" title="Rust之宏入门">
+      <i class="fa fa-chevron-left"></i> Rust之宏入门
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/blog/7029f79.html" rel="next" title="合约模块解析">
+      合约模块解析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">线程基本使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">创建线程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%89%E5%BE%85%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">等待线程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#move%E9%97%AD%E5%8C%85"><span class="nav-number">1.3.</span> <span class="nav-text">move闭包</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Send-Sync"><span class="nav-number">2.</span> <span class="nav-text">Send,Sync</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92"><span class="nav-number">3.</span> <span class="nav-text">消息传递</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E9%81%93"><span class="nav-number">3.1.</span> <span class="nav-text">通道</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="nav-number">3.1.1.</span> <span class="nav-text">基本使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E5%A4%9A%E4%B8%AA%E6%B6%88%E6%81%AF"><span class="nav-number">3.1.2.</span> <span class="nav-text">发送多个消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E7%94%9F%E4%BA%A7%E8%80%85"><span class="nav-number">3.1.3.</span> <span class="nav-text">多个生产者</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98"><span class="nav-number">3.2.</span> <span class="nav-text">共享内存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%92%E6%96%A5%E9%94%81Mutex-lt-T-gt"><span class="nav-number">3.2.1.</span> <span class="nav-text">互斥锁Mutex&lt;T&gt;</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Arc-lt-T-gt"><span class="nav-number">3.2.2.</span> <span class="nav-text">Arc&lt;T&gt;</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E7%9A%84WebServer"><span class="nav-number">4.</span> <span class="nav-text">简单的WebServer</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%B1%A0"><span class="nav-number">4.1.</span> <span class="nav-text">线程池</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF"><span class="nav-number">4.2.</span> <span class="nav-text">服务端</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jenner"
+      src="/images/avatar.gif">
+  <p class="site-author-name" itemprop="name">Jenner</p>
+  <div class="site-description" itemprop="description">区块链相关</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/JNhua" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;JNhua" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:hjntc59@qq.com" title="E-Mail → mailto:hjntc59@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      友站
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="https://chansonchan.cn/" title="https:&#x2F;&#x2F;chansonchan.cn&#x2F;" rel="noopener" target="_blank">Chanson's blog</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jenner</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+  <script>
+    (function(){
+      var canonicalURL, curProtocol;
+      //Get the <link> tag
+      var x=document.getElementsByTagName("link");
+		//Find the last canonical URL
+		if(x.length > 0){
+			for (i=0;i<x.length;i++){
+				if(x[i].rel.toLowerCase() == 'canonical' && x[i].href){
+					canonicalURL=x[i].href;
+				}
+			}
+		}
+    //Get protocol
+	    if (!canonicalURL){
+	    	curProtocol = window.location.protocol.split(':')[0];
+	    }
+	    else{
+	    	curProtocol = canonicalURL.split(':')[0];
+	    }
+      //Get current URL if the canonical URL does not exist
+	    if (!canonicalURL) canonicalURL = window.location.href;
+	    //Assign script content. Replace current URL with the canonical URL
+      !function(){var e=/([http|https]:\/\/[a-zA-Z0-9\_\.]+\.baidu\.com)/gi,r=canonicalURL,t=document.referrer;if(!e.test(r)){var n=(String(curProtocol).toLowerCase() === 'https')?"https://sp0.baidu.com/9_Q4simg2RQJ8t7jm9iCKT-xh_/s.gif":"//api.share.baidu.com/s.gif";t?(n+="?r="+encodeURIComponent(document.referrer),r&&(n+="&l="+r)):r&&(n+="?l="+r);var i=new Image;i.src=n}}(window);})();
+  </script>
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'ayR41aIDOEphaIn5j9h6ckuM-gzGzoHsz',
+      appKey     : 'bcvUWLaLiqyVgwTmRHg8Gy4K',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : '' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+
+</body>
+</html>
