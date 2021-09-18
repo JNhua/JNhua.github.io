@@ -7,6 +7,7 @@ category:
   - Java
   - Spring
 mathjax: true
+toc: false
 abbrlink: bdd23c8d
 ---
 # 1.基本类型

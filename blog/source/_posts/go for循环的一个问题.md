@@ -7,6 +7,7 @@ category:
   - go
   - Go
 mathjax: true
+toc: false
 abbrlink: 4d1a6fbb
 ---
 在写go的for循环时，遇到了一个神奇的问题，记录一下。

@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+toc: false
 abbrlink: 484acaf
 ---
 # 包管理（Cargo）

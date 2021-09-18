@@ -7,6 +7,7 @@ category:
   - Java
   - 路线与基础
 mathjax: true
+toc: false
 abbrlink: 8ab7cabf
 ---
 记录Java基础

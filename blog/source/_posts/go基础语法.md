@@ -7,6 +7,7 @@ category:
   - go
   - Go
 mathjax: true
+toc: false
 abbrlink: f700becf
 ---
 # 语言结构

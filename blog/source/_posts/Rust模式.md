@@ -7,6 +7,7 @@ category:
   - Rust
   - Rust基础
 mathjax: true
+toc: false
 abbrlink: '3164e534'
 ---
 # 模式

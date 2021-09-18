@@ -43,3 +43,18 @@ cd ./blog
 npm install
 ```
 
+# 使用步骤
+
+## 安装自定义的everblog插件
+
+[Jenner_Everblog](https://github.com/JNhua/everblog)
+
+## 生成与推送
+
+```bash
+everblog build
+hexo g
+hexo s
+hexo d
+```
+

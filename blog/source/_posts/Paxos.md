@@ -7,6 +7,7 @@ category:
   - 区块链
   - 共识协议
 mathjax: true
+toc: false
 abbrlink: c20c6b6
 ---
 # Paxos

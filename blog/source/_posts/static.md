@@ -6,6 +6,8 @@ tags: []
 category:
   - Java
   - 路线与基础
+mathjax: true
+toc: false
 abbrlink: 80c02825
 ---
 # 修饰用法
