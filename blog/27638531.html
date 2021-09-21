@@ -17,23 +17,20 @@
     var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="引例算法题目如果一个黑名单网站包含100亿个黑名单网页，每个网页最多占64B，设计一个系统，判断当前的URL是否在这个黑名单当中，要求额外空间不超过30GB，允许误差率为万分之一。">
+  <meta name="description" content="寻路方法NavMesh">
 <meta property="og:type" content="article">
-<meta property="og:title" content="布隆过滤器">
-<meta property="og:url" content="http://munan.tech/blog/9a0369ec.html">
+<meta property="og:title" content="自动寻路">
+<meta property="og:url" content="http://munan.tech/blog/27638531.html">
 <meta property="og:site_name" content="Jenner&#39;s Blog">
-<meta property="og:description" content="引例算法题目如果一个黑名单网站包含100亿个黑名单网页，每个网页最多占64B，设计一个系统，判断当前的URL是否在这个黑名单当中，要求额外空间不超过30GB，允许误差率为万分之一。">
+<meta property="og:description" content="寻路方法NavMesh">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="en-resource://database/3196:1">
-<meta property="og:image" content="en-resource://database/3198:1">
-<meta property="article:published_time" content="2020-09-17T12:16:37.000Z">
-<meta property="article:modified_time" content="2020-09-17T16:00:36.000Z">
+<meta property="article:published_time" content="2021-09-20T07:55:33.000Z">
+<meta property="article:modified_time" content="2021-09-20T09:01:53.000Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust,区块链">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="en-resource://database/3196:1">
 
-<link rel="canonical" href="http://munan.tech/blog/9a0369ec.html">
+<link rel="canonical" href="http://munan.tech/blog/27638531.html">
 
 
 <script id="page-configurations">
@@ -46,7 +43,7 @@
   };
 </script>
 
-  <title>布隆过滤器 | Jenner's Blog</title>
+  <title>自动寻路 | Jenner's Blog</title>
   
 
 
@@ -199,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/9a0369ec.html">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/27638531.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -212,7 +209,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          布隆过滤器
+          自动寻路
         </h1>
 
         <div class="post-meta">
@@ -221,27 +218,21 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2020-09-17 20:16:37" itemprop="dateCreated datePublished" datetime="2020-09-17T20:16:37+08:00">2020-09-17</time>
+              <time title="创建时间：2021-09-20 15:55:33 / 修改时间：17:01:53" itemprop="dateCreated datePublished" datetime="2021-09-20T15:55:33+08:00">2021-09-20</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-09-18 00:00:36" itemprop="dateModified" datetime="2020-09-18T00:00:36+08:00">2020-09-18</time>
-              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/" itemprop="url" rel="index"><span itemprop="name">区块链</span></a>
+                  <a href="/categories/Unity/" itemprop="url" rel="index"><span itemprop="name">Unity</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%8C%BA%E5%9D%97%E9%93%BE/bitcoin/" itemprop="url" rel="index"><span itemprop="name">bitcoin</span></a>
+                  <a href="/categories/Unity/expirences/" itemprop="url" rel="index"><span itemprop="name">expirences</span></a>
                 </span>
             </span>
 
@@ -261,8 +252,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/blog/9a0369ec.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/9a0369ec.html" itemprop="commentCount"></span>
+    <a title="valine" href="/blog/27638531.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/27638531.html" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -277,27 +268,28 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="引例"><a href="#引例" class="headerlink" title="引例"></a>引例</h1><h2 id="算法题目"><a href="#算法题目" class="headerlink" title="算法题目"></a>算法题目</h2><p>如果一个黑名单网站包含100亿个黑名单网页，每个网页最多占64B，设计一个系统，判断当前的URL是否在这个黑名单当中，要求额外空间不超过30GB，允许误差率为万分之一。<br><a id="more"></a></p>
-<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><p>布隆过滤器</p>
-<h1 id="基础介绍"><a href="#基础介绍" class="headerlink" title="基础介绍"></a>基础介绍</h1><blockquote>
-<p>布隆过滤器（Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量(位图)和一系列随机映射函数（哈希函数）。</p>
+        <h1 id="寻路方法"><a href="#寻路方法" class="headerlink" title="寻路方法"></a>寻路方法</h1><p>NavMesh<br><a id="more"></a><br>A*<br>itween</p>
+<h1 id="网络方案"><a href="#网络方案" class="headerlink" title="网络方案"></a>网络方案</h1><p>服务器寻路，客户端寻路，客户端寻路服务器校验。</p>
+<h1 id="建模"><a href="#建模" class="headerlink" title="建模"></a>建模</h1><p>Grid<br>Waypoint<br>NavMesh</p>
+<h1 id="NavMesh"><a href="#NavMesh" class="headerlink" title="NavMesh"></a>NavMesh</h1><p>官方内置的寻路插件，三角网格寻路。<br>步骤：</p>
+<ol>
+<li>创建地形，添加角色，添加障碍物（需要有Mesh Render）</li>
+<li>选中地形和各种物体，在Navigation窗口中，设置Navigation Static，设置Area的Cost</li>
+<li>Navigation窗口中，选择Bake（烘焙）界面，点击Bake按钮，进程场景烘焙，就可以烘焙出寻路网格了</li>
+<li>为角色添加NavMeshAgent组件</li>
+<li>为角色新增一个脚本PlayerController.cs，agent.SetDestination()设置目标，实现点击目标，自动寻路功能<h2 id="agent属性"><a href="#agent属性" class="headerlink" title="agent属性"></a>agent属性</h2>Radius 半径： 代理的半径（仅用于寻路目的，可以跟实际对象的半径大小不一样，一般比实际对象的半径大）。<br>Speed 速度： 代理可以周游世界，走向它的目的地的最大移动速度。<br>Acceleration 加速度： 最大加速度。<br>Angular Speed 角速度： 最高转速（度/秒）。<br>Stopping distance 制动距离：制动距离。到目的地的距离小于这个值，代理减速。<br>Auto Traverse OffMesh Link 自动遍历OffMesh链接：自动移动并关闭OffMeshLinks<br>Auto Repath 自动重新寻路：如果现有的部分已失效，获得新的路径。<br>Height 高度：代理的高度（用于调试图形）。<br>Base offset 基本偏移：碰撞几何体相对于实际几何体垂直的偏移。<br>Obstacle Avoidance Type 障碍躲避类型 ：躲避的质量水平。<br>NavMesh Walkable 导航网格行走：指定代理可以遍历的导航网格层类型。</li>
+</ol>
+<blockquote>
+<p>OffMeshLinks：Off Mesh Link组件用于手动指定路线来生成分离的网格连接。例如，游戏中让行进对象上下爬梯子到达另一块网格的情景就是利用生成分离的网格连接来实现的。例如爬梯子，梯子就需要设置该组件，达到两个网格间的连接。<br>另外，在烘焙过程中是否自动生成分离的网格链接还取决于导航烘焙 (Bake选项卡) 设置中的跳跃距离 (Jump distance) 和下落高度 (Drop height) 属性。</p>
 </blockquote>
-<p>布隆过滤器可以用于检索一个元素是否在一个集合中。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。<br>实际工程的应用实际上，布隆过滤器广泛应用于网页黑名单系统、垃圾邮件过滤系统、爬虫网址判重系统等，有人会想，我直接将网页URL存入数据库进行查找不就好了，或者建立一个哈希表进行查找不就OK了。当数据量小的时候，这么思考是对的，但如果整个网页黑名单系统包含100亿个网页URL，在数据库查找是很费时的，并且如果每个URL空间为64B，那么需要内存为640GB，一般的服务器很难达到这个需求。那么，在这种内存不够且检索速度慢的情况下，不妨考虑下布隆过滤器，但业务上要可以忍受判断失误率。<br><img src="en-resource://database/3196:1" alt="46ce58dd1b5437be76f0a0a7996d78e6.jpeg"></p>
-<p>位图（bitmap）布隆过滤器其中重要的实现就是位图的实现，也就是位数组，并且在这个数组中每一个位置只占有1个bit，而每个bit只有0和1两种状态。如上图bitarray所示！bitarray也叫bitmap，大小也就是布隆过滤器的大小。假设一种有k个哈希函数，且每个哈希函数的输出范围都大于m，接着将输出值对k取余（%m），就会得到k个[0, m-1]的值，由于每个哈希函数之间相互独立，因此这k个数也相互独立，最后将这k个数对应到bitarray上并标记为1（涂黑）。等判断时，将输入对象经过这k个哈希函数计算得到k个值，然后判断对应bitarray的k个位置是否都为1（是否标黑），如果有一个不为黑，那么这个输入对象则不在这个集合中，也就不是黑名单了！如果都是黑，那说明在集合中，但有可能会误，由于当输入对象过多，而集合也就是bitarray过小，则会出现大部分为黑的情况，那样就容易发生误判！因此使用布隆过滤器是需要容忍错误率的，即使很低很低！</p>
-<h1 id="布隆过滤器重要参数计算"><a href="#布隆过滤器重要参数计算" class="headerlink" title="布隆过滤器重要参数计算"></a>布隆过滤器重要参数计算</h1><p>通过上面的描述，我们可以知道，如果输入量过大，而bitarray空间的大小又很小，那么误判率就会上升。那么bitarray空间大小怎么确定呢？不要慌，已经有人通过数据推倒出公式了！假设输入对象个数为n，bitarray大小（也就是布隆过滤器大小）为m，所容忍的误判率p和哈希函数的个数k。计算公式如下：（小数向上取整）<br><img src="en-resource://database/3198:1" alt="fc1fb96508a363b17d1bb7737dc51e54.jpeg"></p>
-<p>注意：由于我们计算的m和k可能是小数，那么需要经过向上取整，此时需要重新计算误判率p！假设一个网页黑名单有URL为100亿，每个样本为64B，失误率为0.01%，经过上述公式计算后，需要布隆过滤器大小为25GB，这远远小于使用哈希表的640GB的空间。并且由于是通过hash进行查找的，所以基本都可以在O(1)的时间完成！</p>
-<h1 id="在比特币中的应用"><a href="#在比特币中的应用" class="headerlink" title="在比特币中的应用"></a>在比特币中的应用</h1><p>比特币中布隆过滤器是在BIP-0037中提到。下面我们通过“比特币钱包如何知道有多少钱”的问题来介绍布隆过滤器在比特币中的应用。这个问题其实就是“比特币钱包如何知道有多少UTXO”。<br>比特币网络中主要有两种节点类型：</p>
-<ul>
-<li>全节点：存放所有区块数据和交易</li>
-<li>SPV节点：只存放区块头（Block Header）</li>
-</ul>
-<p>我们假设，比特币钱包最开始值存储了私钥，没有任何其他数据。那么它要获取跟自己地址相关的UTXO，只能向比特币网络中相邻的全节点询问，询问的方式有3种：</p>
-<ul>
-<li>方法一：下载完整的区块链账本，自己查找<br>这种方法很简单，也能隐藏用户的隐私（全节点无法知道SPV节点关联的钱包的地址）。但是在手机端是不现实的，每次用户需要下载上百G的区块链数据，才能知道自己钱包有多少钱，虽然保护了用户隐私，但是浪费了存储空间和带宽。所以这种方法不行，而这也是为什么有SPV的概念存在，中本聪也是考虑到移动支付的场景的。</li>
-<li>方法二：直接告诉全节点自己钱包的所有地址，全节点返回所有跟钱包地址相关的UTXO<br>这种方法直接等于是泄露了用户隐私，其他全节点就知道SPV节点所关联的钱包地址。但是好处是所要下载的数据少了很多，也更精确了。</li>
-<li>方法三：告诉全节点部分自己钱包的地址信息，全节点返回可能相关的UTXO这种方法实际上就是采用布隆过滤器的方法隐藏用户隐私，从而做到即保护用户隐私，又节省存储空间和带宽。<br>布隆过滤器的两个特点：只能告诉你某个元素可能存在集合中以及某个元素一定不存在集合中。这里可以简单理解Bloom Filter就是一个过滤器，用来过滤不属于钱包的UTXO。钱包节点（SPV节点）会以布隆过滤器的形式告诉相邻全节点自己地址信息，那么根据布隆过滤器的特性，会有两种结果：没有通过布隆过滤器过滤出来的UTXO，就【一定】不属于钱包地址通过布隆过滤器过滤出来的UTXO，【可能】属于钱包地址这种方法虽然在一定程度上保护用户隐私，节省了存储空间和带宽，但是根据布隆过滤器的特点，我们知道，随着钱包交易的UTXO越多，布隆过滤器误报率会越高，也就是相邻全节点返回正确的UTXO概率越低。</li>
-</ul>
-<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/72378274">数学之美：布隆过滤器 - TeddyZhang的文章 - 知乎 </a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/xuanfuhuo4769/article/details/84785007">比特币原理分析（三）</a></p>
+<h1 id="A"><a href="#A" class="headerlink" title="A*"></a>A*</h1><p>使用AStar插件，步骤：</p>
+<ol>
+<li>在移动对象挂AIFollow.cs脚本，再添加了这个脚本之后，它会自动帮你添加上Character Controller和Seeker脚本，同时，在该对象上再添加上Funnel Modifier.cs，Simple Smooth Modifier.cs，Navmesh Controller.cs这三个脚本。<br>其主要脚本就是AIFollow.cs这个脚本。其Target就是你的目的地。</li>
+<li>接下来在场景中建一个空对象，挂上Astar Path.cs脚本，选择RecastGraph选项。Cell Size变量跟你障碍物之间间隙有关，当你的障碍物之间间隙比较小的时候，建议这个值设小一点，下面是一些可走区域的高度，攀爬高度，以及对象半径等参数，下面可以设置区域的坡度，Max Edge Length这个参数跟你线的复杂度有关，最小可设置到0.05，当然数据特别小的时候，线圈布局很繁忙，很耗资源，一般设置几百就好了，效果可以自行调节调试。设置完成之后可以点击一下Snap bounds to scene，来规定界限。也可以自己微调其区域大小和位置。</li>
+</ol>
+<h1 id="iTween-DoTween"><a href="#iTween-DoTween" class="headerlink" title="iTween/DoTween"></a>iTween/DoTween</h1><p>iTween和DoTween实际上是动画插件，需要手动设置路径点。属于WayPoints方法。</p>
+<h1 id="路径渲染"><a href="#路径渲染" class="headerlink" title="路径渲染"></a>路径渲染</h1><h2 id="LineRenderer"><a href="#LineRenderer" class="headerlink" title="LineRenderer"></a>LineRenderer</h2><p>SetPositions设置路径上的点。</p>
+<h3 id="属性"><a href="#属性" class="headerlink" title="属性"></a>属性</h3><p>Cast Shadows：线是否投射阴影。<br>Receive Shadows：线条是否接收阴影。<br>Motion Vectors：运动轨迹。<br>Camera Motion Only 只有相机移动<br>Per Object Motion 每一个对象移动也会跟着移动<br>Force No Motion强制移动<br>Materials：线的材质。<br>Light Parameters：光照贴图参数，使该线与全局照明系统交互。<br>Use World Space：如果启用，则这些点将被视为世界空间坐标，而不是受此组件所附加的GameObject的变换影响。<br>Loop：启用此选项可连接线路的第一个和最后一个位置。这形成了一个闭环。<br>Positions：要连接的Vector3点数组。<br>Width：定义宽度值和曲线（控制线在其开始和结束之间的各个点处的宽度。曲线仅在每个顶点处采样，因此其精度受到线中存在的顶点数量的限制。线的总宽度由宽度值控制。）<br>Color：定义渐变以控制线条沿其长度的颜色。<br>Corner Vertices：增加此值可使线条边角显得更圆。<br>End Cap Vertices：增加此值可使线条显示更圆。<br>Alignment：对齐方式。<br>Texture Mode：添加线条纹理。<br>Shadow Bias：沿着光的方向移动阴影，以通过使用广告牌几何体近似体积来消除阴影瑕疵。<br>Generate Lighting Data:如果启用（选中该框），则使用包括法线和切线构建线几何。这允许它使用使用场景的材质照明，例如通过标准着色器，或使用自定义着色器。<br>Sorting Layer:渲染器的排序图层的名称。<br>Order in Layer:此渲染器在排序图层中的顺序。<br>Light Probes:基于探测器的光照插值模式。<br>Reflection Probes:如果启用并且场景中存在反射探测，则会为此线渲染器拾取反射纹理并将其设置为内置的着色器均匀变量。</p>
 
     </div>
 
@@ -328,7 +320,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://munan.tech/blog/9a0369ec.html" title="布隆过滤器">http://munan.tech/blog/9a0369ec.html</a>
+    <a href="http://munan.tech/blog/27638531.html" title="自动寻路">http://munan.tech/blog/27638531.html</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -345,12 +337,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/blog/1d646e11.html" rel="prev" title="账户模型">
-      <i class="fa fa-chevron-left"></i> 账户模型
+    <a href="/blog/c32a14d2.html" rel="prev" title="状态同步的抖动">
+      <i class="fa fa-chevron-left"></i> 状态同步的抖动
     </a></div>
       <div class="post-nav-item">
-    <a href="/blog/d998082e.html" rel="next" title="交易">
-      交易 <i class="fa fa-chevron-right"></i>
+    <a href="/blog/7fd42f65.html" rel="next" title="使用lua的注意事项">
+      使用lua的注意事项 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -411,7 +403,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BC%95%E4%BE%8B"><span class="nav-number">1.</span> <span class="nav-text">引例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E9%A2%98%E7%9B%AE"><span class="nav-number">1.1.</span> <span class="nav-text">算法题目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E9%A2%98%E6%80%9D%E8%B7%AF"><span class="nav-number">1.2.</span> <span class="nav-text">解题思路</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.</span> <span class="nav-text">基础介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%83%E9%9A%86%E8%BF%87%E6%BB%A4%E5%99%A8%E9%87%8D%E8%A6%81%E5%8F%82%E6%95%B0%E8%AE%A1%E7%AE%97"><span class="nav-number">3.</span> <span class="nav-text">布隆过滤器重要参数计算</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%A8%E6%AF%94%E7%89%B9%E5%B8%81%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">在比特币中的应用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AF%BB%E8%B7%AF%E6%96%B9%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">寻路方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%96%B9%E6%A1%88"><span class="nav-number">2.</span> <span class="nav-text">网络方案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BB%BA%E6%A8%A1"><span class="nav-number">3.</span> <span class="nav-text">建模</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#NavMesh"><span class="nav-number">4.</span> <span class="nav-text">NavMesh</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#agent%E5%B1%9E%E6%80%A7"><span class="nav-number">4.1.</span> <span class="nav-text">agent属性</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#A"><span class="nav-number">5.</span> <span class="nav-text">A*</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#iTween-DoTween"><span class="nav-number">6.</span> <span class="nav-text">iTween&#x2F;DoTween</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%B7%AF%E5%BE%84%E6%B8%B2%E6%9F%93"><span class="nav-number">7.</span> <span class="nav-text">路径渲染</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#LineRenderer"><span class="nav-number">7.1.</span> <span class="nav-text">LineRenderer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%9E%E6%80%A7"><span class="nav-number">7.1.1.</span> <span class="nav-text">属性</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -427,14 +419,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-count">49</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-count">31</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>

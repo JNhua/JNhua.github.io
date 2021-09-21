@@ -879,86 +879,6 @@
       </categories>
   </entry>
   <entry>
-    <title>go基础语法</title>
-    <url>/blog/f700becf.html</url>
-    <content><![CDATA[<h1 id="语言结构"><a href="#语言结构" class="headerlink" title="语言结构"></a>语言结构</h1><ul>
-<li>包声明<a id="more"></a></li>
-<li>引入包</li>
-<li>函数</li>
-<li>变量</li>
-<li>语句 &amp; 表达式</li>
-<li>注释</li>
-</ul>
-<p><strong>注意</strong>：<code>&#123;</code>不能单独放在一行。go编译器会按行为语句加分隔符，如果<code>&#123;</code>单独一行，上一行末尾会被分隔。</p>
-<h1 id="变量"><a href="#变量" class="headerlink" title="变量"></a>变量</h1><p>变量：<code>var v_name v_type</code><br>根据值自行判定类型： <code>var v_name  = value</code><br>省略var，但是左侧必须有待新声明的变量：<code>v_name := value</code> 。只能使用在函数体内。<br>在相同代码块中，不可以重复声明同名变量，只能重新赋值。</p>
-<h2 id="多个变量"><a href="#多个变量" class="headerlink" title="多个变量"></a>多个变量</h2><p>同时定义多个变量：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a,b = b,a</span><br></pre></td></tr></table></figure><br>可以用组的方式：<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span>(</span><br><span class="line">    x,y <span class="keyword">int</span></span><br><span class="line">    a,s=<span class="number">100</span>,<span class="string">&quot;abc&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
-<h2 id="常量"><a href="#常量" class="headerlink" title="常量"></a>常量</h2><ul>
-<li>不曾使用的常量不会编译错误</li>
-<li>右值不能超过常量类型取值范围</li>
-<li>右值也可以是某些编译器能够计算出结果的表达式</li>
-<li>在常量组中如果不指定类型和初始化值，则与上一行非空常量右值相同</li>
-<li>在预处理阶段展开，不分配内存，不能内存寻址来取值</li>
-</ul>
-<h2 id="类型转换"><a href="#类型转换" class="headerlink" title="类型转换"></a>类型转换</h2><p>除常量、别名类型以及未命名类型外，Go强制要求使用显式类型转换。<br>如果转换的目标是指针、单向通道或没有返回值的函数类型，那么必须使用括号，以避免造成语法分解错误。</p>
-<h3 id="自定义类型"><a href="#自定义类型" class="headerlink" title="自定义类型"></a>自定义类型</h3><p>即便指定了基础类型，也只表明它们有相同底层数据结构，两者间不存在任何关系，属完全不同的两种类型。除操作符外，自定义类型不会继承基础类型的其他信息（包括方法）。不能视作别名，不能隐式转换，不能直接用于比较表达式。</p>
-<h3 id="未命名类型"><a href="#未命名类型" class="headerlink" title="未命名类型"></a>未命名类型</h3><p>与有明确标识符的bool、int、string等类型相比，数组、切片、字典、通道等类型与具体元素类型或长度等属性有关，故称作未命名类型（unnamed type）。当然，可用type为其提供具体名称，将其改变为命名类型（named type）。<br>具有相同声明的未命名类型被视作同一类型。</p>
-<ul>
-<li>具有相同基类型的指针。</li>
-<li>具有相同元素类型和长度的数组（array）。</li>
-<li>具有相同元素类型的切片（slice）。</li>
-<li>具有相同键值类型的字典（map）。</li>
-<li>具有相同数据类型及操作方向的通道（channel）。</li>
-<li>具有相同字段序列（字段名、字段类型、标签，以及字段顺序）的结构体（struct）。</li>
-<li>具有相同签名（参数和返回值列表，不包括参数名）的函数（func）。</li>
-<li>具有相同方法集（方法名、方法签名，不包括顺序）的接口（interface）。<br>容易被忽视的是struct tag，它也属于类型组成部分，而不仅仅是元数据描述。<br>同样，函数的参数顺序也属签名组成部分。</li>
-</ul>
-<p>未命名类型转换规则：</p>
-<ul>
-<li>所属类型相同。</li>
-<li>基础类型相同，且其中一个是未命名类型。</li>
-<li>数据类型相同，将双向通道赋值给单向通道，且其中一个为未命名类型。</li>
-<li>将默认值nil赋值给切片、字典、通道、指针、函数或接口。</li>
-<li>对象实现了目标接口。</li>
-</ul>
-<h1 id="表达式"><a href="#表达式" class="headerlink" title="表达式"></a>表达式</h1><h2 id="运算符"><a href="#运算符" class="headerlink" title="运算符"></a>运算符</h2><h3 id="位运算"><a href="#位运算" class="headerlink" title="位运算"></a>位运算</h3><p>位清除（AND NOT）和位亦或（XOR）是不同的。它将右操作数对应二进制位都为1的重置为0（有些类似位图），以达到一次清除多个标记位的目的。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">x := <span class="number">0</span>b0101&amp;^<span class="number">0</span>b0011</span><br><span class="line"><span class="comment">// x=0100</span></span><br></pre></td></tr></table></figure></p>
-<h3 id="、—"><a href="#、—" class="headerlink" title="++、—"></a>++、—</h3><p>自增、自减不再是运算符。只能作为独立语句，不能用于表达式，不能前置。</p>
-<h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>指针类型支持相等运算符，但不能做加减法运算和类型转换。<br>指针没有专门指向成员的“-&gt;”运算符，统一使用“.”选择表达式。</p>
-<h2 id="流控制"><a href="#流控制" class="headerlink" title="流控制"></a>流控制</h2><h3 id="switch"><a href="#switch" class="headerlink" title="switch"></a>switch</h3><p>相邻的空case不构成多条件匹配。无须显式执行break语句，case执行完毕后自动中断。如须贯通后续case（源码顺序），须执行fallthrough，但不再匹配后续条件表达式。注意，fallthrough必须放在case块结尾，可使用break语句阻止。</p>
-<h1 id="枚举"><a href="#枚举" class="headerlink" title="枚举"></a>枚举</h1><p>使用<code>iota</code>关键字实现枚举。如果中断<code>iota</code>自增，需要显示恢复。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span>(</span><br><span class="line">    _,_ = <span class="literal">iota</span>*<span class="number">10</span>    <span class="comment">//0*10</span></span><br><span class="line">    a               <span class="comment">//1*10</span></span><br><span class="line">    b               <span class="comment">//2*10</span></span><br><span class="line">    c = <span class="number">100</span></span><br><span class="line">    d               <span class="comment">//100</span></span><br><span class="line">    e = <span class="literal">iota</span>        <span class="comment">//5*10</span></span><br></pre></td></tr></table></figure></p>
-<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">function_name</span><span class="params">( [parameter list] )</span> [<span class="title">return_types</span>]</span> &#123;</span><br><span class="line">   函数体    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="变参"><a href="#变参" class="headerlink" title="变参"></a>变参</h2><p>变参本质上就是一个切片。只能接收一到多个同类型参数，且必须放在列表尾部。</p>
-<h2 id="命名返回值"><a href="#命名返回值" class="headerlink" title="命名返回值"></a>命名返回值</h2><p>命名返回值和参数一样，可当作函数局部变量使用，最后由return隐式返回。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">div</span><span class="params">(x,y <span class="keyword">int</span>)</span> <span class="params">(z <span class="keyword">int</span>,err error)</span></span> &#123; </span><br><span class="line">   <span class="keyword">if</span> y==<span class="number">0</span>&#123; </span><br><span class="line">       err=errors.New(<span class="string">&quot;division by zero&quot;</span>) </span><br><span class="line">       <span class="keyword">return</span></span><br><span class="line">   &#125;</span><br><span class="line">   z=x/y</span><br><span class="line">   <span class="keyword">return</span>         <span class="comment">// 相当于&quot;return z,err&quot; </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>这些特殊的“局部变量”会被不同层级的同名变量遮蔽。好在编译器能检查到此类状况，只要改为显式return返回即可。<br>除遮蔽外，我们还必须对全部返回值命名，否则编译器会搞不清状况。如果返回值类型能明确表明其含义，就尽量不要对其命名。</p>
-<h2 id="闭包"><a href="#闭包" class="headerlink" title="闭包"></a>闭包</h2><p>闭包是匿名函数和引用的环境变量指针的组合体。<br>正因为闭包通过指针引用环境变量，那么可能会导致其生命周期延长，甚至被分配到堆内存。另外，还有所谓“延迟求值”的特性。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">getSequence</span><span class="params">()</span> <span class="title">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">   i:=<span class="number">0</span></span><br><span class="line">   <span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">()</span> <span class="title">int</span></span> &#123;</span><br><span class="line">      i+=<span class="number">1</span></span><br><span class="line">     <span class="keyword">return</span> i  </span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span>&#123;</span><br><span class="line">   <span class="comment">/* nextNumber 为一个函数，i 为 0 */</span></span><br><span class="line">   nextNumber := getSequence()  </span><br><span class="line"></span><br><span class="line">   <span class="comment">/* 调用 nextNumber 函数，i 变量自增 1 并返回 */</span></span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   fmt.Println(nextNumber())</span><br><span class="line">   </span><br><span class="line">   <span class="comment">/* 创建新的函数 nextNumber1，并查看结果 */</span></span><br><span class="line">   nextNumber1 := getSequence()  </span><br><span class="line">   fmt.Println(nextNumber1())</span><br><span class="line">   fmt.Println(nextNumber1())&#125;</span><br></pre></td></tr></table></figure><br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">执行结果：</span><br><span class="line">1 </span><br><span class="line">2 </span><br><span class="line">3 </span><br><span class="line">1 </span><br><span class="line">2</span><br></pre></td></tr></table></figure></p>
-<h2 id="延迟调用defer"><a href="#延迟调用defer" class="headerlink" title="延迟调用defer"></a>延迟调用defer</h2><p>注意，延迟调用注册的是调用，必须提供执行所需参数（哪怕为空）。参数值在注册时被复制并缓存起来。如对状态敏感，可改用指针或闭包。<br>延迟调用可修改当前函数命名返回值，但其自身返回值被抛弃。<br>多个延迟注册按FILO次序执行。<br>相比直接用CALL汇编指令调用函数，延迟调用则须花费更大代价。这其中包括注册、调用等操作，还有额外的缓存开销。</p>
-<h1 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h1><h2 id="字符串"><a href="#字符串" class="headerlink" title="字符串"></a>字符串</h2><p>以切片语法（起始和结束索引号）返回子串时，其内部依旧指向原字节数组。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   s:= <span class="string">&quot;abcdefg&quot;</span> </span><br><span class="line">   s1:=s[:<span class="number">3</span>]          <span class="comment">// 从头开始，仅指定结束索引位置</span></span><br><span class="line">   s2:=s[<span class="number">1</span>:<span class="number">4</span>]         <span class="comment">// 指定开始和结束位置，返回[start,end) </span></span><br><span class="line">   s3:=s[<span class="number">2</span>:]          <span class="comment">// 指定开始位置，返回后面全部内容</span></span><br><span class="line">   <span class="built_in">println</span>(s1,s2,s3) </span><br><span class="line">    <span class="comment">//  reflect.StringHeader和string头结构相同</span></span><br><span class="line">    <span class="comment">//  unsafe.Pointer用于指针类型转换</span></span><br><span class="line">   fmt.Printf(<span class="string">&quot;%#v\n&quot;</span>, (*reflect.StringHeader)(unsafe.Pointer(&amp;s))) </span><br><span class="line">   fmt.Printf(<span class="string">&quot;%#v\n&quot;</span>, (*reflect.StringHeader)(unsafe.Pointer(&amp;s1))) </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>输出<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">abc bcd cdefg</span><br><span class="line">  </span><br><span class="line">&amp;StringHeader&#123;Data:0xfb838,Len:7&#125; </span><br><span class="line">&amp;StringHeader&#123;Data:0xfb838,Len:3&#125;</span><br></pre></td></tr></table></figure><br>使用for遍历字符串时，分byte和rune两种方式。rune:返回（数组索引号，Unicode字符）。</p>
-<h3 id="转换"><a href="#转换" class="headerlink" title="转换"></a>转换</h3><p>要修改字符串，须将其转换为可变类型（[]rune或[]byte），待完成后再转换回来。但不管如何转换，都须重新分配内存，并复制数据。</p>
-<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><p>初始化<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   <span class="keyword">var</span> a[<span class="number">4</span>]<span class="keyword">int</span>    <span class="comment">// 元素自动初始化为零</span></span><br><span class="line">   b:= [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">2</span>,<span class="number">5</span>&#125;    <span class="comment">// 未提供初始值的元素自动初始化为0</span></span><br><span class="line">   c:= [<span class="number">4</span>]<span class="keyword">int</span>&#123;<span class="number">5</span>,<span class="number">3</span>:<span class="number">10</span>&#125;     <span class="comment">// 可指定索引位置初始化</span></span><br><span class="line">   d:= [...]<span class="keyword">int</span>&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;        <span class="comment">// 编译器按初始化值数量确定数组长度</span></span><br><span class="line">   e:= [...]<span class="keyword">int</span>&#123;<span class="number">10</span>,<span class="number">3</span>:<span class="number">100</span>&#125;      <span class="comment">// 支持索引初始化，但注意数组长度与此有关</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>对于结构等复合类型，可省略元素初始化类型标签。<br>在定义多维数组时，仅第一维度允许使用“…”。<br>内置函数len和cap都返回第一维度长度。</p>
-<h2 id="切片"><a href="#切片" class="headerlink" title="切片"></a>切片</h2><p>定义：<code>var identifier []type</code> 或者 <code>var slice1 []type = make([]type, len)</code><br>初始化：<code>s :=[] int &#123;1,2,3 &#125;</code>  或者 <code>s := arr[startIndex:endIndex]</code><br>属性cap表示切片所引用数组片段的真实长度，len用于限定可读的写元素数量。另外，数组必须addressable，否则会引发错误。比如数组是map的value值，仅仅是一个值，没有地址。<br>新建切片对象依旧指向原底层数组，也就是说修改对所有关联切片可见。</p>
-<h3 id="append"><a href="#append" class="headerlink" title="append"></a>append</h3><p>向切片尾部（slice[len]）添加数据，返回新的切片对象。不会修改原slice属性，但是数据被追加到原底层数组。如超出cap限制，则为新切片对象重新分配数组。</p>
-<h3 id="copy"><a href="#copy" class="headerlink" title="copy"></a>copy</h3><p>在两个切片对象间复制数据，允许指向同一底层数组，允许目标区间重叠。最终所复制长度以较短的切片长度（len）为准。<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123; </span><br><span class="line">   s:= []<span class="keyword">int</span>&#123;<span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>&#125; </span><br><span class="line">   s1:=s[<span class="number">5</span>:<span class="number">8</span>] </span><br><span class="line">   n:=<span class="built_in">copy</span>(s[<span class="number">4</span>:],s1)      <span class="comment">// 在同一底层数组的不同区间复制</span></span><br><span class="line">   s2:=<span class="built_in">make</span>([]<span class="keyword">int</span>,<span class="number">6</span>)      <span class="comment">// 在不同数组间复制</span></span><br><span class="line">   n=<span class="built_in">copy</span>(s2,s) </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>如果切片长时间引用大数组中很小的片段，那么建议新建独立切片，复制出所需数据，以便原数组内存可被及时回收。</p>
-<h2 id="字典"><a href="#字典" class="headerlink" title="字典"></a>字典</h2><p>map： <code>var v_name map[key_type]data_type</code> 或者 <code>v_name = make(map[key_type]data_type)</code>或者<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">m:=<span class="keyword">map</span>[<span class="keyword">int</span>]<span class="keyword">struct</span>&#123;        <span class="comment">// 值为匿名结构类型</span></span><br><span class="line">       x <span class="keyword">int</span></span><br><span class="line">&#125;&#123; </span><br><span class="line">   <span class="number">1</span>:  &#123;x:<span class="number">100</span>&#125;,          </span><br><span class="line">   <span class="number">2</span>:  &#123;x:<span class="number">200</span>&#125;, </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure><br>运行时会对字典并发操作做出检测。如果某个任务正在对字典进行写操作，那么其他任务就不能对该字典执行并发操作（读、写、删除），否则会导致进程崩溃。</p>
-<h2 id="结构体"><a href="#结构体" class="headerlink" title="结构体"></a>结构体</h2><h3 id="匿名字段"><a href="#匿名字段" class="headerlink" title="匿名字段"></a>匿名字段</h3><p>所谓匿名字段（anonymous field），是指没有名字，仅有类型的字段，也被称作嵌入字段或嵌入类型。<br>从编译器角度看，这只是隐式地以类型名作为字段名字。可直接引用匿名字段的成员，但初始化时须当作独立字段。<br>如嵌入其他包中的类型，则隐式字段名字不包括包名。<br>不仅仅是结构体，除接口指针和多级指针以外的任何命名类型都可作为匿名字段。<br>因未命名类型没有名字标识，自然无法作为匿名字段。<br>不能将基础类型和其指针类型同时嵌入，因为两者隐式名字相同。</p>
-<h3 id="字段标签"><a href="#字段标签" class="headerlink" title="字段标签"></a>字段标签</h3><p>字段标签（tag）并不是注释，而是用来对字段进行描述的元数据。尽管它不属于数据成员，但却是类型的组成部分。<br>在运行期，可用反射获取标签信息。它常被用作格式校验，数据库关系映射等。</p>
-<h1 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(type_name <span class="keyword">type</span>)</span> <span class="title">function_name</span><span class="params">(variable_name variable_data_type)</span> [<span class="title">return_type</span>]</span>&#123;</span><br><span class="line">   <span class="comment">/* 函数体*/</span>&#125;</span><br><span class="line"><span class="comment">/* 定义结构体 */</span></span><br><span class="line"><span class="keyword">type</span> Circle <span class="keyword">struct</span> &#123;</span><br><span class="line">  radius <span class="keyword">float64</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">var</span> c1 Circle</span><br><span class="line">  c1.radius = <span class="number">10.00</span></span><br><span class="line">  fmt.Println(<span class="string">&quot;圆的面积 = &quot;</span>, c1.getArea())</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//该 method 属于 Circle 类型对象中的方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(c Circle)</span> <span class="title">getArea</span><span class="params">()</span> <span class="title">float64</span></span> &#123;</span><br><span class="line">  <span class="comment">//c.radius 即为 Circle 类型对象中的属性</span></span><br><span class="line">  <span class="keyword">return</span> <span class="number">3.14</span> * c.radius * c.radius</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>方法同样不支持重载（overload）。如方法内部并不引用实例，可省略参数名，仅保留类型。<br>方法可看作特殊的函数，那么receiver的类型自然可以是基础类型或指针类型。这会关系到调用时对象实例是否被复制。<br>可使用实例值或指针调用方法，编译器会根据方法receiver类型自动在基础类型和指针类型间转换。<br>不能用多级指针调用方法。<br>指针类型的receiver必须是合法指针（包括nil），或能获取实例地址。</p>
-<h2 id="如何选择方法的receiver类型？"><a href="#如何选择方法的receiver类型？" class="headerlink" title="如何选择方法的receiver类型？"></a>如何选择方法的receiver类型？</h2><ul>
-<li>要修改实例状态，用<code>*T</code>。</li>
-<li>无须修改状态的小对象或固定值，建议用T。</li>
-<li>大对象建议用<code>*T</code>，以减少复制成本。</li>
-<li>引用类型、字符串、函数等指针包装对象，直接用T。</li>
-<li>若包含Mutex等同步字段，用<code>*T</code>，避免因复制造成锁操作无效。</li>
-<li>其他无法确定的情况，都用<code>*T</code>。<h1 id="错误处理"><a href="#错误处理" class="headerlink" title="错误处理"></a>错误处理</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">type error interface &#123;</span><br><span class="line">    Error() string</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-使用<code>error.New(“xxx”)</code>生成错误信息。</li>
-</ul>
-<h1 id="并发"><a href="#并发" class="headerlink" title="并发"></a>并发</h1><p><code>goroutine</code>：go 函数名( 参数列表 )<br>通道：<br><code>ch &lt;- v</code>    // 把 v 发送到通道 ch<br><code>v := &lt;-ch</code>  // 从 ch 接收数据<br>           // 并把值赋给 v<br>声明通道： <code>ch := make(chan int)</code></p>
-<h1 id="context上下文"><a href="#context上下文" class="headerlink" title="context上下文"></a>context上下文</h1><p>context 包在与 API 和慢处理交互时可以派上用场，特别是在生产级的 Web 服务中。在这些场景中，您可能想要通知所有的 goroutine 停止运行并返回。<br><a href="https://studygolang.com/articles/13866?fr=sidebar">https://studygolang.com/articles/13866?fr=sidebar</a></p>
-]]></content>
-      <categories>
-        <category>go</category>
-        <category>Go</category>
-      </categories>
-  </entry>
-  <entry>
     <title>go for循环的一个问题</title>
     <url>/blog/4d1a6fbb.html</url>
     <content><![CDATA[<p>在写go的for循环时，遇到了一个神奇的问题，记录一下。<br><a id="more"></a></p>
@@ -1099,217 +1019,6 @@
       <categories>
         <category>区块链</category>
         <category>密码学</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>socket</title>
-    <url>/blog/5e568bb.html</url>
-    <content><![CDATA[<h1 id="Socket-编程"><a href="#Socket-编程" class="headerlink" title="Socket 编程"></a>Socket 编程</h1><a id="more"></a>
-<p>套接字使用TCP提供了两台计算机之间的通信机制。 客户端程序创建一个套接字，并尝试连接服务器的套接字。</p>
-<p>当连接建立时，服务器会创建一个 Socket 对象。客户端和服务器现在可以通过对 Socket 对象的写入和读取来进行通信。</p>
-<p>java.net.Socket 类代表一个套接字，并且 java.net.ServerSocket 类为服务器程序提供了一种来监听客户端，并与他们建立连接的机制。</p>
-<p>以下步骤在两台计算机之间使用套接字建立TCP连接时会出现：</p>
-<ul>
-<li>服务器实例化一个 ServerSocket 对象，表示通过服务器上的端口通信。</li>
-<li>服务器调用 ServerSocket 类的 accept() 方法，该方法将一直等待，直到客户端连接到服务器上给定的端口。</li>
-<li>服务器正在等待时，一个客户端实例化一个 Socket 对象，指定服务器名称和端口号来请求连接。</li>
-<li>Socket 类的构造函数试图将客户端连接到指定的服务器和端口号。如果通信被建立，则在客户端创建一个 Socket 对象能够与服务器进行通信。</li>
-<li>在服务器端，accept() 方法返回服务器上一个新的 socket 引用，该 socket 连接到客户端的 socket。</li>
-</ul>
-<p>连接建立后，通过使用 I/O 流在进行通信，每一个socket都有一个输出流和一个输入流，客户端的输出流连接到服务器端的输入流，而客户端的输入流连接到服务器端的输出流。</p>
-<p>TCP 是一个双向的通信协议，因此数据可以通过两个数据流在同一时间发送.以下是一些类提供的一套完整的有用的方法来实现 socket。</p>
-<h1 id="ServerSocket-类的方法"><a href="#ServerSocket-类的方法" class="headerlink" title="ServerSocket 类的方法"></a>ServerSocket 类的方法</h1><p>服务器应用程序通过使用 java.net.ServerSocket 类以获取一个端口,并且侦听客户端请求。</p>
-<p>ServerSocket 类有四个构造方法：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th><strong>序号</strong></th>
-<th><strong>方法描述</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td><strong>public ServerSocket(int port) throws IOException</strong> 创建绑定到特定端口的服务器套接字。</td>
-</tr>
-<tr>
-<td>2</td>
-<td><strong>public ServerSocket(int port, int backlog) throws IOException</strong> 利用指定的 backlog 创建服务器套接字并将其绑定到指定的本地端口号。</td>
-</tr>
-<tr>
-<td>3</td>
-<td><strong>public ServerSocket(int port, int backlog, InetAddress address) throws IOException</strong> 使用指定的端口、侦听 backlog 和要绑定到的本地 IP 地址创建服务器。</td>
-</tr>
-<tr>
-<td>4</td>
-<td><strong>public ServerSocket() throws IOException</strong> 创建非绑定服务器套接字。</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>创建非绑定服务器套接字。 如果 ServerSocket 构造方法没有抛出异常，就意味着你的应用程序已经成功绑定到指定的端口，并且侦听客户端请求。</p>
-<p>这里有一些 ServerSocket 类的常用方法：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th><strong>序号</strong></th>
-<th><strong>方法描述</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td><strong>public int getLocalPort()</strong>  返回此套接字在其上侦听的端口。</td>
-</tr>
-<tr>
-<td>2</td>
-<td><strong>public Socket accept() throws IOException</strong> 侦听并接受到此套接字的连接。</td>
-</tr>
-<tr>
-<td>3</td>
-<td><strong>public void setSoTimeout(int timeout)</strong>  通过指定超时值启用/禁用 SO_TIMEOUT，以毫秒为单位。</td>
-</tr>
-<tr>
-<td>4</td>
-<td><strong>public void bind(SocketAddress host, int backlog)</strong> 将 ServerSocket 绑定到特定地址（IP 地址和端口号）。</td>
-</tr>
-</tbody>
-</table>
-</div>
-<h1 id="Socket-类的方法"><a href="#Socket-类的方法" class="headerlink" title="Socket 类的方法"></a>Socket 类的方法</h1><p>java.net.Socket 类代表客户端和服务器都用来互相沟通的套接字。客户端要获取一个 Socket 对象通过实例化 ，而 服务器获得一个 Socket 对象则通过 accept() 方法的返回值。</p>
-<p>Socket 类有五个构造方法.</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th><strong>序号</strong></th>
-<th><strong>方法描述</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td><strong>public Socket(String host, int port) throws UnknownHostException, IOException.</strong> 创建一个流套接字并将其连接到指定主机上的指定端口号。</td>
-</tr>
-<tr>
-<td>2</td>
-<td><strong>public Socket(InetAddress host, int port) throws IOException</strong> 创建一个流套接字并将其连接到指定 IP 地址的指定端口号。</td>
-</tr>
-<tr>
-<td>3</td>
-<td><strong>public Socket(String host, int port, InetAddress localAddress, int localPort) throws IOException.</strong> 创建一个套接字并将其连接到指定远程主机上的指定远程端口。</td>
-</tr>
-<tr>
-<td>4</td>
-<td><strong>public Socket(InetAddress host, int port, InetAddress localAddress, int localPort) throws IOException.</strong> 创建一个套接字并将其连接到指定远程地址上的指定远程端口。</td>
-</tr>
-<tr>
-<td>5</td>
-<td><strong>public Socket()</strong> 通过系统默认类型的 SocketImpl 创建未连接套接字</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>当 Socket 构造方法返回，并没有简单的实例化了一个 Socket 对象，它实际上会尝试连接到指定的服务器和端口。</p>
-<p>下面列出了一些感兴趣的方法，注意客户端和服务器端都有一个 Socket 对象，所以无论客户端还是服务端都能够调用这些方法。</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th><strong>序号</strong></th>
-<th><strong>方法描述</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td><strong>public void connect(SocketAddress host, int timeout) throws IOException</strong> 将此套接字连接到服务器，并指定一个超时值。</td>
-</tr>
-<tr>
-<td>2</td>
-<td><strong>public InetAddress getInetAddress()</strong>  返回套接字连接的地址。</td>
-</tr>
-<tr>
-<td>3</td>
-<td><strong>public int getPort()</strong> 返回此套接字连接到的远程端口。</td>
-</tr>
-<tr>
-<td>4</td>
-<td><strong>public int getLocalPort()</strong> 返回此套接字绑定到的本地端口。</td>
-</tr>
-<tr>
-<td>5</td>
-<td><strong>public SocketAddress getRemoteSocketAddress()</strong> 返回此套接字连接的端点的地址，如果未连接则返回 null。</td>
-</tr>
-<tr>
-<td>6</td>
-<td><strong>public InputStream getInputStream() throws IOException</strong> 返回此套接字的输入流。</td>
-</tr>
-<tr>
-<td>7</td>
-<td><strong>public OutputStream getOutputStream() throws IOException</strong> 返回此套接字的输出流。</td>
-</tr>
-<tr>
-<td>8</td>
-<td><strong>public void close() throws IOException</strong> 关闭此套接字。</td>
-</tr>
-</tbody>
-</table>
-</div>
-<hr>
-<h1 id="InetAddress-类的方法"><a href="#InetAddress-类的方法" class="headerlink" title="InetAddress 类的方法"></a>InetAddress 类的方法</h1><p>这个类表示互联网协议(IP)地址。下面列出了 Socket 编程时比较有用的方法：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th><strong>序号</strong></th>
-<th><strong>方法描述</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>1</td>
-<td><strong>static InetAddress getByAddress(byte[] addr)</strong> 在给定原始 IP 地址的情况下，返回 InetAddress 对象。</td>
-</tr>
-<tr>
-<td>2</td>
-<td><strong>static InetAddress getByAddress(String host, byte[] addr)</strong> 根据提供的主机名和 IP 地址创建 InetAddress。</td>
-</tr>
-<tr>
-<td>3</td>
-<td><strong>static InetAddress getByName(String host)</strong> 在给定主机名的情况下确定主机的 IP 地址。</td>
-</tr>
-<tr>
-<td>4</td>
-<td><strong>String getHostAddress()</strong>  返回 IP 地址字符串（以文本表现形式）。</td>
-</tr>
-<tr>
-<td>5</td>
-<td><strong>String getHostName()</strong>   获取此 IP 地址的主机名。</td>
-</tr>
-<tr>
-<td>6</td>
-<td><strong>static InetAddress getLocalHost()</strong> 返回本地主机。</td>
-</tr>
-<tr>
-<td>7</td>
-<td><strong>String toString()</strong> 将此 IP 地址转换为 String。</td>
-</tr>
-</tbody>
-</table>
-</div>
-<h1 id="Socket-服务端实例"><a href="#Socket-服务端实例" class="headerlink" title="Socket 服务端实例"></a>Socket 服务端实例</h1><p>如下的GreetingServer 程序是一个服务器端应用程序，使用 Socket 来监听一个指定的端口。</p>
-<p>GreetingServer.java 文件代码：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 文件名 GreetingServer.java</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">import</span> java.net.*;</span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GreetingServer</span> <span class="keyword">extends</span> <span class="title">Thread</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">   <span class="keyword">private</span> ServerSocket serverSocket;</span><br><span class="line">   </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="title">GreetingServer</span><span class="params">(<span class="keyword">int</span> port)</span> <span class="keyword">throws</span> IOException</span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      serverSocket = <span class="keyword">new</span> ServerSocket(port);</span><br><span class="line">      serverSocket.setSoTimeout(<span class="number">10000</span>);</span><br><span class="line">   &#125;</span><br><span class="line"> </span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      <span class="keyword">while</span>(<span class="keyword">true</span>)</span><br><span class="line">      &#123;</span><br><span class="line">         <span class="keyword">try</span></span><br><span class="line">         &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;等待远程连接，端口号为：&quot;</span> + serverSocket.getLocalPort() + <span class="string">&quot;...&quot;</span>);</span><br><span class="line">            Socket server = serverSocket.accept();</span><br><span class="line">            System.out.println(<span class="string">&quot;远程主机地址：&quot;</span> + server.getRemoteSocketAddress());</span><br><span class="line">            DataInputStream in = <span class="keyword">new</span> DataInputStream(server.getInputStream());</span><br><span class="line">            System.out.println(in.readUTF());</span><br><span class="line">            DataOutputStream out = <span class="keyword">new</span> DataOutputStream(server.getOutputStream());</span><br><span class="line">            out.writeUTF(<span class="string">&quot;谢谢连接我：&quot;</span> + server.getLocalSocketAddress() + <span class="string">&quot;\nGoodbye!&quot;</span>);</span><br><span class="line">            server.close();</span><br><span class="line">         &#125;<span class="keyword">catch</span>(SocketTimeoutException s)</span><br><span class="line">         &#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;Socket timed out!&quot;</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">         &#125;<span class="keyword">catch</span>(IOException e)</span><br><span class="line">         &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">         &#125;</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String [] args)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      <span class="keyword">int</span> port = Integer.parseInt(args[<span class="number">0</span>]);</span><br><span class="line">      <span class="keyword">try</span></span><br><span class="line">      &#123;</span><br><span class="line">         Thread t = <span class="keyword">new</span> GreetingServer(port);</span><br><span class="line">         t.run();</span><br><span class="line">      &#125;<span class="keyword">catch</span>(IOException e)</span><br><span class="line">      &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="Socket-客户端实例"><a href="#Socket-客户端实例" class="headerlink" title="Socket 客户端实例"></a>Socket 客户端实例</h1><p>如下的 GreetingClient 是一个客户端程序，该程序通过 socket 连接到服务器并发送一个请求，然后等待一个响应。</p>
-<p>GreetingClient.java 文件代码：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 文件名 GreetingClient.java</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">import</span> java.net.*;</span><br><span class="line"><span class="keyword">import</span> java.io.*;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GreetingClient</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String [] args)</span></span></span><br><span class="line"><span class="function">   </span>&#123;</span><br><span class="line">      String serverName = args[<span class="number">0</span>];</span><br><span class="line">      <span class="keyword">int</span> port = Integer.parseInt(args[<span class="number">1</span>]);</span><br><span class="line">      <span class="keyword">try</span></span><br><span class="line">      &#123;</span><br><span class="line">         System.out.println(<span class="string">&quot;连接到主机：&quot;</span> + serverName + <span class="string">&quot; ，端口号：&quot;</span> + port);</span><br><span class="line">         Socket client = <span class="keyword">new</span> Socket(serverName, port);</span><br><span class="line">         System.out.println(<span class="string">&quot;远程主机地址：&quot;</span> + client.getRemoteSocketAddress());</span><br><span class="line">         OutputStream outToServer = client.getOutputStream();</span><br><span class="line">         DataOutputStream out = <span class="keyword">new</span> DataOutputStream(outToServer);</span><br><span class="line"> </span><br><span class="line">         out.writeUTF(<span class="string">&quot;Hello from &quot;</span> + client.getLocalSocketAddress());</span><br><span class="line">         InputStream inFromServer = client.getInputStream();</span><br><span class="line">         DataInputStream in = <span class="keyword">new</span> DataInputStream(inFromServer);</span><br><span class="line">         System.out.println(<span class="string">&quot;服务器响应： &quot;</span> + in.readUTF());</span><br><span class="line">         client.close();</span><br><span class="line">      &#125;<span class="keyword">catch</span>(IOException e)</span><br><span class="line">      &#123;</span><br><span class="line">         e.printStackTrace();</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>路线与基础</category>
       </categories>
   </entry>
   <entry>
@@ -1707,36 +1416,6 @@
       </categories>
   </entry>
   <entry>
-    <title>布隆过滤器</title>
-    <url>/blog/9a0369ec.html</url>
-    <content><![CDATA[<h1 id="引例"><a href="#引例" class="headerlink" title="引例"></a>引例</h1><h2 id="算法题目"><a href="#算法题目" class="headerlink" title="算法题目"></a>算法题目</h2><p>如果一个黑名单网站包含100亿个黑名单网页，每个网页最多占64B，设计一个系统，判断当前的URL是否在这个黑名单当中，要求额外空间不超过30GB，允许误差率为万分之一。<br><a id="more"></a></p>
-<h2 id="解题思路"><a href="#解题思路" class="headerlink" title="解题思路"></a>解题思路</h2><p>布隆过滤器</p>
-<h1 id="基础介绍"><a href="#基础介绍" class="headerlink" title="基础介绍"></a>基础介绍</h1><blockquote>
-<p>布隆过滤器（Bloom Filter）是1970年由布隆提出的。它实际上是一个很长的二进制向量(位图)和一系列随机映射函数（哈希函数）。</p>
-</blockquote>
-<p>布隆过滤器可以用于检索一个元素是否在一个集合中。它的优点是空间效率和查询时间都远远超过一般的算法，缺点是有一定的误识别率和删除困难。<br>实际工程的应用实际上，布隆过滤器广泛应用于网页黑名单系统、垃圾邮件过滤系统、爬虫网址判重系统等，有人会想，我直接将网页URL存入数据库进行查找不就好了，或者建立一个哈希表进行查找不就OK了。当数据量小的时候，这么思考是对的，但如果整个网页黑名单系统包含100亿个网页URL，在数据库查找是很费时的，并且如果每个URL空间为64B，那么需要内存为640GB，一般的服务器很难达到这个需求。那么，在这种内存不够且检索速度慢的情况下，不妨考虑下布隆过滤器，但业务上要可以忍受判断失误率。<br><img src="en-resource://database/3196:1" alt="46ce58dd1b5437be76f0a0a7996d78e6.jpeg"></p>
-<p>位图（bitmap）布隆过滤器其中重要的实现就是位图的实现，也就是位数组，并且在这个数组中每一个位置只占有1个bit，而每个bit只有0和1两种状态。如上图bitarray所示！bitarray也叫bitmap，大小也就是布隆过滤器的大小。假设一种有k个哈希函数，且每个哈希函数的输出范围都大于m，接着将输出值对k取余（%m），就会得到k个[0, m-1]的值，由于每个哈希函数之间相互独立，因此这k个数也相互独立，最后将这k个数对应到bitarray上并标记为1（涂黑）。等判断时，将输入对象经过这k个哈希函数计算得到k个值，然后判断对应bitarray的k个位置是否都为1（是否标黑），如果有一个不为黑，那么这个输入对象则不在这个集合中，也就不是黑名单了！如果都是黑，那说明在集合中，但有可能会误，由于当输入对象过多，而集合也就是bitarray过小，则会出现大部分为黑的情况，那样就容易发生误判！因此使用布隆过滤器是需要容忍错误率的，即使很低很低！</p>
-<h1 id="布隆过滤器重要参数计算"><a href="#布隆过滤器重要参数计算" class="headerlink" title="布隆过滤器重要参数计算"></a>布隆过滤器重要参数计算</h1><p>通过上面的描述，我们可以知道，如果输入量过大，而bitarray空间的大小又很小，那么误判率就会上升。那么bitarray空间大小怎么确定呢？不要慌，已经有人通过数据推倒出公式了！假设输入对象个数为n，bitarray大小（也就是布隆过滤器大小）为m，所容忍的误判率p和哈希函数的个数k。计算公式如下：（小数向上取整）<br><img src="en-resource://database/3198:1" alt="fc1fb96508a363b17d1bb7737dc51e54.jpeg"></p>
-<p>注意：由于我们计算的m和k可能是小数，那么需要经过向上取整，此时需要重新计算误判率p！假设一个网页黑名单有URL为100亿，每个样本为64B，失误率为0.01%，经过上述公式计算后，需要布隆过滤器大小为25GB，这远远小于使用哈希表的640GB的空间。并且由于是通过hash进行查找的，所以基本都可以在O(1)的时间完成！</p>
-<h1 id="在比特币中的应用"><a href="#在比特币中的应用" class="headerlink" title="在比特币中的应用"></a>在比特币中的应用</h1><p>比特币中布隆过滤器是在BIP-0037中提到。下面我们通过“比特币钱包如何知道有多少钱”的问题来介绍布隆过滤器在比特币中的应用。这个问题其实就是“比特币钱包如何知道有多少UTXO”。<br>比特币网络中主要有两种节点类型：</p>
-<ul>
-<li>全节点：存放所有区块数据和交易</li>
-<li>SPV节点：只存放区块头（Block Header）</li>
-</ul>
-<p>我们假设，比特币钱包最开始值存储了私钥，没有任何其他数据。那么它要获取跟自己地址相关的UTXO，只能向比特币网络中相邻的全节点询问，询问的方式有3种：</p>
-<ul>
-<li>方法一：下载完整的区块链账本，自己查找<br>这种方法很简单，也能隐藏用户的隐私（全节点无法知道SPV节点关联的钱包的地址）。但是在手机端是不现实的，每次用户需要下载上百G的区块链数据，才能知道自己钱包有多少钱，虽然保护了用户隐私，但是浪费了存储空间和带宽。所以这种方法不行，而这也是为什么有SPV的概念存在，中本聪也是考虑到移动支付的场景的。</li>
-<li>方法二：直接告诉全节点自己钱包的所有地址，全节点返回所有跟钱包地址相关的UTXO<br>这种方法直接等于是泄露了用户隐私，其他全节点就知道SPV节点所关联的钱包地址。但是好处是所要下载的数据少了很多，也更精确了。</li>
-<li>方法三：告诉全节点部分自己钱包的地址信息，全节点返回可能相关的UTXO这种方法实际上就是采用布隆过滤器的方法隐藏用户隐私，从而做到即保护用户隐私，又节省存储空间和带宽。<br>布隆过滤器的两个特点：只能告诉你某个元素可能存在集合中以及某个元素一定不存在集合中。这里可以简单理解Bloom Filter就是一个过滤器，用来过滤不属于钱包的UTXO。钱包节点（SPV节点）会以布隆过滤器的形式告诉相邻全节点自己地址信息，那么根据布隆过滤器的特性，会有两种结果：没有通过布隆过滤器过滤出来的UTXO，就【一定】不属于钱包地址通过布隆过滤器过滤出来的UTXO，【可能】属于钱包地址这种方法虽然在一定程度上保护用户隐私，节省了存储空间和带宽，但是根据布隆过滤器的特点，我们知道，随着钱包交易的UTXO越多，布隆过滤器误报率会越高，也就是相邻全节点返回正确的UTXO概率越低。</li>
-</ul>
-<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><p><a href="https://zhuanlan.zhihu.com/p/72378274">数学之美：布隆过滤器 - TeddyZhang的文章 - 知乎 </a><br><a href="https://blog.csdn.net/xuanfuhuo4769/article/details/84785007">比特币原理分析（三）</a></p>
-]]></content>
-      <categories>
-        <category>区块链</category>
-        <category>bitcoin</category>
-      </categories>
-  </entry>
-  <entry>
     <title>数字签名</title>
     <url>/blog/a277e67b.html</url>
     <content><![CDATA[<p>数字签名在区块链中主要运用在交易签名上。<br><a id="more"></a></p>
@@ -1992,125 +1671,6 @@
       <categories>
         <category>区块链</category>
         <category>bitcoin</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>文档注释</title>
-    <url>/blog/70b7aba4.html</url>
-    <content><![CDATA[<h1 id="Java-文档注释"><a href="#Java-文档注释" class="headerlink" title="Java 文档注释"></a>Java 文档注释</h1><a id="more"></a>
-<p>Java 支持三种注释方式。前两种分别是 <strong>//</strong> 和 <strong>/* */</strong>，第三种被称作说明注释，它以 <strong>/**</strong> 开始，以 <strong>*/</strong>结束。</p>
-<p>说明注释允许你在程序中嵌入关于程序的信息。你可以使用 javadoc 工具软件来生成信息，并输出到HTML文件中。</p>
-<p>说明注释，使你更加方便的记录你的程序信息。</p>
-<h2 id="javadoc-标签"><a href="#javadoc-标签" class="headerlink" title="javadoc 标签"></a>javadoc 标签</h2><p>javadoc 工具软件识别以下标签：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:left"><strong>标签</strong></th>
-<th style="text-align:center"><strong>描述</strong></th>
-<th style="text-align:center"><strong>示例</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">@author</td>
-<td style="text-align:center">标识一个类的作者</td>
-<td style="text-align:center">@author description</td>
-</tr>
-<tr>
-<td style="text-align:left">@deprecated</td>
-<td style="text-align:center">指名一个过期的类或成员</td>
-<td style="text-align:center">@deprecated description</td>
-</tr>
-<tr>
-<td style="text-align:left">{@docRoot}</td>
-<td style="text-align:center">指明当前文档根目录的路径</td>
-<td style="text-align:center">Directory Path</td>
-</tr>
-<tr>
-<td style="text-align:left">@exception</td>
-<td style="text-align:center">标志一个类抛出的异常</td>
-<td style="text-align:center">@exception exception-name explanation</td>
-</tr>
-<tr>
-<td style="text-align:left">{@inheritDoc}</td>
-<td style="text-align:center">从直接父类继承的注释</td>
-<td style="text-align:center">Inherits a comment from the immediate surperclass.</td>
-</tr>
-<tr>
-<td style="text-align:left">{@link}</td>
-<td style="text-align:center">插入一个到另一个主题的链接</td>
-<td style="text-align:center">{@link name text}</td>
-</tr>
-<tr>
-<td style="text-align:left">{@linkplain}</td>
-<td style="text-align:center">插入一个到另一个主题的链接，但是该链接显示纯文本字体</td>
-<td style="text-align:center">Inserts an in-line link to another topic.</td>
-</tr>
-<tr>
-<td style="text-align:left">@param</td>
-<td style="text-align:center">说明一个方法的参数</td>
-<td style="text-align:center">@param parameter-name explanation</td>
-</tr>
-<tr>
-<td style="text-align:left">@return</td>
-<td style="text-align:center">说明返回值类型</td>
-<td style="text-align:center">@return explanation</td>
-</tr>
-<tr>
-<td style="text-align:left">@see</td>
-<td style="text-align:center">指定一个到另一个主题的链接</td>
-<td style="text-align:center">@see anchor</td>
-</tr>
-<tr>
-<td style="text-align:left">@serial</td>
-<td style="text-align:center">说明一个序列化属性</td>
-<td style="text-align:center">@serial description</td>
-</tr>
-<tr>
-<td style="text-align:left">@serialData</td>
-<td style="text-align:center">说明通过writeObject( ) 和 writeExternal( )方法写的数据</td>
-<td style="text-align:center">@serialData description</td>
-</tr>
-<tr>
-<td style="text-align:left">@serialField</td>
-<td style="text-align:center">说明一个ObjectStreamField组件</td>
-<td style="text-align:center">@serialField name type description</td>
-</tr>
-<tr>
-<td style="text-align:left">@since</td>
-<td style="text-align:center">标记当引入一个特定的变化时</td>
-<td style="text-align:center">@since release</td>
-</tr>
-<tr>
-<td style="text-align:left">@throws</td>
-<td style="text-align:center">和 @exception标签一样.</td>
-<td style="text-align:center">The @throws tag has the same meaning as the @exception tag.</td>
-</tr>
-<tr>
-<td style="text-align:left">{@value}</td>
-<td style="text-align:center">显示常量的值，该常量必须是static属性。</td>
-<td style="text-align:center">Displays the value of a constant, which must be a static field.</td>
-</tr>
-<tr>
-<td style="text-align:left">@version</td>
-<td style="text-align:center">指定类的版本</td>
-<td style="text-align:center">@version info</td>
-</tr>
-</tbody>
-</table>
-</div>
-<hr>
-<h2 id="文档注释"><a href="#文档注释" class="headerlink" title="文档注释"></a>文档注释</h2><p>在开始的 <strong>/**</strong> 之后，第一行或几行是关于类、变量和方法的主要描述。</p>
-<p>之后，你可以包含一个或多个各种各样的 <strong>@</strong> 标签。每一个 <strong>@</strong> 标签必须在一个新行的开始或者在一行的开始紧跟星号(*).</p>
-<p>多个相同类型的标签应该放成一组。例如，如果你有三个 <strong>@see</strong> 标签，可以将它们一个接一个的放在一起。</p>
-<p>下面是一个类的说明注释的实例：</p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/** 这个类绘制一个条形图 </span></span><br><span class="line"><span class="comment">* <span class="doctag">@author</span> runoob </span></span><br><span class="line"><span class="comment">* <span class="doctag">@version</span> 1.2 </span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
-<h2 id="IDE中使用"><a href="#IDE中使用" class="headerlink" title="IDE中使用"></a>IDE中使用</h2><p>可以使用插件、模板，自动在每个类和方法前加上文档注释。</p>
-]]></content>
-      <categories>
-        <category>Java</category>
-        <category>路线与基础</category>
       </categories>
   </entry>
   <entry>
@@ -4648,6 +4208,155 @@ public String call() throws Exception &#123;
       <categories>
         <category>编程</category>
         <category>database</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Unity中的特殊文件夹</title>
+    <url>/blog/74e7a2cc.html</url>
+    <content><![CDATA[<h1 id="Editor"><a href="#Editor" class="headerlink" title="Editor"></a>Editor</h1><p>Editor文件夹可以在根目录下，也可以在子目录里，只要叫Editor就可以。Editor下面放的所有资源文件或者脚本文件都不会被打进发布包中，并且脚本也只能在编辑时使用。一般会把一些工具类的脚本放在这里，或者是一些编辑时用的DLL。 比如我们现在要做类似技能编辑器，那么编辑器的代码放在这里是再好不过了，因为实际运行时我们只需要编辑器生成的文件，而不需要编辑器的核心代码。<br><a id="more"></a></p>
+<h1 id="Editor-Default-Resources"><a href="#Editor-Default-Resources" class="headerlink" title="Editor Default Resources"></a>Editor Default Resources</h1><p>注意中间是有空格的，它必须放在Project视图的根目录下，如果你想放在/xxx/xxx/Editor Default Resources 这样是不行的。你可以把编辑器用到的一些资源放在这里，比如图片、文本文件、等等。它和Editor文件夹一样都不会被打到最终发布包里，仅仅用于开发时使用。你可以直接通过EditorGUIUtility.Load去读取该文件夹下的资源。</p>
+<h1 id="Plugins"><a href="#Plugins" class="headerlink" title="Plugins"></a>Plugins</h1><p>如果做手机游戏开发一般 andoird 或者 ios 要接一些sdk 可以把sdk依赖的库文件放在这里，比如 .so .jar 文件。这样打完包以后就会自动把这些文件打在你的包中。</p>
+<h1 id="Resources"><a href="#Resources" class="headerlink" title="Resources"></a>Resources</h1><p>可以在根目录下，也可以在子目录里，只要名子叫Resources就可以。比如目录：/xxx/xxx/Resources  和 /Resources 是一样的，无论多少个叫Resources的文件夹都可以。Resources文件夹下的资源不管你用还是不用都会被打包。</p>
+<p>Resource.Load ：编辑时和运行时都可以通过Resource.Load来直接读取。<br>Resources.LoadAssetAtPath() ：它可以读取Assets目录下的任意文件夹下的资源，它可以在编辑时或者编辑器运行时用，但是它不能在真机上用，它的路径是”Assets/xx/xx.xxx” 必须是这种路径，并且要带文件的后缀名。<br>AssetDatabase.LoadAssetAtPath()：它可以读取Assets目录下的任意文件夹下的资源，它只能在编辑时用。它的路径是”Assets/xx/xx.xxx” 必须是这种路径，并且要带文件的后缀名。</p>
+<p>在电脑上开发的时候尽量来用Resource.Load() 或者 Resources.LoadAssetAtPath() ，假如手机上选择一部分资源要打assetbundle，一部分资源Resource.Load()。在做.apk或者.ipa的时候，现在都是用脚本来自动化打包，在打包之前可以用AssetDatabase.MoveAsset()把已经打包成assetbundle的原始文件从Resources文件夹下移动出去在打包，这样打出来的运行包就不会有多余的文件了。打完包以后再把移动出去的文件夹移动回来。</p>
+<h1 id="StreamingAssets"><a href="#StreamingAssets" class="headerlink" title="StreamingAssets"></a>StreamingAssets</h1><p>这个文件夹下的资源也会全都打包在.apk或者.ipa。它和Resources的区别是，Resources会压缩文件，但是它不会压缩。并且它是一个只读的文件夹，在程序运行时只读。它在各个平台下的路径是不同的，不过你可以用Application.streamingAssetsPath 它会根据当前的平台选择对应的路径。<br>有些游戏为了让所有的资源全部使用assetbundle，会把一些初始的assetbundle放在StreamingAssets目录下，运行程序的时候在把这些assetbundle拷贝在Application.persistentDataPath目录下，如果这些assetbundle有更新的话，那么下载到新的assetbundle在把Application.persistentDataPath目录下原有的覆盖掉。<br>因为Application.persistentDataPath目录是应用程序的沙盒目录，所以打包之前是没有这个目录的，直到应用程序在手机上安装完毕才有这个目录。<br>StreamingAssets目录下的资源都是不压缩的，所以它比较大会占空间，比如你的应用装在手机上会占用100M的容量，那么你又在StreamingAssets放了一个100M的assetbundle，那么此时在装在手机上就会在200M的容量。</p>
+<h1 id="Gizmos"><a href="#Gizmos" class="headerlink" title="Gizmos"></a>Gizmos</h1><p>Gizmos文件夹存放用Gizmos.DrawIcon方法使用的贴图、图标资源。放在Gizmos文件夹中的贴图资源可以直接通过名称使用，可以被Editor作为gizmo画在屏幕上。</p>
+<h1 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h1><p><a href="https://blog.csdn.net/baidu_35080512/article/details/78618293">Unity中的特殊文件夹</a></p>
+]]></content>
+      <categories>
+        <category>Unity</category>
+        <category>Base</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>使用lua的注意事项</title>
+    <url>/blog/7fd42f65.html</url>
+    <content><![CDATA[<ol>
+<li><h1 id="table-可以用来判断一个数组的长度，但需要注意的是，若table中包含nil，则不可使用。"><a href="#table-可以用来判断一个数组的长度，但需要注意的是，若table中包含nil，则不可使用。" class="headerlink" title="table 可以用来判断一个数组的长度，但需要注意的是，若table中包含nil，则不可使用。"></a>table 可以用来判断一个数组的长度，但需要注意的是，若table中包含nil，则不可使用。</h1><a id="more"></a>
+</li>
+<li><p>table.sort同理，需要排序的table必须是1到n连续的，中间不能有nil。</p>
+</li>
+<li><p>尽量使用局部变量，函数function也是如此，因为在lua里函数也是一个变量。局部变量的存取会更快，且生命周期外就会被释放。</p>
+</li>
+<li><p>避免使用table.insert()<br>方法1：</p>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="keyword">local</span> a = &#123;&#125;</span><br><span class="line"><span class="keyword">local</span> table_insert = <span class="built_in">table</span>.<span class="built_in">insert</span></span><br><span class="line"><span class="keyword">for</span> i = <span class="number">1</span>,<span class="number">100</span> <span class="keyword">do</span></span><br><span class="line">   table_insert( a, i )</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>方法2：</p>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="keyword">local</span> a = &#123;&#125;</span><br><span class="line"><span class="keyword">for</span> i = <span class="number">1</span>,<span class="number">100</span> <span class="keyword">do</span></span><br><span class="line">   a[#a+<span class="number">1</span>] = i</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>方法3：</p>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line"><span class="keyword">local</span> a = &#123;&#125;</span><br><span class="line"><span class="keyword">for</span> i = <span class="number">1</span>,<span class="number">100</span> <span class="keyword">do</span></span><br><span class="line">   a[i] = i</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>推荐使用方法3。其中方法3远优于1,2。而方法1略优于方法2。</p>
+</li>
+<li><p>ipairs和pairs的区别</p>
+<ol>
+<li>ipairs遇到nil会停止，pairs会输出nil值然后继续下去</li>
+<li>ipairs顺序输出table中的值。而pairs会乱序(键的哈希值)输出键值对。</li>
+</ol>
+</li>
+</ol>
+]]></content>
+      <categories>
+        <category>编程</category>
+        <category>lua</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>其他几种常用的设计模式</title>
+    <url>/blog/6db75381.html</url>
+    <content><![CDATA[<h1 id="工厂模式"><a href="#工厂模式" class="headerlink" title="工厂模式"></a>工厂模式</h1><h2 id="简单工厂"><a href="#简单工厂" class="headerlink" title="简单工厂"></a>简单工厂</h2><p>一个公有接口，不同类有不同的实现方式。工厂中通过条件分支实例化不同的产品。<br><a id="more"></a></p>
+<h2 id="工厂方法"><a href="#工厂方法" class="headerlink" title="工厂方法"></a>工厂方法</h2><p>有四个角色，抽象工厂，具体工厂，抽象产品，具体产品。不再是由一个工厂类去实例化具体的产品，而是由抽象工厂的子类具体工厂去实例化产品。<br>具体工厂生产具体产品，解除了工厂与条件分支的耦合。</p>
+<h2 id="抽象工厂"><a href="#抽象工厂" class="headerlink" title="抽象工厂"></a>抽象工厂</h2><p>与工厂方法模式不同的是，工厂方法模式中的工厂只生产单一的产品，而抽象工厂模式中的工厂生产多个产品。</p>
+<h2 id="Unity中的使用"><a href="#Unity中的使用" class="headerlink" title="Unity中的使用"></a>Unity中的使用</h2><p>对象池使用抽象工厂模式：对象池抽象基类定义接口，两个子类分别完成GameObject和ab包的管理。</p>
+<h1 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h1><p>随着项目需求的变动，需要接入新的功能类，但是新类的接口与原有的接口定义不一致，就需要用到适配器模式。分别有类适配器和对象适配器（优先选择）。</p>
+<h1 id="装饰器模式"><a href="#装饰器模式" class="headerlink" title="装饰器模式"></a>装饰器模式</h1><p>对已有的业务逻辑进一步的封装，使其增加额外的功能。继承父类，并增加功能函数。</p>
+<h2 id="举例"><a href="#举例" class="headerlink" title="举例"></a>举例</h2><p>使用C#中的this扩展方法。比如lua框架封装按钮的监听点击事件，回调lua 方法。</p>
+<h1 id="命令模式"><a href="#命令模式" class="headerlink" title="命令模式"></a>命令模式</h1><p>有两个角色：</p>
+<ol>
+<li>调用者Invoker，一般为控制器或角色，得到客户端输入，调用具体的命令；</li>
+<li>接受者Receiver，一般为角色，提供命令的具体执行方法。</li>
+</ol>
+<p>命令模式主要的特点是把调用者和接受者之间的连接——命令——类化，把命令（Command）独立出来一个，成为一个单独的层用来连接调用者和接受者。然后调用者（Invoker）调用命令，命令通知接受者（Receiver）具体的执行逻辑。</p>
+<p>违反开闭原则的写法：<br><figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span>(Input.GetKey(KeyCode.W))&#123;<span class="comment">//向前移动的具体逻辑&#125;</span></span><br></pre></td></tr></table></figure><br>这里调用和执行高度耦合，如果要修改向前移动的逻辑，或者更换向前移动的按键，需要直接修改上面的代码。</p>
+<h2 id="举例-1"><a href="#举例-1" class="headerlink" title="举例"></a>举例</h2><figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">ICommand</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Execute</span>(<span class="params">Receiver receiver</span>)</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MoveForwardCommand</span> : <span class="title">ICommand</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Execute</span>(<span class="params">Receiver receiver</span>)</span>&#123;</span><br><span class="line">        receiver.MoveForward();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">MoveBackCommand</span> : <span class="title">ICommand</span> &#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Execute</span>(<span class="params">Receiver receiver</span>)</span>&#123;</span><br><span class="line">        receiver.MoveBack();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 具体的移动方法</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Receiver</span> : <span class="title">MonoBehaviour</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">float</span> speed = <span class="number">6f</span>;</span><br><span class="line">    CharacterController characterController;</span><br><span class="line">    Vector3 moveDir = Vector3.zero;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Awake</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        characterController = GetComponent&lt;CharacterController&gt;();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">MoveForward</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        moveDir = transform.TransformDirection(Vector3.forward) * speed; </span><br><span class="line">        characterController.Move(moveDir * Time.deltaTime);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">MoveBack</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">        moveDir = transform.TransformDirection(Vector3.back) * speed;</span><br><span class="line">        characterController.Move(moveDir * Time.deltaTime);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h1 id="迭代器模式"><a href="#迭代器模式" class="headerlink" title="迭代器模式"></a>迭代器模式</h1><p>C#自带的迭代器。<br><figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="comment">//  枚举器接口 IEnumerator</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">IEnumerator</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">object</span> Current &#123; <span class="keyword">get</span>; &#125;</span><br><span class="line">    <span class="comment">// 如果是返回 false，就是结束迭代器块</span></span><br><span class="line">    <span class="function"><span class="built_in">bool</span> <span class="title">MoveNext</span>(<span class="params"></span>)</span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Reset</span>(<span class="params"></span>)</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//  可枚举的接口 IEnumerable, 返回枚举器接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title">IEnumerable</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function">IEnumerator <span class="title">GetEnumerator</span>(<span class="params"></span>)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+]]></content>
+      <categories>
+        <category>Unity</category>
+        <category>unity中的设计模式</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>单例模式</title>
+    <url>/blog/f1601c3e.html</url>
+    <content><![CDATA[<h1 id="几种单例模式"><a href="#几种单例模式" class="headerlink" title="几种单例模式"></a>几种单例模式</h1><h2 id="懒汉"><a href="#懒汉" class="headerlink" title="懒汉"></a>懒汉</h2><ul>
+<li>非线程安全，多线程可以同时生成新的实例。<a id="more"></a>
+<figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span><br><span class="line"><span class="comment">// 静态，实例化只有一次</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> Singleton singleton;</span><br><span class="line"><span class="comment">// 构造函数私有化</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span>(<span class="params"></span>)</span> &#123; &#125;</span><br><span class="line"><span class="comment">//通过getInstance()的方法来获取实例</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getInstance</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> (singleton == <span class="literal">null</span>) &#123;</span><br><span class="line">    singleton = <span class="keyword">new</span> Singleton();</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> singleton;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="饿汉"><a href="#饿汉" class="headerlink" title="饿汉"></a>饿汉</h2></li>
+<li>类初始化就创建单例对象，消耗资源，而又不是马上使用。</li>
+<li>线程安全<figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title">Singleton</span> &#123;</span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">readonly</span> Singleton instance = <span class="keyword">new</span> Singleton();</span><br><span class="line">   <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span> (<span class="params"></span>)</span>&#123;&#125;</span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getInstance</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> instance;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="双重校验锁"><a href="#双重校验锁" class="headerlink" title="双重校验锁"></a>双重校验锁</h2></li>
+<li>线程安全<figure class="highlight c#"><table><tr><td class="code"><pre><span class="line">public static class Singleton&lt;T&gt; where T : class,new() </span><br><span class="line">&#123; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> T _Instance; </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="built_in">object</span> _lockObj = <span class="keyword">new</span> <span class="built_in">object</span>(); </span><br><span class="line">    <span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;summary&gt;</span> </span></span><br><span class="line">    <span class="comment"><span class="doctag">///</span> 获取单例对象的实例 </span></span><br><span class="line">    <span class="comment"><span class="doctag">///</span> <span class="doctag">&lt;/summary&gt;</span> </span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> T <span class="title">GetInstance</span>(<span class="params"></span>) </span></span><br><span class="line"><span class="function"></span>    &#123; </span><br><span class="line">    <span class="comment">// 检查1</span></span><br><span class="line">        <span class="keyword">if</span> (_Instance != <span class="literal">null</span>)  <span class="keyword">return</span> _Instance; </span><br><span class="line">        <span class="comment">// 锁</span></span><br><span class="line">        <span class="keyword">lock</span> (_lockObj) </span><br><span class="line">        &#123; </span><br><span class="line">        <span class="comment">// 检查2</span></span><br><span class="line">            <span class="keyword">if</span> (_Instance == <span class="literal">null</span>) </span><br><span class="line">            &#123; </span><br><span class="line">                <span class="comment">// 创建实例</span></span><br><span class="line">                <span class="keyword">var</span> temp = Activator.CreateInstance&lt;T&gt;();</span><br><span class="line">                <span class="comment">// 原子操作：互换</span></span><br><span class="line">               System.Threading.Interlocked.Exchange(<span class="keyword">ref</span> _Instance, temp); </span><br><span class="line">            &#125; </span><br><span class="line">        &#125; </span><br><span class="line">        <span class="keyword">return</span> _Instance; </span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h1 id="Unity中的使用"><a href="#Unity中的使用" class="headerlink" title="Unity中的使用"></a>Unity中的使用</h1><h2 id="简单懒汉"><a href="#简单懒汉" class="headerlink" title="简单懒汉"></a>简单懒汉</h2><figure class="highlight c#"><table><tr><td class="code"><pre><span class="line">public class Singleton&lt;T&gt; where T : new()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> T instance;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> T Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                instance = <span class="keyword">new</span> T();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="全局单例，不销毁"><a href="#全局单例，不销毁" class="headerlink" title="全局单例，不销毁"></a>全局单例，不销毁</h2><figure class="highlight c#"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">class</span> <span class="title">MonoSingleton</span>&lt;<span class="title">T</span>&gt; : <span class="title">MonoBehaviour</span> <span class="keyword">where</span> <span class="title">T</span> : <span class="title">MonoBehaviour</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="built_in">bool</span> <span class="keyword">global</span> = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">static</span> T instance;</span><br><span class="line">    <span class="comment">// 普通单例的写法</span></span><br><span class="line">    <span class="comment">// MonoSingleton的写法一般是在Awake()中instance=this</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> T Instance</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (instance == <span class="literal">null</span>)</span><br><span class="line">            &#123;</span><br><span class="line">                instance = (T)FindObjectOfType&lt;T&gt;();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> instance;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Start</span>(<span class="params"></span>)</span></span><br><span class="line"><span class="function"></span>    &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">global</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// 清除新生成的实例，防止堆积</span></span><br><span class="line">            <span class="keyword">if</span> (instance != <span class="literal">null</span> &amp;&amp; instance != <span class="keyword">this</span>.gameObject.GetComponent&lt;T&gt;())</span><br><span class="line">            &#123;</span><br><span class="line">                Destroy(<span class="keyword">this</span>.gameObject);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            DontDestroyOnLoad(<span class="keyword">this</span>.gameObject);</span><br><span class="line">            instance = <span class="keyword">this</span>.gameObject.GetComponent&lt;T&gt;();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.OnStart();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 子类Start替换为OnStart</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">OnStart</span>(<span class="params"></span>)</span> &#123; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>即使解决了实例堆积的问题，但多个子类重复生成实例再销毁也太冗余操作了，可以挂一个全局的单例管理器，记录哪些MonoSingleton已经被生成了。</p>
+]]></content>
+      <categories>
+        <category>Unity</category>
+        <category>unity中的设计模式</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>状态同步的抖动</title>
+    <url>/blog/c32a14d2.html</url>
+    <content><![CDATA[<p>之前的mmorpg项目中使用了状态同步，但是在移动同步中发现了抖动现象，于是打算研究一下。<br><a id="more"></a></p>
+<h1 id="分析原因"><a href="#分析原因" class="headerlink" title="分析原因"></a>分析原因</h1><h2 id="频率不一致"><a href="#频率不一致" class="headerlink" title="频率不一致"></a>频率不一致</h2><p>服务端按固定频率发包，但是客户端不是固定频率收到，如果直接应用服务端状态，必然导致抖动。</p>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>客户端对收到的状态信息进行缓存入队，然后用状态插值追赶服务器状态。<br>状态插值：<code>Current = MathUtils.Interpolate(State_A, State_B, 估算帧号/ (State_B.frame -State_A.frame ))</code><br>估算帧应该比真实帧号提前一些，否则处于A帧时，B帧还没收到，需要等待。但是会有延迟代价。这个代价可以通过增大发包频率，和客户端预测表现来弥补。<br>估算帧是客户端估算服务器发来的帧号，当收包帧号与估算差距太大时，需要调整。比如客户端估算帧比服务端提前，那客户端就不模拟，反之加快模拟的速度。</p>
+<h1 id="客户端本地预测"><a href="#客户端本地预测" class="headerlink" title="客户端本地预测"></a>客户端本地预测</h1><p>如果要等待服务器返回状态才开始表现，对于延迟比较高的玩家可能无法忍受，这时候需要客户端自己本地预测，来预表现。<br>流程：</p>
+<ol>
+<li>客户端本地模拟指令，并且将指令队列发送给服务器；</li>
+<li>服务器收到指令序列，逐帧模拟，然后向客户端发送模拟结果；</li>
+<li>客户端与收到的模拟结果比对，为指令序列做确认</li>
+</ol>
+<h2 id="抖动"><a href="#抖动" class="headerlink" title="抖动"></a>抖动</h2><p>服务器返回的模拟结果状态是旧的，客户端已经预表现了，如果直接应用服务器的结果肯定会造成抖动。</p>
+<h3 id="解决方案-1"><a href="#解决方案-1" class="headerlink" title="解决方案"></a>解决方案</h3><p>当客户端收到描述角色状态的数据包时，我们基本上就得把移动状态及时恢复到最近一次经过服务器验证过状态上去，而且必须重新计算之后所有的输入操作（除了服务器验证过的），直至追上当前时刻。</p>
+<h1 id="多客户端移动同步"><a href="#多客户端移动同步" class="headerlink" title="多客户端移动同步"></a>多客户端移动同步</h1><p>A客户端通过服务器同步B客户端状态时，如果使用预测的方式，A拿到的B状态必然是比A预测的B状态要延迟的，如果直接应用服务器传来的B状态，肯定要导致抖动。并且A拿到的B操作指令也是旧的，没办法和之前那样解决。<br>这里我使用了状态插值的办法。之后想到更好的解决办法，再来更新。</p>
+<p>Valve分享了Source引擎内置的网络同步模型,在旗下的多人游戏都有应用,包括CS:GO,Left 4 Dead 2,Team Fortress 2等等。有时间去参考一下。</p>
+]]></content>
+      <categories>
+        <category>Unity</category>
+        <category>expirences</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>自动寻路</title>
+    <url>/blog/27638531.html</url>
+    <content><![CDATA[<h1 id="寻路方法"><a href="#寻路方法" class="headerlink" title="寻路方法"></a>寻路方法</h1><p>NavMesh<br><a id="more"></a><br>A*<br>itween</p>
+<h1 id="网络方案"><a href="#网络方案" class="headerlink" title="网络方案"></a>网络方案</h1><p>服务器寻路，客户端寻路，客户端寻路服务器校验。</p>
+<h1 id="建模"><a href="#建模" class="headerlink" title="建模"></a>建模</h1><p>Grid<br>Waypoint<br>NavMesh</p>
+<h1 id="NavMesh"><a href="#NavMesh" class="headerlink" title="NavMesh"></a>NavMesh</h1><p>官方内置的寻路插件，三角网格寻路。<br>步骤：</p>
+<ol>
+<li>创建地形，添加角色，添加障碍物（需要有Mesh Render）</li>
+<li>选中地形和各种物体，在Navigation窗口中，设置Navigation Static，设置Area的Cost</li>
+<li>Navigation窗口中，选择Bake（烘焙）界面，点击Bake按钮，进程场景烘焙，就可以烘焙出寻路网格了</li>
+<li>为角色添加NavMeshAgent组件</li>
+<li>为角色新增一个脚本PlayerController.cs，agent.SetDestination()设置目标，实现点击目标，自动寻路功能<h2 id="agent属性"><a href="#agent属性" class="headerlink" title="agent属性"></a>agent属性</h2>Radius 半径： 代理的半径（仅用于寻路目的，可以跟实际对象的半径大小不一样，一般比实际对象的半径大）。<br>Speed 速度： 代理可以周游世界，走向它的目的地的最大移动速度。<br>Acceleration 加速度： 最大加速度。<br>Angular Speed 角速度： 最高转速（度/秒）。<br>Stopping distance 制动距离：制动距离。到目的地的距离小于这个值，代理减速。<br>Auto Traverse OffMesh Link 自动遍历OffMesh链接：自动移动并关闭OffMeshLinks<br>Auto Repath 自动重新寻路：如果现有的部分已失效，获得新的路径。<br>Height 高度：代理的高度（用于调试图形）。<br>Base offset 基本偏移：碰撞几何体相对于实际几何体垂直的偏移。<br>Obstacle Avoidance Type 障碍躲避类型 ：躲避的质量水平。<br>NavMesh Walkable 导航网格行走：指定代理可以遍历的导航网格层类型。</li>
+</ol>
+<blockquote>
+<p>OffMeshLinks：Off Mesh Link组件用于手动指定路线来生成分离的网格连接。例如，游戏中让行进对象上下爬梯子到达另一块网格的情景就是利用生成分离的网格连接来实现的。例如爬梯子，梯子就需要设置该组件，达到两个网格间的连接。<br>另外，在烘焙过程中是否自动生成分离的网格链接还取决于导航烘焙 (Bake选项卡) 设置中的跳跃距离 (Jump distance) 和下落高度 (Drop height) 属性。</p>
+</blockquote>
+<h1 id="A"><a href="#A" class="headerlink" title="A*"></a>A*</h1><p>使用AStar插件，步骤：</p>
+<ol>
+<li>在移动对象挂AIFollow.cs脚本，再添加了这个脚本之后，它会自动帮你添加上Character Controller和Seeker脚本，同时，在该对象上再添加上Funnel Modifier.cs，Simple Smooth Modifier.cs，Navmesh Controller.cs这三个脚本。<br>其主要脚本就是AIFollow.cs这个脚本。其Target就是你的目的地。</li>
+<li>接下来在场景中建一个空对象，挂上Astar Path.cs脚本，选择RecastGraph选项。Cell Size变量跟你障碍物之间间隙有关，当你的障碍物之间间隙比较小的时候，建议这个值设小一点，下面是一些可走区域的高度，攀爬高度，以及对象半径等参数，下面可以设置区域的坡度，Max Edge Length这个参数跟你线的复杂度有关，最小可设置到0.05，当然数据特别小的时候，线圈布局很繁忙，很耗资源，一般设置几百就好了，效果可以自行调节调试。设置完成之后可以点击一下Snap bounds to scene，来规定界限。也可以自己微调其区域大小和位置。</li>
+</ol>
+<h1 id="iTween-DoTween"><a href="#iTween-DoTween" class="headerlink" title="iTween/DoTween"></a>iTween/DoTween</h1><p>iTween和DoTween实际上是动画插件，需要手动设置路径点。属于WayPoints方法。</p>
+<h1 id="路径渲染"><a href="#路径渲染" class="headerlink" title="路径渲染"></a>路径渲染</h1><h2 id="LineRenderer"><a href="#LineRenderer" class="headerlink" title="LineRenderer"></a>LineRenderer</h2><p>SetPositions设置路径上的点。</p>
+<h3 id="属性"><a href="#属性" class="headerlink" title="属性"></a>属性</h3><p>Cast Shadows：线是否投射阴影。<br>Receive Shadows：线条是否接收阴影。<br>Motion Vectors：运动轨迹。<br>Camera Motion Only 只有相机移动<br>Per Object Motion 每一个对象移动也会跟着移动<br>Force No Motion强制移动<br>Materials：线的材质。<br>Light Parameters：光照贴图参数，使该线与全局照明系统交互。<br>Use World Space：如果启用，则这些点将被视为世界空间坐标，而不是受此组件所附加的GameObject的变换影响。<br>Loop：启用此选项可连接线路的第一个和最后一个位置。这形成了一个闭环。<br>Positions：要连接的Vector3点数组。<br>Width：定义宽度值和曲线（控制线在其开始和结束之间的各个点处的宽度。曲线仅在每个顶点处采样，因此其精度受到线中存在的顶点数量的限制。线的总宽度由宽度值控制。）<br>Color：定义渐变以控制线条沿其长度的颜色。<br>Corner Vertices：增加此值可使线条边角显得更圆。<br>End Cap Vertices：增加此值可使线条显示更圆。<br>Alignment：对齐方式。<br>Texture Mode：添加线条纹理。<br>Shadow Bias：沿着光的方向移动阴影，以通过使用广告牌几何体近似体积来消除阴影瑕疵。<br>Generate Lighting Data:如果启用（选中该框），则使用包括法线和切线构建线几何。这允许它使用使用场景的材质照明，例如通过标准着色器，或使用自定义着色器。<br>Sorting Layer:渲染器的排序图层的名称。<br>Order in Layer:此渲染器在排序图层中的顺序。<br>Light Probes:基于探测器的光照插值模式。<br>Reflection Probes:如果启用并且场景中存在反射探测，则会为此线渲染器拾取反射纹理并将其设置为内置的着色器均匀变量。</p>
+]]></content>
+      <categories>
+        <category>Unity</category>
+        <category>expirences</category>
       </categories>
   </entry>
 </search>

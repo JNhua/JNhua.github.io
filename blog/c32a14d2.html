@@ -17,20 +17,20 @@
     var CONFIG = {"hostname":"munan.tech","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"default"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="Java 文档注释">
+  <meta name="description" content="之前的mmorpg项目中使用了状态同步，但是在移动同步中发现了抖动现象，于是打算研究一下。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="文档注释">
-<meta property="og:url" content="http://munan.tech/blog/70b7aba4.html">
+<meta property="og:title" content="状态同步的抖动">
+<meta property="og:url" content="http://munan.tech/blog/c32a14d2.html">
 <meta property="og:site_name" content="Jenner&#39;s Blog">
-<meta property="og:description" content="Java 文档注释">
+<meta property="og:description" content="之前的mmorpg项目中使用了状态同步，但是在移动同步中发现了抖动现象，于是打算研究一下。">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-05-25T03:13:09.000Z">
-<meta property="article:modified_time" content="2020-05-25T03:13:23.000Z">
+<meta property="article:published_time" content="2021-09-20T06:06:12.000Z">
+<meta property="article:modified_time" content="2021-09-20T07:31:17.000Z">
 <meta property="article:author" content="Jenner">
 <meta property="article:tag" content="Rust,区块链">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://munan.tech/blog/70b7aba4.html">
+<link rel="canonical" href="http://munan.tech/blog/c32a14d2.html">
 
 
 <script id="page-configurations">
@@ -43,7 +43,7 @@
   };
 </script>
 
-  <title>文档注释 | Jenner's Blog</title>
+  <title>状态同步的抖动 | Jenner's Blog</title>
   
 
 
@@ -196,7 +196,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/70b7aba4.html">
+    <link itemprop="mainEntityOfPage" href="http://munan.tech/blog/c32a14d2.html">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -209,7 +209,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          文档注释
+          状态同步的抖动
         </h1>
 
         <div class="post-meta">
@@ -220,7 +220,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2020-05-25 11:13:09 / 修改时间：11:13:23" itemprop="dateCreated datePublished" datetime="2020-05-25T11:13:09+08:00">2020-05-25</time>
+              <time title="创建时间：2021-09-20 14:06:12 / 修改时间：15:31:17" itemprop="dateCreated datePublished" datetime="2021-09-20T14:06:12+08:00">2021-09-20</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -228,11 +228,11 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                  <a href="/categories/Unity/" itemprop="url" rel="index"><span itemprop="name">Unity</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Java/%E8%B7%AF%E7%BA%BF%E4%B8%8E%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">路线与基础</span></a>
+                  <a href="/categories/Unity/expirences/" itemprop="url" rel="index"><span itemprop="name">expirences</span></a>
                 </span>
             </span>
 
@@ -252,8 +252,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/blog/70b7aba4.html#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/blog/70b7aba4.html" itemprop="commentCount"></span>
+    <a title="valine" href="/blog/c32a14d2.html#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/blog/c32a14d2.html" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -268,116 +268,19 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="Java-文档注释"><a href="#Java-文档注释" class="headerlink" title="Java 文档注释"></a>Java 文档注释</h1><a id="more"></a>
-<p>Java 支持三种注释方式。前两种分别是 <strong>//</strong> 和 <strong>/* */</strong>，第三种被称作说明注释，它以 <strong>/**</strong> 开始，以 <strong>*/</strong>结束。</p>
-<p>说明注释允许你在程序中嵌入关于程序的信息。你可以使用 javadoc 工具软件来生成信息，并输出到HTML文件中。</p>
-<p>说明注释，使你更加方便的记录你的程序信息。</p>
-<h2 id="javadoc-标签"><a href="#javadoc-标签" class="headerlink" title="javadoc 标签"></a>javadoc 标签</h2><p>javadoc 工具软件识别以下标签：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:left"><strong>标签</strong></th>
-<th style="text-align:center"><strong>描述</strong></th>
-<th style="text-align:center"><strong>示例</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">@author</td>
-<td style="text-align:center">标识一个类的作者</td>
-<td style="text-align:center">@author description</td>
-</tr>
-<tr>
-<td style="text-align:left">@deprecated</td>
-<td style="text-align:center">指名一个过期的类或成员</td>
-<td style="text-align:center">@deprecated description</td>
-</tr>
-<tr>
-<td style="text-align:left">{@docRoot}</td>
-<td style="text-align:center">指明当前文档根目录的路径</td>
-<td style="text-align:center">Directory Path</td>
-</tr>
-<tr>
-<td style="text-align:left">@exception</td>
-<td style="text-align:center">标志一个类抛出的异常</td>
-<td style="text-align:center">@exception exception-name explanation</td>
-</tr>
-<tr>
-<td style="text-align:left">{@inheritDoc}</td>
-<td style="text-align:center">从直接父类继承的注释</td>
-<td style="text-align:center">Inherits a comment from the immediate surperclass.</td>
-</tr>
-<tr>
-<td style="text-align:left">{@link}</td>
-<td style="text-align:center">插入一个到另一个主题的链接</td>
-<td style="text-align:center">{@link name text}</td>
-</tr>
-<tr>
-<td style="text-align:left">{@linkplain}</td>
-<td style="text-align:center">插入一个到另一个主题的链接，但是该链接显示纯文本字体</td>
-<td style="text-align:center">Inserts an in-line link to another topic.</td>
-</tr>
-<tr>
-<td style="text-align:left">@param</td>
-<td style="text-align:center">说明一个方法的参数</td>
-<td style="text-align:center">@param parameter-name explanation</td>
-</tr>
-<tr>
-<td style="text-align:left">@return</td>
-<td style="text-align:center">说明返回值类型</td>
-<td style="text-align:center">@return explanation</td>
-</tr>
-<tr>
-<td style="text-align:left">@see</td>
-<td style="text-align:center">指定一个到另一个主题的链接</td>
-<td style="text-align:center">@see anchor</td>
-</tr>
-<tr>
-<td style="text-align:left">@serial</td>
-<td style="text-align:center">说明一个序列化属性</td>
-<td style="text-align:center">@serial description</td>
-</tr>
-<tr>
-<td style="text-align:left">@serialData</td>
-<td style="text-align:center">说明通过writeObject( ) 和 writeExternal( )方法写的数据</td>
-<td style="text-align:center">@serialData description</td>
-</tr>
-<tr>
-<td style="text-align:left">@serialField</td>
-<td style="text-align:center">说明一个ObjectStreamField组件</td>
-<td style="text-align:center">@serialField name type description</td>
-</tr>
-<tr>
-<td style="text-align:left">@since</td>
-<td style="text-align:center">标记当引入一个特定的变化时</td>
-<td style="text-align:center">@since release</td>
-</tr>
-<tr>
-<td style="text-align:left">@throws</td>
-<td style="text-align:center">和 @exception标签一样.</td>
-<td style="text-align:center">The @throws tag has the same meaning as the @exception tag.</td>
-</tr>
-<tr>
-<td style="text-align:left">{@value}</td>
-<td style="text-align:center">显示常量的值，该常量必须是static属性。</td>
-<td style="text-align:center">Displays the value of a constant, which must be a static field.</td>
-</tr>
-<tr>
-<td style="text-align:left">@version</td>
-<td style="text-align:center">指定类的版本</td>
-<td style="text-align:center">@version info</td>
-</tr>
-</tbody>
-</table>
-</div>
-<hr>
-<h2 id="文档注释"><a href="#文档注释" class="headerlink" title="文档注释"></a>文档注释</h2><p>在开始的 <strong>/**</strong> 之后，第一行或几行是关于类、变量和方法的主要描述。</p>
-<p>之后，你可以包含一个或多个各种各样的 <strong>@</strong> 标签。每一个 <strong>@</strong> 标签必须在一个新行的开始或者在一行的开始紧跟星号(*).</p>
-<p>多个相同类型的标签应该放成一组。例如，如果你有三个 <strong>@see</strong> 标签，可以将它们一个接一个的放在一起。</p>
-<p>下面是一个类的说明注释的实例：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** 这个类绘制一个条形图 </span></span><br><span class="line"><span class="comment">* <span class="doctag">@author</span> runoob </span></span><br><span class="line"><span class="comment">* <span class="doctag">@version</span> 1.2 </span></span><br><span class="line"><span class="comment">*/</span></span><br></pre></td></tr></table></figure>
-<h2 id="IDE中使用"><a href="#IDE中使用" class="headerlink" title="IDE中使用"></a>IDE中使用</h2><p>可以使用插件、模板，自动在每个类和方法前加上文档注释。</p>
+        <p>之前的mmorpg项目中使用了状态同步，但是在移动同步中发现了抖动现象，于是打算研究一下。<br><a id="more"></a></p>
+<h1 id="分析原因"><a href="#分析原因" class="headerlink" title="分析原因"></a>分析原因</h1><h2 id="频率不一致"><a href="#频率不一致" class="headerlink" title="频率不一致"></a>频率不一致</h2><p>服务端按固定频率发包，但是客户端不是固定频率收到，如果直接应用服务端状态，必然导致抖动。</p>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>客户端对收到的状态信息进行缓存入队，然后用状态插值追赶服务器状态。<br>状态插值：<code>Current = MathUtils.Interpolate(State_A, State_B, 估算帧号/ (State_B.frame -State_A.frame ))</code><br>估算帧应该比真实帧号提前一些，否则处于A帧时，B帧还没收到，需要等待。但是会有延迟代价。这个代价可以通过增大发包频率，和客户端预测表现来弥补。<br>估算帧是客户端估算服务器发来的帧号，当收包帧号与估算差距太大时，需要调整。比如客户端估算帧比服务端提前，那客户端就不模拟，反之加快模拟的速度。</p>
+<h1 id="客户端本地预测"><a href="#客户端本地预测" class="headerlink" title="客户端本地预测"></a>客户端本地预测</h1><p>如果要等待服务器返回状态才开始表现，对于延迟比较高的玩家可能无法忍受，这时候需要客户端自己本地预测，来预表现。<br>流程：</p>
+<ol>
+<li>客户端本地模拟指令，并且将指令队列发送给服务器；</li>
+<li>服务器收到指令序列，逐帧模拟，然后向客户端发送模拟结果；</li>
+<li>客户端与收到的模拟结果比对，为指令序列做确认</li>
+</ol>
+<h2 id="抖动"><a href="#抖动" class="headerlink" title="抖动"></a>抖动</h2><p>服务器返回的模拟结果状态是旧的，客户端已经预表现了，如果直接应用服务器的结果肯定会造成抖动。</p>
+<h3 id="解决方案-1"><a href="#解决方案-1" class="headerlink" title="解决方案"></a>解决方案</h3><p>当客户端收到描述角色状态的数据包时，我们基本上就得把移动状态及时恢复到最近一次经过服务器验证过状态上去，而且必须重新计算之后所有的输入操作（除了服务器验证过的），直至追上当前时刻。</p>
+<h1 id="多客户端移动同步"><a href="#多客户端移动同步" class="headerlink" title="多客户端移动同步"></a>多客户端移动同步</h1><p>A客户端通过服务器同步B客户端状态时，如果使用预测的方式，A拿到的B状态必然是比A预测的B状态要延迟的，如果直接应用服务器传来的B状态，肯定要导致抖动。并且A拿到的B操作指令也是旧的，没办法和之前那样解决。<br>这里我使用了状态插值的办法。之后想到更好的解决办法，再来更新。</p>
+<p>Valve分享了Source引擎内置的网络同步模型,在旗下的多人游戏都有应用,包括CS:GO,Left 4 Dead 2,Team Fortress 2等等。有时间去参考一下。</p>
 
     </div>
 
@@ -408,7 +311,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://munan.tech/blog/70b7aba4.html" title="文档注释">http://munan.tech/blog/70b7aba4.html</a>
+    <a href="http://munan.tech/blog/c32a14d2.html" title="状态同步的抖动">http://munan.tech/blog/c32a14d2.html</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -425,12 +328,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/blog/5e568bb.html" rel="prev" title="socket">
-      <i class="fa fa-chevron-left"></i> socket
+    <a href="/blog/6db75381.html" rel="prev" title="其他几种常用的设计模式">
+      <i class="fa fa-chevron-left"></i> 其他几种常用的设计模式
     </a></div>
       <div class="post-nav-item">
-    <a href="/blog/e6493c73.html" rel="next" title="内存模型">
-      内存模型 <i class="fa fa-chevron-right"></i>
+    <a href="/blog/27638531.html" rel="next" title="自动寻路">
+      自动寻路 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -491,7 +394,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-%E6%96%87%E6%A1%A3%E6%B3%A8%E9%87%8A"><span class="nav-number">1.</span> <span class="nav-text">Java 文档注释</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#javadoc-%E6%A0%87%E7%AD%BE"><span class="nav-number">1.1.</span> <span class="nav-text">javadoc 标签</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E6%A1%A3%E6%B3%A8%E9%87%8A"><span class="nav-number">1.2.</span> <span class="nav-text">文档注释</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IDE%E4%B8%AD%E4%BD%BF%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">IDE中使用</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E5%8E%9F%E5%9B%A0"><span class="nav-number">1.</span> <span class="nav-text">分析原因</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A2%91%E7%8E%87%E4%B8%8D%E4%B8%80%E8%87%B4"><span class="nav-number">1.1.</span> <span class="nav-text">频率不一致</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">1.1.1.</span> <span class="nav-text">解决方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%9C%AC%E5%9C%B0%E9%A2%84%E6%B5%8B"><span class="nav-number">2.</span> <span class="nav-text">客户端本地预测</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8A%96%E5%8A%A8"><span class="nav-number">2.1.</span> <span class="nav-text">抖动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88-1"><span class="nav-number">2.1.1.</span> <span class="nav-text">解决方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%A4%9A%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%A7%BB%E5%8A%A8%E5%90%8C%E6%AD%A5"><span class="nav-number">3.</span> <span class="nav-text">多客户端移动同步</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -507,14 +410,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-count">49</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-count">31</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
