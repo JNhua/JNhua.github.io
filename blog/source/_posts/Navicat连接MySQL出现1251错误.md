@@ -8,6 +8,7 @@ category:
   - database
 mathjax: true
 toc: false
+abbrlink: 224524ad
 ---
 # 1251错误
 ![1251error](https://cdn.jsdelivr.net/gh/JNhua/blog_images/img/20210918112513.png)
